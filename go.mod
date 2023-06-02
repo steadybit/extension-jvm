@@ -1,4 +1,4 @@
-module github.com/steadybit/extension-scaffold
+module github.com/steadybit/extension-jvm
 
 go 1.20
 
@@ -10,7 +10,7 @@ require (
 	github.com/steadybit/action-kit/go/action_kit_test v1.0.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
 	github.com/steadybit/event-kit/go/event_kit_api v1.1.0
-	github.com/steadybit/extension-kit v1.7.17
+	github.com/steadybit/extension-kit v1.7.18
 	github.com/stretchr/testify v1.8.2
 )
 

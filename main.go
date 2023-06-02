@@ -9,13 +9,12 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/event-kit/go/event_kit_api"
+	"github.com/steadybit/extension-jvm/config"
+	"github.com/steadybit/extension-jvm/extjvm"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthealth"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extlogging"
-	"github.com/steadybit/extension-scaffold/config"
-	"github.com/steadybit/extension-scaffold/extevents"
-	"github.com/steadybit/extension-scaffold/extrobots"
 )
 
 func main() {
@@ -49,9 +48,8 @@ func main() {
 	// This is a section you will most likely want to change: The registration of HTTP handlers
 	// for your extension. You might want to change these because the names do not fit, or because
 	// you do not have a need for all of them.
-	extrobots.RegisterDiscoveryHandlers()
-	action_kit_sdk.RegisterAction(extrobots.NewLogAction())
-	extevents.RegisterEventListenerHandlers()
+	extjvm.RegisterDiscoveryHandlers()
+	action_kit_sdk.RegisterAction(extjvm.NewLogAction())
 
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
@@ -64,7 +62,7 @@ func main() {
 		// The port can be configured externally through the
 		// STEADYBIT_EXTENSION_PORT environment variable.
 		// We suggest that you keep port 8080 as the default.
-		Port: 8080,
+		Port: 8085,
 	})
 }
 
@@ -84,10 +82,6 @@ func getExtensionList() ExtensionListResponse {
 
 		// See this document to learn more about the discovery list:
 		// https://github.com/steadybit/discovery-kit/blob/main/docs/discovery-api.md#index-response
-		DiscoveryList: extrobots.GetDiscoveryList(),
-
-		// See this document to learn more about the event listener list:
-		// https://github.com/steadybit/event-kit/blob/main/docs/event-api.md#event-listeners-list
-		EventListenerList: extevents.GetEventListenerList(),
+		DiscoveryList: extjvm.GetDiscoveryList(),
 	}
 }

@@ -2,14 +2,13 @@
  * Copyright 2023 steadybit GmbH. All rights reserved.
  */
 
-package extrobots
+package extjvm
 
 import (
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
-	"github.com/steadybit/extension-scaffold/config"
 	"net/http"
 )
 
@@ -64,20 +63,23 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
 		Icon:    extutil.Ptr(targetIcon),
 
 		// Labels used in the UI
-		Label: discovery_kit_api.PluralLabel{One: "Robot", Other: "Robots"},
+		Label: discovery_kit_api.PluralLabel{One: "JVM application", Other: "JVM applications"},
 
 		// Category for the targets to appear in
-		Category: extutil.Ptr("example"),
+		Category: extutil.Ptr("JVM Application Attacks"),
 
 		// Specify attributes shown in table columns and to be used for sorting
 		Table: discovery_kit_api.Table{
 			Columns: []discovery_kit_api.Column{
-				{Attribute: "steadybit.label"},
-				{Attribute: "robot.reportedBy"},
+				{Attribute: "application.name"},
+				{Attribute: "application.type"},
+				{Attribute: "k8s.namespace"},
+				{Attribute: "k8s.cluster-name"},
+				{Attribute: "k8s.deployment"},
 			},
 			OrderBy: []discovery_kit_api.OrderBy{
 				{
-					Attribute: "steadybit.label",
+					Attribute: "application.name",
 					Direction: "ASC",
 				},
 			},
@@ -89,10 +91,52 @@ func getAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
 	return discovery_kit_api.AttributeDescriptions{
 		Attributes: []discovery_kit_api.AttributeDescription{
 			{
-				Attribute: "robot.reportedBy",
+				Attribute: "application.name",
 				Label: discovery_kit_api.PluralLabel{
-					One:   "Reported by",
-					Other: "Reported by",
+					One:   "Application Name",
+					Other: "Application Names",
+				},
+			},
+			{
+				Attribute: "application.type",
+				Label: discovery_kit_api.PluralLabel{
+					One:   "Application Type",
+					Other: "Application Types",
+				},
+			},
+			{
+				Attribute: "process.pid",
+				Label: discovery_kit_api.PluralLabel{
+					One:   "Process Pid",
+					Other: "Process Pids",
+				},
+			},
+			{
+				Attribute: "k8s.container.name",
+				Label: discovery_kit_api.PluralLabel{
+					One:   "container name",
+					Other: "container names",
+				},
+			},
+			{
+				Attribute: "k8s.namespace",
+				Label: discovery_kit_api.PluralLabel{
+					One:   "namespace name",
+					Other: "namespace names",
+				},
+			},
+			{
+				Attribute: "k8s.cluster-name",
+				Label: discovery_kit_api.PluralLabel{
+					One:   "cluster name",
+					Other: "cluster names",
+				},
+			},
+			{
+				Attribute: "k8s.deployment",
+				Label: discovery_kit_api.PluralLabel{
+					One:   "deployment name",
+					Other: "deployment names",
 				},
 			},
 		},
@@ -100,14 +144,14 @@ func getAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
 }
 
 func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
-	targets := make([]discovery_kit_api.Target, len(config.Config.RobotNames))
-	for i, name := range config.Config.RobotNames {
-		targets[i] = discovery_kit_api.Target{
-			Id:         name,
-			TargetType: targetID,
-			Label:      name,
-			Attributes: map[string][]string{"robot.reportedBy": {"extension-scaffold"}},
-		}
-	}
+	targets := make([]discovery_kit_api.Target, 0)
+	//for i, name := range config.Config.RobotNames {
+	//	targets[i] = discovery_kit_api.Target{
+	//		Id:         name,
+	//		TargetType: targetID,
+	//		Label:      name,
+	//		Attributes: map[string][]string{"robot.reportedBy": {"extension-jvm"}},
+	//	}
+	//}
 	exthttp.WriteBody(w, discovery_kit_api.DiscoveredTargets{Targets: targets})
 }

@@ -1,0 +1,315 @@
+manifest should match snapshot with TLS:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels: null
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
+            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": 8085,\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n        \"server\": {\n          \"extraCertsFile\": \"server-cert/tls.crt\"\n        }\n        \n      }\n    }\n  ]\n}\n"
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+                - name: STEADYBIT_EXTENSION_TLS_SERVER_CERT
+                  value: /etc/extension/certificates/server-cert/tls.crt
+                - name: STEADYBIT_EXTENSION_TLS_SERVER_KEY
+                  value: /etc/extension/certificates/server-cert/tls.key
+              image: ghcr.io/steadybit/extension-jvm:latest
+              imagePullPolicy: Always
+              livenessProbe:
+                httpGet:
+                  path: /health/liveness
+                  port: 8081
+              name: steadybit-extension-jvm
+              readinessProbe:
+                httpGet:
+                  path: /health/readiness
+                  port: 8081
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                runAsGroup: 10000
+                runAsNonRoot: true
+                runAsUser: 10000
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /etc/extension/certificates/server-cert
+                  name: certificate-server-cert
+                  readOnly: true
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - name: certificate-server-cert
+              secret:
+                optional: false
+                secretName: server-cert
+manifest should match snapshot with extra env vars:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels: null
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
+            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": 8085,\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n        \n      }\n    }\n  ]\n}\n"
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+                - name: FOO
+                  value: bar
+              envFrom:
+                - configMapRef: null
+                  name: env-configmap
+                - name: env-secrets
+                  secretRef: null
+              image: ghcr.io/steadybit/extension-jvm:latest
+              imagePullPolicy: Always
+              livenessProbe:
+                httpGet:
+                  path: /health/liveness
+                  port: 8081
+              name: steadybit-extension-jvm
+              readinessProbe:
+                httpGet:
+                  path: /health/readiness
+                  port: 8081
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                runAsGroup: 10000
+                runAsNonRoot: true
+                runAsUser: 10000
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+manifest should match snapshot with mutual TLS:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels: null
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
+            steadybit.com/extension-auto-discovery: |
+              {
+                "extensions": [
+                  {
+                    "port": 8085,
+                    "types": ["ACTION","DISCOVERY"],
+                    "tls": {
+                      "server": {
+                        "extraCertsFile": "server-cert/tls.crt"
+                      },
+                      "client": {
+                        "certChainFile": "client-cert-a/tls.crt",
+                        "certKeyFile": "client-cert-a/tls.key"
+                      }
+                    }
+                  }
+                ]
+              }
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+                - name: STEADYBIT_EXTENSION_TLS_SERVER_CERT
+                  value: /etc/extension/certificates/server-cert/tls.crt
+                - name: STEADYBIT_EXTENSION_TLS_SERVER_KEY
+                  value: /etc/extension/certificates/server-cert/tls.key
+                - name: STEADYBIT_EXTENSION_TLS_CLIENT_CAS
+                  value: /etc/extension/certificates/client-cert-a/tls.crt,/etc/extension/certificates/client-cert-a/tls.crt
+              image: ghcr.io/steadybit/extension-jvm:latest
+              imagePullPolicy: Always
+              livenessProbe:
+                httpGet:
+                  path: /health/liveness
+                  port: 8081
+              name: steadybit-extension-jvm
+              readinessProbe:
+                httpGet:
+                  path: /health/readiness
+                  port: 8081
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                runAsGroup: 10000
+                runAsNonRoot: true
+                runAsUser: 10000
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /etc/extension/certificates/client-cert-a
+                  name: certificate-client-cert-a
+                  readOnly: true
+                - mountPath: /etc/extension/certificates/server-cert
+                  name: certificate-server-cert
+                  readOnly: true
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - name: certificate-client-cert-a
+              secret:
+                optional: false
+                secretName: client-cert-a
+            - name: certificate-server-cert
+              secret:
+                optional: false
+                secretName: server-cert
+manifest should match snapshot without TLS:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels: null
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
+            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": 8085,\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n        \n      }\n    }\n  ]\n}\n"
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+              image: ghcr.io/steadybit/extension-jvm:latest
+              imagePullPolicy: Always
+              livenessProbe:
+                httpGet:
+                  path: /health/liveness
+                  port: 8081
+              name: steadybit-extension-jvm
+              readinessProbe:
+                httpGet:
+                  path: /health/readiness
+                  port: 8081
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                runAsGroup: 10000
+                runAsNonRoot: true
+                runAsUser: 10000
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir

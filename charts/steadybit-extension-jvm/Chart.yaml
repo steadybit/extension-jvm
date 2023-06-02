@@ -1,15 +1,15 @@
 apiVersion: v2
-name: steadybit-extension-scaffold
+name: steadybit-extension-jvm
 description: Steadybit scaffold extension Helm chart for Kubernetes.
-version: 1.0.8
+version: 1.0.0
 appVersion: latest
 home: https://www.steadybit.com/
 icon: https://steadybit-website-assets.s3.amazonaws.com/logo-symbol-transparent.png
 maintainers:
-  - email: daniel.reuter@steadybit.com
-    name: reuda
+  - email: ansgar.schulte@steadybit.com
+    name: ansgarschulte
 sources:
-  - https://github.com/steadybit/extension-scaffold
+  - https://github.com/steadybit/extension-jvm
 annotations:
   artifacthub.io/images: |
     - name: logo
@@ -21,5 +21,5 @@ annotations:
       url: https://hub.steadybit.com
 dependencies:
   - name: extensionlib
-    version: 1.2.0
+    version: 1.2.2
     repository: https://steadybit.github.io/helm-charts
