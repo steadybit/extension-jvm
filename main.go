@@ -5,16 +5,17 @@
 package main
 
 import (
-	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/steadybit/event-kit/go/event_kit_api"
-	"github.com/steadybit/extension-jvm/config"
-	"github.com/steadybit/extension-jvm/extjvm"
-	"github.com/steadybit/extension-kit/extbuild"
-	"github.com/steadybit/extension-kit/exthealth"
-	"github.com/steadybit/extension-kit/exthttp"
-	"github.com/steadybit/extension-kit/extlogging"
+  "github.com/steadybit/action-kit/go/action_kit_api/v2"
+  "github.com/steadybit/action-kit/go/action_kit_sdk"
+  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
+  "github.com/steadybit/event-kit/go/event_kit_api"
+  "github.com/steadybit/extension-jvm/config"
+  "github.com/steadybit/extension-jvm/extjvm"
+  "github.com/steadybit/extension-jvm/extjvm/java_process"
+  "github.com/steadybit/extension-kit/extbuild"
+  "github.com/steadybit/extension-kit/exthealth"
+  "github.com/steadybit/extension-kit/exthttp"
+  "github.com/steadybit/extension-kit/extlogging"
 )
 
 func main() {
@@ -53,6 +54,10 @@ func main() {
 
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
+
+  // Start JVM Watcher
+  java_process.Start()
+  extjvm.Activate(0)
 
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)
