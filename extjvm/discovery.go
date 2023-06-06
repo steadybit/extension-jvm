@@ -5,11 +5,14 @@
 package extjvm
 
 import (
-	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+  "fmt"
+  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
 	"net/http"
+  "strconv"
+  "strings"
 )
 
 const discoveryBasePath = basePath + "/discovery"
@@ -144,14 +147,28 @@ func getAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
 }
 
 func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
-	targets := make([]discovery_kit_api.Target, 0)
-	//for i, name := range config.Config.RobotNames {
-	//	targets[i] = discovery_kit_api.Target{
-	//		Id:         name,
-	//		TargetType: targetID,
-	//		Label:      name,
-	//		Attributes: map[string][]string{"robot.reportedBy": {"extension-jvm"}},
-	//	}
-	//}
+  vms := GetJVMs()
+	targets := make([]discovery_kit_api.Target, len(vms))
+  for i, jvm := range vms {
+		targets[i] = discovery_kit_api.Target{
+			Id:         fmt.Sprintf("%d/%s", jvm.Pid, getApplicationName(jvm, "?")),
+			TargetType: targetID,
+			Label:      getApplicationName(jvm, ""),
+			Attributes: map[string][]string{
+        "application.type": {"java"},
+        "application.name": {getApplicationName(jvm, "")},
+        "container.id": {jvm.ContainerId},
+        "process.pid": {strconv.Itoa(int(jvm.Pid))},
+      },
+		}
+	}
 	exthttp.WriteBody(w, discovery_kit_api.DiscoveredTargets{Targets: targets})
+}
+
+func getApplicationName(jvm JavaVm, defaultIfEmpty string) string {
+  name := strings.Replace(jvm.MainClass, ".jar", "", -1)
+  if name == "" {
+    name = defaultIfEmpty
+  }
+  return name
 }

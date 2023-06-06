@@ -4,16 +4,19 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/process"
+  "github.com/steadybit/extension-jvm/extjvm/hotspot"
+  "github.com/steadybit/extension-jvm/extjvm/hsperf"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
-  "github.com/steadybit/extension-jvm/extjvm/utils"
-  "github.com/steadybit/extension-kit/extutil"
+	"github.com/steadybit/extension-jvm/extjvm/procfs"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
+	"github.com/steadybit/extension-kit/extutil"
 	"github.com/xin053/hsperfdata"
 	"math"
 	"os"
 	"path/filepath"
 	"runtime"
-  "strconv"
-  "strings"
+	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -35,9 +38,9 @@ type JavaVm struct {
 	CommandLine   string
 	MainClass     string
 	ClassPath     string
-	ContainerId   string
-	InContainerId int
-	VmVersion     string
+	ContainerId    string
+	InContainerPid int
+	VmVersion      string
 	VmVendor      string
 	VmName        string
 	VmArgs        string
@@ -45,6 +48,11 @@ type JavaVm struct {
 	GroupId       string
 	Path          string
 	DiscoveredVia string
+}
+
+func (vm JavaVm) ToDebugString() string {
+	return fmt.Sprintf("JavaVm{pid=%d, discoveredVia=%s, commandLine=%s, mainClass=%s, classpath=%s, containerId=%s, inContainerPid=%d, vmVersion=%s, vmVendor=%s, vmName=%s, vmArgs=%s, userId=%s, groupId=%s, path=%s}",
+		vm.Pid, vm.DiscoveredVia, vm.CommandLine, vm.MainClass, vm.ClassPath, vm.ContainerId, vm.InContainerPid, vm.VmVersion, vm.VmVendor, vm.VmName, vm.VmArgs, vm.UserId, vm.GroupId, vm.Path)
 }
 
 func Activate(agentPid int) {
@@ -63,24 +71,58 @@ func (j *JavaVMS) NewProcess(p *process.Process) {
 }
 
 func addJvm(jvm *JavaVm) {
-	jvms.Store(jvm.Pid, jvm)
-}
-func createJvm(process *process.Process) *JavaVm {
-	containerId := getContainerIdForProcess(process)
-	if containerId == "" {
-		return createHostJvm(process)
+	if jvm == nil || isExcluded(jvm) {
+		return
 	}
-	//var containerFs = ProcFs.ROOT.getProcessRoot(process.getProcessID());
-	//var containerPid = this.getContainerPid(process.getProcessID(), containerFs);
-	//if (containerPid != null) {
-	//  return this.createContainerizedJvm(process, containerId, containerPid, containerFs);
-	//}
+	log.Debug().Msgf("Discovered JVM %s", jvm.ToDebugString())
+	jvms.Store(jvm.Pid, *jvm)
+}
+
+func GetJVMs() []JavaVm {
+	result := make([]JavaVm, 0)
+	jvms.Range(func(key, value interface{}) bool {
+		result = append(result, value.(JavaVm))
+		return true
+	})
+	return result
+}
+func createJvm(p *process.Process) *JavaVm {
+	containerId := procfs.GetContainerIdForProcess(p)
+	if containerId == "" {
+		return createHostJvm(p)
+	}
+
+	containerPid := procfs.GetContainerPid(p.Pid)
+	if containerPid > 0 {
+		return createContainerizedJvm(p, containerId, containerPid, procfs.GetProcessRoot(p.Pid));
+	}
 	return nil
+}
+
+func createContainerizedJvm(p *process.Process, containerId string, containerPid int32, containerFs string) *JavaVm {
+  filePaths := hotspot.GetRootHsPerfPaths(p.Pid, containerFs)
+  if len(filePaths) == 0 {
+    log.Error().Msgf("Could not find hsperfdata root path for container %s", containerId)
+    return nil
+  }
+  hsPerfDataPath := filePaths[containerId]
+  if hsPerfDataPath == "" {
+    log.Error().Msgf("Could not find hsperfdata path for container %s", containerId)
+    return nil
+  }
+  javaVm := parsePerfDataBuffer(p, hsPerfDataPath)
+  if javaVm == nil {
+    log.Error().Msgf("Could not parse hsperfdata for container %s", containerId)
+    return nil
+  }
+  javaVm.InContainerPid = int(containerPid)
+  javaVm.ContainerId = containerId
+  return javaVm
 }
 
 func createHostJvm(p *process.Process) *JavaVm {
 	if runtime.GOOS != "windows" {
-		rootPath := fmt.Sprintf("/proc/%d/root", p.Pid)
+		rootPath := procfs.GetProcessRoot(p.Pid)
 		dirsGlob := filepath.Join(rootPath, os.TempDir(), "hsperfdata_*", strconv.Itoa(int(p.Pid)))
 		jvm := findJvmOnPath(p, dirsGlob)
 		if jvm != nil {
@@ -139,23 +181,17 @@ func createJvmFromProcess(p *process.Process) *JavaVm {
 }
 
 func findJvmOnPath(p *process.Process, dirsGlob string) *JavaVm {
-	paths, err := filepath.Glob(dirsGlob)
-	if err != nil {
-		log.Error().Msgf("Error while globbing %s: %s", dirsGlob, err)
-		return nil
-	}
-
-	filePaths := make(map[string]string)
-	for _, path := range paths {
-		pid := filepath.Base(path)
-		filePaths[pid] = path
-	}
+	filePaths := hsperf.FindHsPerfDataDirs(dirsGlob)
 	jvm := findJvm(p, filePaths)
 	return jvm
 }
 
 func findJvm(p *process.Process, paths map[string]string) *JavaVm {
-	return parsePerfDataBuffer(p, paths[strconv.Itoa(int(p.Pid))])
+  path := paths[strconv.Itoa(int(p.Pid))]
+  if path == "" {
+    return nil
+  }
+  return parsePerfDataBuffer(p, path)
 }
 
 func parsePerfDataBuffer(p *process.Process, path string) *JavaVm {
@@ -164,17 +200,20 @@ func parsePerfDataBuffer(p *process.Process, path string) *JavaVm {
 		log.Error().Msgf("Error while reading perf data from %s: %s", path, err)
 		return nil
 	}
-	commandLine := getStringProperty(entryMap, "sun.rt.javaCommand")
+  if !hsperf.IsAttachable(entryMap) {
+    return nil
+  }
+	commandLine := hsperf.GetStringProperty(entryMap, "sun.rt.javaCommand")
 	jvm := &JavaVm{
 		Pid:           p.Pid,
 		DiscoveredVia: "hsperfdata",
 		CommandLine:   commandLine,
 		MainClass:     getMainClass(commandLine),
-		ClassPath:     getStringProperty(entryMap, "java.property.java.class.path"),
-		VmArgs:        getStringProperty(entryMap, "java.rt.vmArgs"),
-		VmName:        getStringProperty(entryMap, "java.vm.name"),
-		VmVendor:      getStringProperty(entryMap, "java.vm.vendor"),
-		VmVersion:     getStringProperty(entryMap, "java.vm.version"),
+		ClassPath:     hsperf.GetStringProperty(entryMap, "java.property.java.class.path"),
+		VmArgs:        hsperf.GetStringProperty(entryMap, "java.rt.vmArgs"),
+		VmName:        hsperf.GetStringProperty(entryMap, "java.vm.name"),
+		VmVendor:      hsperf.GetStringProperty(entryMap, "java.vm.vendor"),
+		VmVersion:     hsperf.GetStringProperty(entryMap, "java.vm.version"),
 	}
 	uids, err := p.Uids()
 	if err == nil && len(uids) > 0 {
@@ -231,20 +270,9 @@ func getMainClass(commandLine string) string {
 	return cmdLine
 }
 
-func getStringProperty(entryMap map[string]interface{}, key string) string {
-	if value, ok := entryMap[key]; ok {
-		return value.(string)
-	}
-	log.Error().Msgf("Could not get property %s from perfdata", key)
-	return ""
-}
 
-func getContainerIdForProcess(process *process.Process) string {
-	//TODO: implement
-	return ""
-}
 
-func isExcluded(vm JavaVm) bool {
+func isExcluded(vm *JavaVm) bool {
 	if utils.ContainsPartOfString(ClasspathExcludes, vm.ClassPath) {
 		log.Debug().Msgf("%+v is excluded by classpath", vm)
 		return true

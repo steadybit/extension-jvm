@@ -35,7 +35,6 @@ func updatePids() {
   if err != nil {
     return
   }
-  //processes, err := ps.Processes()
   if err != nil {
     log.Error().Err(err).Msg("Failed to list processes")
     return
@@ -93,7 +92,7 @@ func isJava(p *process.Process) bool {
 func isRunning(p *process.Process) bool {
   status, err := p.Status()
   if err != nil {
-    log.Warn().Err(err).Msg("Failed to get process status")
+    log.Trace().Err(err).Msg("Failed to get process status")
     return false
   }
   return utils.ContainsString(RunningStates, status)
