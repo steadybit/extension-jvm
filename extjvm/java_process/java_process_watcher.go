@@ -27,7 +27,7 @@ func Start() {
   }, 5 * time.Second)
 
   if err == nil {
-    log.Print("Task has been scheduled successfully.")
+    log.Info().Msg("Java Process Watcher Task has been scheduled successfully.")
   }
 }
 func updatePids() {
@@ -41,7 +41,7 @@ func updatePids() {
   }
   for _, p := range processes {
     if !utils.Contains(pids, p.Pid) {
-      if isRunning(p) {
+      if IsRunning(p) {
         pids = append(pids, p.Pid)
         newProcess(p)
       }
@@ -89,7 +89,7 @@ func isJava(p *process.Process) bool {
   return strings.HasSuffix(strings.TrimSpace(exe), "java")
 }
 
-func isRunning(p *process.Process) bool {
+func IsRunning(p *process.Process) bool {
   status, err := p.Status()
   if err != nil {
     log.Trace().Err(err).Msg("Failed to get process status")

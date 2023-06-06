@@ -11,6 +11,7 @@ import (
   "github.com/steadybit/event-kit/go/event_kit_api"
   "github.com/steadybit/extension-jvm/config"
   "github.com/steadybit/extension-jvm/extjvm"
+  "github.com/steadybit/extension-jvm/extjvm/hotspot"
   "github.com/steadybit/extension-jvm/extjvm/java_process"
   "github.com/steadybit/extension-kit/extbuild"
   "github.com/steadybit/extension-kit/exthealth"
@@ -57,6 +58,9 @@ func main() {
 
   // Start JVM Watcher
   java_process.Start()
+  // Start Hotspot JVM Watcher
+  hotspot.Start()
+  // Start listening for JVM events
   extjvm.Activate(0)
 
 	//This will switch the readiness state of the application to true.

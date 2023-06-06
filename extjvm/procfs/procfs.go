@@ -18,7 +18,7 @@ func GetContainerPid(hostPid int32) int32 {
 		return pid
 	}
 
-	containerPids := hotspot.GetJvmPids(hostPid, GetProcessRoot(hostPid))
+	containerPids := hotspot.GetJvmPidsForPath(hostPid, GetProcessRoot(hostPid))
 	if len(containerPids) > 0 {
 		log.Trace().Msgf("Potential container PIDs found for JVM %d: %+v", hostPid, containerPids)
 		for _, containerPid := range containerPids {

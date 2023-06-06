@@ -153,7 +153,7 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 		targets[i] = discovery_kit_api.Target{
 			Id:         fmt.Sprintf("%d/%s", jvm.Pid, getApplicationName(jvm, "?")),
 			TargetType: targetID,
-			Label:      getApplicationName(jvm, ""),
+			Label:      getApplicationName(jvm, "?"),
 			Attributes: map[string][]string{
         "application.type": {"java"},
         "application.name": {getApplicationName(jvm, "")},

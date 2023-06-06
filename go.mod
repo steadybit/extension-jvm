@@ -12,7 +12,7 @@ require (
 	github.com/steadybit/action-kit/go/action_kit_test v1.0.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
 	github.com/steadybit/event-kit/go/event_kit_api v1.1.0
-	github.com/steadybit/extension-kit v1.7.19-0.20230605113441-83230c7d6392
+	github.com/steadybit/extension-kit v1.7.19
 	github.com/stretchr/testify v1.8.2
 	github.com/xin053/hsperfdata v0.2.3
 )
