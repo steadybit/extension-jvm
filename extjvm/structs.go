@@ -2,7 +2,7 @@ package extjvm
 
 import "fmt"
 
-type JavaVMS struct{}
+
 
 func (vm JavaVm) ToDebugString() string {
   return fmt.Sprintf("JavaVm{pid=%d, discoveredVia=%s, commandLine=%s, mainClass=%s, classpath=%s, containerId=%s, inContainerPid=%d, vmVersion=%s, vmVendor=%s, vmName=%s, vmArgs=%s, userId=%s, groupId=%s, path=%s}",

@@ -7,9 +7,9 @@ a [pull request](https://github.com/steadybit/reliability-hub-db) and add a link
 
 ## Configuration
 
-| Environment Variable              | Meaning                                     | Required | Default                 |
-|-----------------------------------|---------------------------------------------|----------|-------------------------|
-| `STEADYBIT_EXTENSION_ROBOT_NAMES` | Comma-separated list of discoverable robots | yes      | Bender,Terminator,R2-D2 |
+| Environment Variable                         | Meaning                   | Required | Default |
+|----------------------------------------------|---------------------------|----------|---------|
+| `STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED` | is jvm attachment enabled | yes      | true    |
 
 The extension supports all environment variables provided by [steadybit/extension-kit](https://github.com/steadybit/extension-kit#environment-variables).
 

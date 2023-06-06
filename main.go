@@ -11,6 +11,7 @@ import (
   "github.com/steadybit/event-kit/go/event_kit_api"
   "github.com/steadybit/extension-jvm/config"
   "github.com/steadybit/extension-jvm/extjvm"
+  "github.com/steadybit/extension-jvm/extjvm/common"
   "github.com/steadybit/extension-jvm/extjvm/hotspot"
   "github.com/steadybit/extension-jvm/extjvm/java_process"
   "github.com/steadybit/extension-kit/extbuild"
@@ -36,7 +37,7 @@ func main() {
 	//This will start /health/liveness and /health/readiness endpoints on port 8081 for use with kubernetes
 	//The port can be configured using the STEADYBIT_EXTENSION_HEALTH_PORT environment variable
 	exthealth.SetReady(false)
-	exthealth.StartProbes(8081)
+	exthealth.StartProbes(int(common.GetOwnHealthPort()))
 
 	// Most extensions require some form of configuration. These calls exist to parse and validate the
 	// configuration obtained from environment variables.
@@ -62,6 +63,8 @@ func main() {
   hotspot.Start()
   // Start listening for JVM events
   extjvm.Activate(0)
+  //Start attaching to JVMs
+  extjvm.StartAttachment()
 
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)
@@ -71,7 +74,7 @@ func main() {
 		// The port can be configured externally through the
 		// STEADYBIT_EXTENSION_PORT environment variable.
 		// We suggest that you keep port 8080 as the default.
-		Port: 8085,
+		Port: int(common.GetOwnPort()),
 	})
 }
 
