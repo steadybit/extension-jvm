@@ -1,4 +1,4 @@
-package extjvm
+package jvm
 
 import "fmt"
 

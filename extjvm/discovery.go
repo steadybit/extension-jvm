@@ -7,7 +7,8 @@ package extjvm
 import (
   "fmt"
   "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/steadybit/extension-kit/extbuild"
+  "github.com/steadybit/extension-jvm/extjvm/jvm"
+  "github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
 	"net/http"
@@ -165,7 +166,7 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 	exthttp.WriteBody(w, discovery_kit_api.DiscoveredTargets{Targets: targets})
 }
 
-func getApplicationName(jvm JavaVm, defaultIfEmpty string) string {
+func getApplicationName(jvm jvm.JavaVm, defaultIfEmpty string) string {
   name := strings.Replace(jvm.MainClass, ".jar", "", -1)
   if name == "" {
     name = defaultIfEmpty

@@ -1,7 +1,10 @@
 package attachment
 
+import "github.com/steadybit/extension-jvm/extjvm/jvm"
 
-type ContainerJvmAttachment struct {}
+type ContainerJvmAttachment struct {
+  jvm *jvm.JavaVm
+}
 
 func (attachment ContainerJvmAttachment) Attach(agentJar string, initJar string, port int) bool {
  //TODO: implement
