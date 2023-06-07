@@ -96,10 +96,9 @@ func IsExecAny(path string) bool {
 	return stat.Mode()&0111 != 0
 }
 func (attachment HostJvmAttachment) CopyFiles(dstPath string, files map[string]string) {
-	//TODO: implement
+	panic("not supported")
 }
 
 func (attachment HostJvmAttachment) GetAgentHost() string {
-	//TODO: implement
-	return ""
+	return "127.0.0.1"
 }
