@@ -98,3 +98,12 @@ func IsRunning(p *process.Process) bool {
 	}
 	return utils.ContainsString(RunningStates, status)
 }
+
+func IsRunningProcess(pid int32) bool {
+  p, err := process.NewProcess(pid)
+  if err != nil {
+    log.Warn().Err(err).Msg("Error in listener for newProcess")
+    return false
+  }
+  return IsRunning(p)
+}
