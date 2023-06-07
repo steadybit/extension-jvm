@@ -1,21 +1,20 @@
 package extjvm
 
 import (
-	"bufio"
-	"errors"
-	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-jvm/extjvm/attachment"
-	"github.com/steadybit/extension-jvm/extjvm/attachment/plugin_tracking"
-	"github.com/steadybit/extension-jvm/extjvm/attachment/remote_jvm_connections"
-	"github.com/steadybit/extension-jvm/extjvm/common"
-	"github.com/steadybit/extension-jvm/extjvm/java_process"
-	"github.com/steadybit/extension-kit/extutil"
-	"net"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
+  "bufio"
+  "errors"
+  "fmt"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/extension-jvm/extjvm/attachment/plugin_tracking"
+  "github.com/steadybit/extension-jvm/extjvm/attachment/remote_jvm_connections"
+  "github.com/steadybit/extension-jvm/extjvm/common"
+  "github.com/steadybit/extension-jvm/extjvm/java_process"
+  "github.com/steadybit/extension-kit/extutil"
+  "net"
+  "os"
+  "path/filepath"
+  "strings"
+  "time"
 )
 
 type JavaExtensionFacade struct{}
@@ -101,7 +100,7 @@ func LoadAgentPlugin(jvm *JavaVm, plugin string, args string) (bool, error) {
 	if jvm.IsRunningInContainer() {
 		file := filepath.Base(plugin)
 		file = fmt.Sprintf("steadybit-%s", file)
-		attachment.GetAttachment(jvm).CopyFiles("/tmp", map[string]string{
+		GetAttachment(jvm).CopyFiles("/tmp", map[string]string{
 			file: plugin,
 		})
 		pluginPath = "/tmp/" + file
@@ -111,7 +110,7 @@ func LoadAgentPlugin(jvm *JavaVm, plugin string, args string) (bool, error) {
 
 	loaded := SendCommandToAgent(jvm, "load-agent-plugin", fmt.Sprintf("%s,%s", pluginPath, args))
 	if loaded {
-		plugin_tracking.Add(jvm, plugin)
+		plugin_tracking.Add(jvm.Pid, plugin)
 	}
 	return false, nil
 }
@@ -144,12 +143,12 @@ func UnloadAgentPlugin(jvm *JavaVm, plugin string) (bool, error) {
 
 	unloaded := SendCommandToAgent(jvm, "unload-agent-plugin", args)
 	if unloaded {
-		plugin_tracking.Remove(jvm, plugin)
+		plugin_tracking.Remove(jvm.Pid, plugin)
 	}
 	return unloaded, nil
 }
 func hasAgentPlugin(jvm *JavaVm, plugin string) bool {
-	return plugin_tracking.Has(jvm, plugin)
+	return plugin_tracking.Has(jvm.Pid, plugin)
 }
 
 func hasClassLoaded(jvm *JavaVm, className string) bool {
@@ -248,7 +247,7 @@ func attachInternal(jvm *JavaVm) (bool, error) {
 		return false, err
 	}
 
-	attached := attachment.GetAttachment(jvm).Attach(JavaagentMainJar, JavaagentInitJar, int(common.GetOwnJVMAttachmentPort()))
+	attached := GetAttachment(jvm).Attach(JavaagentMainJar, JavaagentInitJar, int(common.GetOwnJVMAttachmentPort()))
 	if !attached {
 		return false, errors.New("could not attach to JVM")
 	}
@@ -277,7 +276,7 @@ func attach(jvm *JavaVm) {
 func (j JavaExtensionFacade) RemovedJvm(jvm *JavaVm) {
 	//TODO: implement
 	//abortAttach(jvm.Pid)
-	plugin_tracking.RemoveAll(jvm)
+	plugin_tracking.RemoveAll(jvm.Pid)
 }
 
 func AddAutoloadAgentPlugin(plugin string, markerClass string) {
