@@ -2,19 +2,23 @@ package extjvm
 
 import (
 	"bufio"
+	"errors"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/extjvm/attachment"
+	"github.com/steadybit/extension-jvm/extjvm/attachment/plugin_tracking"
 	"github.com/steadybit/extension-jvm/extjvm/attachment/remote_jvm_connections"
 	"github.com/steadybit/extension-jvm/extjvm/common"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
 	"github.com/steadybit/extension-kit/extutil"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
-type JavaAgentFacade struct{}
+type JavaExtensionFacade struct{}
 
 type AttachJvmWork struct {
 	jvm     *JavaVm
@@ -43,7 +47,7 @@ func StartAttachment() {
 	for w := 1; w <= 4; w++ {
 		go worker(jobs)
 	}
-	AddListener(&JavaAgentFacade{})
+	AddListener(&JavaExtensionFacade{})
 }
 
 func worker(jobs chan AttachJvmWork) {
@@ -55,7 +59,16 @@ func worker(jobs chan AttachJvmWork) {
 
 func doAttach(job AttachJvmWork) {
 	jvm := job.jvm
-	if attachInternal(jvm) {
+	ok, err := attachInternal(jvm)
+	if err != nil {
+		if java_process.IsRunningProcess(jvm.Pid) {
+			log.Warn().Msgf("Error attaching to JVM %+v: %s", jvm, err)
+		} else {
+			log.Trace().Msgf("Jvm stopped, attach failed. JVM %+v: %s", jvm, err)
+		}
+		return
+	}
+	if ok {
 		log.Debug().Msgf("Successful attachment to JVM  %+v", jvm)
 
 		loglevel := getJvmExtensionLogLevel()
@@ -65,7 +78,7 @@ func doAttach(job AttachJvmWork) {
 			attach(job.jvm)
 		}
 		for _, plugin := range autoloadPlugins {
-			loadAutoloadPlugin(jvm, plugin.MarkerClass, plugin.Plugin)
+			loadAutoLoadPlugin(jvm, plugin.MarkerClass, plugin.Plugin)
 		}
 	} else {
 		log.Debug().Msgf("Attach to JVM skipped. Excluding %+v", jvm)
@@ -73,8 +86,74 @@ func doAttach(job AttachJvmWork) {
 
 }
 
-func loadAutoloadPlugin(jvm *JavaVm, markerClass string, plugin string) {
-	//TODO implement
+func LoadAgentPlugin(jvm *JavaVm, plugin string, args string) (bool, error) {
+	if hasAgentPlugin(jvm, plugin) {
+		return true, nil
+	}
+
+	_, err := os.Stat(plugin)
+	if err != nil {
+		log.Error().Msgf("Plugin %s not found: %s", plugin, err)
+		return false, err
+	}
+
+	var pluginPath string
+	if jvm.IsRunningInContainer() {
+		file := filepath.Base(plugin)
+		file = fmt.Sprintf("steadybit-%s", file)
+		attachment.GetAttachment(jvm).CopyFiles("/tmp", map[string]string{
+			file: plugin,
+		})
+		pluginPath = "/tmp/" + file
+	} else {
+		pluginPath = plugin
+	}
+
+	loaded := SendCommandToAgent(jvm, "load-agent-plugin", fmt.Sprintf("%s,%s", pluginPath, args))
+	if loaded {
+		plugin_tracking.Add(jvm, plugin)
+	}
+	return false, nil
+}
+
+func unloadAutoLoadPlugin(jvm *JavaVm, markerClass string, plugin string) {
+	if hasClassLoaded(jvm, markerClass) {
+		log.Trace().Msgf("Unloading plugin %s for JVM %+v", plugin, jvm)
+		_, err := UnloadAgentPlugin(jvm, plugin)
+		if err != nil {
+			log.Warn().Msgf("Unloading plugin %s for JVM %+v failed: %s", plugin, jvm, err)
+		}
+	}
+}
+
+func UnloadAgentPlugin(jvm *JavaVm, plugin string) (bool, error) {
+	_, err := os.Stat(plugin)
+	if err != nil {
+		log.Error().Msgf("Plugin %s not found: %s", plugin, err)
+		return false, err
+	}
+
+	var args string
+	if jvm.IsRunningInContainer() {
+		file := filepath.Base(plugin)
+		file = fmt.Sprintf("steadybit-%s", file)
+		args = "/tmp/" + file + ",deleteFile=true"
+	} else {
+		args = plugin
+	}
+
+	unloaded := SendCommandToAgent(jvm, "unload-agent-plugin", args)
+	if unloaded {
+		plugin_tracking.Remove(jvm, plugin)
+	}
+	return unloaded, nil
+}
+func hasAgentPlugin(jvm *JavaVm, plugin string) bool {
+	return plugin_tracking.Has(jvm, plugin)
+}
+
+func hasClassLoaded(jvm *JavaVm, className string) bool {
+	return SendCommandToAgent(jvm, "class-loaded", className)
 }
 
 func setLogLevel(jvm *JavaVm, loglevel string) bool {
@@ -113,9 +192,21 @@ func SendCommandToAgentViaSocket[T any](jvm *JavaVm, command string, args string
 
 		return nil
 	}
-	conn.SetDeadline(time.Now().Add(time.Duration(10) * time.Second))
-	conn.SetWriteDeadline(time.Now().Add(time.Duration(10) * time.Second))
-	conn.SetReadDeadline(time.Now().Add(time.Duration(10) * time.Second))
+  err = conn.SetDeadline(time.Now().Add(time.Duration(10) * time.Second))
+  if err != nil {
+    log.Error().Msgf("Error setting deadline for connection to JVM %d: %s", pid, err)
+    return nil
+  }
+  err = conn.SetWriteDeadline(time.Now().Add(time.Duration(10) * time.Second))
+  if err != nil {
+    log.Error().Msgf("Error setting write deadline for connection to JVM %d: %s", pid, err)
+    return nil
+  }
+  err = conn.SetReadDeadline(time.Now().Add(time.Duration(10) * time.Second))
+  if err != nil {
+    log.Error().Msgf("Error setting read deadline for connection to JVM %d: %s", pid, err)
+    return nil
+  }
 	log.Trace().Msgf("Sending command '%s:%s' to agent on PID %d", command, args, pid)
 	rc, err := conn.Write([]byte(command + ":" + args + "\n"))
 	if err != nil {
@@ -139,33 +230,35 @@ func getJvmExtensionLogLevel() string {
 	return strings.ToUpper(loglevel)
 }
 
-func attachInternal(jvm *JavaVm) bool {
+func attachInternal(jvm *JavaVm) (bool, error) {
 	if isAttached(jvm) {
 		log.Trace().Msgf("RemoteJvmConnection to JVM already established. %+v", jvm)
-		return true
+		return true, nil
 	}
 
 	log.Debug().Msgf("RemoteJvmConnection to JVM not found. Attaching now. %+v", jvm)
 
 	if _, err := os.Stat(JavaagentMainJar); err != nil {
 		log.Error().Msgf("JavaagentMainJar not found: %s", JavaagentMainJar)
+		return false, err
 	}
 
 	if _, err := os.Stat(JavaagentInitJar); err != nil {
 		log.Error().Msgf("JavaagentInitJar not found: %s", JavaagentInitJar)
+		return false, err
 	}
 
-	attached := attachment.Attach(jvm, JavaagentMainJar, JavaagentInitJar, int(common.GetOwnJVMAttachmentPort()))
+	attached := attachment.GetAttachment(jvm).Attach(JavaagentMainJar, JavaagentInitJar, int(common.GetOwnJVMAttachmentPort()))
 	if !attached {
-		return false
+		return false, errors.New("could not attach to JVM")
 	}
 
 	jvmConnectionPresent := remote_jvm_connections.WaitForConnection(jvm.Pid, time.Duration(90)*time.Second)
 	if !jvmConnectionPresent {
 		log.Error().Msgf("JVM with did not call back after 90 seconds.")
-		return false
+		return false, errors.New("could not attach to JVM: VM with did not call back after 90 seconds")
 	}
-	return true
+	return true, nil
 }
 
 func isAttached(jvm *JavaVm) bool {
@@ -173,7 +266,7 @@ func isAttached(jvm *JavaVm) bool {
 	return connection != nil
 }
 
-func (j JavaAgentFacade) AddedJvm(jvm *JavaVm) {
+func (j JavaExtensionFacade) AddedJvm(jvm *JavaVm) {
 	attach(jvm)
 }
 
@@ -181,22 +274,42 @@ func attach(jvm *JavaVm) {
 	jobs <- AttachJvmWork{jvm: jvm, retries: 5}
 }
 
-func (j JavaAgentFacade) RemovedJvm(jvm *JavaVm) {
+func (j JavaExtensionFacade) RemovedJvm(jvm *JavaVm) {
 	//TODO: implement
 	//abortAttach(jvm.Pid)
-	//pluginTracking.removeAll(jvm);
+	plugin_tracking.RemoveAll(jvm)
 }
 
-// TODO call by Spring and Datanbase Discovery
-func addAutoloadAgentPlugin(plugin AutoloadPlugin) {
-	autoloadPlugins = append(autoloadPlugins, plugin)
+func AddAutoloadAgentPlugin(plugin string, markerClass string) {
+	autoloadPlugins = append(autoloadPlugins, AutoloadPlugin{Plugin: plugin, MarkerClass: markerClass})
+	jvms.Range(func(key, value interface{}) bool {
+		jvm := value.(*JavaVm)
+		loadAutoLoadPlugin(jvm, markerClass, plugin)
+		return true
+	})
 }
 
-func removeAutoloadAgentPlugin(plugin AutoloadPlugin) {
+func loadAutoLoadPlugin(jvm *JavaVm, markerClass string, plugin string) {
+	if hasClassLoaded(jvm, markerClass) {
+		log.Debug().Msgf("Marker class %s already loaded on JVM %d. Loading plugin %s", markerClass, jvm.Pid, plugin)
+		_, err := LoadAgentPlugin(jvm, plugin, "")
+		if err != nil {
+			log.Warn().Msgf("Autoloading plugin failed %s for %s: %s", plugin, jvm.ToDebugString(), err)
+			return
+		}
+	}
+}
+
+func RemoveAutoloadAgentPlugin(plugin string, markerClass string) {
 	for i, p := range autoloadPlugins {
-		if p == plugin {
+		if p.Plugin == plugin && p.MarkerClass == markerClass {
 			autoloadPlugins = append(autoloadPlugins[:i], autoloadPlugins[i+1:]...)
 			break
 		}
 	}
+	jvms.Range(func(key, value interface{}) bool {
+		jvm := value.(*JavaVm)
+		unloadAutoLoadPlugin(jvm, plugin, markerClass)
+		return true
+	})
 }

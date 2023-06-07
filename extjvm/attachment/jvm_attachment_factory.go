@@ -1,8 +1,18 @@
 package attachment
 
-import "github.com/steadybit/extension-jvm/extjvm"
+import (
+	"github.com/steadybit/extension-jvm/extjvm"
+)
 
-func Attach(jvm *extjvm.JavaVm, mainJar string, initJar string, port int) bool {
-  //TODO: implement
-  return false
+type JvmAttachment interface {
+	Attach(agentJar string, initJar string, port int) bool
+	CopyFiles(dstPath string, files map[string]string)
+	GetAgentHost() string
+}
+
+func GetAttachment(jvm *extjvm.JavaVm) JvmAttachment {
+	if jvm.IsRunningInContainer() {
+		return ContainerJvmAttachment{}
+	}
+	return HostJvmAttachment{}
 }
