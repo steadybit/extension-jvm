@@ -55,7 +55,12 @@ func StartAttachment() {
 
 func worker(jobs chan AttachJvmWork) {
 	for job := range jobs {
-		doAttach(job)
+    job.retries--
+    if job.retries > 0 {
+		  doAttach(job)
+    } else {
+      log.Warn().Msgf("Attach retries for %s exceeded.", job.jvm.ToDebugString())
+    }
 	}
 
 }
@@ -72,13 +77,13 @@ func doAttach(job AttachJvmWork) {
 		return
 	}
 	if ok {
-		log.Debug().Msgf("Successful attachment to JVM  %+v", jvm)
+		log.Info().Msgf("Successful attachment to JVM  %+v", jvm)
 
 		loglevel := getJvmExtensionLogLevel()
 		log.Trace().Msgf("Propagating Loglevel %s to Javaagent in JVM %+v", loglevel, jvm)
 		if !setLogLevel(jvm, loglevel) {
 			//If setting the loglevel fails, the connection has some issue - do retry
-			attach(job.jvm)
+			attach(job.jvm, job.retries)
 		}
 		for _, plugin := range autoloadPlugins {
 			loadAutoLoadPlugin(jvm, plugin.MarkerClass, plugin.Plugin)
@@ -164,8 +169,8 @@ func setLogLevel(jvm *jvm2.JavaVm, loglevel string) bool {
 }
 
 func SendCommandToAgent(jvm *jvm2.JavaVm, command string, args string) bool {
-	success := SendCommandToAgentViaSocket(jvm, command, args, func(resultMessage string, rc int) bool {
-		if rc == 0 {
+	success := SendCommandToAgentViaSocket(jvm, command, args, func(resultMessage string) bool {
+		if resultMessage != "" {
 			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned %s", command, args, jvm.Pid, resultMessage)
 			return extutil.ToBool(resultMessage)
 		} else {
@@ -176,7 +181,7 @@ func SendCommandToAgent(jvm *jvm2.JavaVm, command string, args string) bool {
 	return success != nil && *success
 }
 
-func SendCommandToAgentViaSocket[T any](jvm *jvm2.JavaVm, command string, args string, handler func(resultMessage string, rc int) T) *T {
+func SendCommandToAgentViaSocket[T any](jvm *jvm2.JavaVm, command string, args string, handler func(resultMessage string) T) *T {
 	pid := jvm.Pid
 	connection := remote_jvm_connections.GetConnection(pid)
 	if connection == nil {
@@ -185,7 +190,7 @@ func SendCommandToAgentViaSocket[T any](jvm *jvm2.JavaVm, command string, args s
 	}
 
 	d := net.Dialer{Timeout: time.Duration(10) * time.Second}
-	conn, err := d.Dial("tcp", "127.0.0.1:8000")
+	conn, err := d.Dial("tcp", connection.Address())
 	if err != nil {
 		if java_process.IsRunningProcess(pid) {
 			log.Error().Msgf("Command '%s' could not be sent over socket to %+v (%s): %s", command, jvm, connection.Address(), err)
@@ -211,7 +216,7 @@ func SendCommandToAgentViaSocket[T any](jvm *jvm2.JavaVm, command string, args s
 		return nil
 	}
 	log.Trace().Msgf("Sending command '%s:%s' to agent on PID %d", command, args, pid)
-	rc, err := conn.Write([]byte(command + ":" + args + "\n"))
+	_, err = conn.Write([]byte(command + ":" + args + "\n"))
 	if err != nil {
 		log.Error().Msgf("Error sending command '%s:%s' to JVM %d: %s", command, args, pid, err)
 		return nil
@@ -221,8 +226,9 @@ func SendCommandToAgentViaSocket[T any](jvm *jvm2.JavaVm, command string, args s
 		log.Error().Msgf("Error reading result from JVM %d: %s", pid, err)
 		return nil
 	}
-
-	return extutil.Ptr(handler(message, rc))
+  message = strings.Trim(message, "\n")
+  message = strings.ReplaceAll(message, "\000", "")
+	return extutil.Ptr(handler(message))
 }
 
 func getJvmExtensionLogLevel() string {
@@ -270,11 +276,11 @@ func isAttached(jvm *jvm2.JavaVm) bool {
 }
 
 func (j JavaExtensionFacade) AddedJvm(jvm *jvm2.JavaVm) {
-	attach(jvm)
+	attach(jvm, 5)
 }
 
-func attach(jvm *jvm2.JavaVm) {
-	jobs <- AttachJvmWork{jvm: jvm, retries: 5}
+func attach(jvm *jvm2.JavaVm, retries int) {
+	jobs <- AttachJvmWork{jvm: jvm, retries: retries}
 }
 
 func (j JavaExtensionFacade) RemovedJvm(jvm *jvm2.JavaVm) {

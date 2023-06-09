@@ -2,7 +2,9 @@ package remote_jvm_connections
 
 import (
   "github.com/rs/zerolog/log"
+  "github.com/steadybit/extension-jvm/extjvm/utils"
   "github.com/steadybit/extension-kit/extutil"
+  "strconv"
   "sync"
   "time"
 )
@@ -14,15 +16,29 @@ type InetSocketAddress struct {
 }
 
 func (a InetSocketAddress) Address() string {
-  return a.Host + ":" + extutil.ToString(a.Port)
+  return a.Host + ":" + strconv.Itoa(a.Port)
 }
 var (
   connections = sync.Map{} //map[int32]InetSocketAddress (IP address)
 )
 
 func WaitForConnection(pid int32, timeout time.Duration) bool {
-  //TODO: implement
-  return false
+  wg := sync.WaitGroup{}
+  wg.Add(1)
+  go func() {
+    for {
+      if GetConnection(pid) != nil {
+        wg.Done()
+        return
+      }
+      time.Sleep(100 * time.Millisecond)
+    }
+  }()
+  if utils.WaitTimeout(&wg, timeout) {
+    return false
+  } else {
+    return true
+  }
 }
 
 func GetConnection(pid int32) *InetSocketAddress {

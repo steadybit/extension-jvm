@@ -15,7 +15,7 @@ import (
 
 func javaagent(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "POST":
+	case "PUT":
 		remoteAddress := r.RemoteAddr
 		var status uint16
 		if remoteAddress == "" {
