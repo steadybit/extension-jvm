@@ -47,7 +47,6 @@ func AddListener(listener Listener) {
   }
 }
 
-
 func RemoveListener(listener Listener) {
   for i, l := range listeners {
     if l == listener {

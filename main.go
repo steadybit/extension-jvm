@@ -67,8 +67,11 @@ func main() {
   hotspot.Start()
   // Start listening for JVM events
   extjvm.Activate(0)
+  //Start discover Spring Applications
+  extjvm.InitSpringDiscovery()
   //Start attaching to JVMs
   extjvm.StartAttachment()
+
 
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)
