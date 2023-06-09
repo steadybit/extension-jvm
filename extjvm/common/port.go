@@ -29,7 +29,7 @@ func GetOwnHealthPort() uint16 {
 
 
 func GetOwnJVMAttachmentPort() uint16 {
-  envPort := os.Getenv("STEADYBIT_EXTENSION_ATTACHMENT_PORT")
+  envPort := os.Getenv("STEADYBIT_EXTENSION_JAVA_AGENT_ATTACHMENT_PORT")
   if envPort != "" {
     uInt := extutil.ToUInt(envPort)
     if uInt != 0 {

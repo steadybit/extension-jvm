@@ -22,7 +22,7 @@ func ContainsString(s []string, str string) bool {
 
 func ContainsPartOfString(s []string, str string) bool {
   for _, v := range s {
-    if strings.Contains(v, str) {
+    if strings.Contains(str, v) {
       return true
     }
   }

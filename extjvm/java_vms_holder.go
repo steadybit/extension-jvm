@@ -306,11 +306,11 @@ func getMainClass(commandLine string) string {
 
 func isExcluded(vm *jvm.JavaVm) bool {
   if utils.ContainsPartOfString(ClasspathExcludes, vm.ClassPath) {
-    log.Debug().Msgf("%+v is excluded by classpath", vm)
+    log.Debug().Msgf("%s is excluded by classpath", vm.ToDebugString())
     return true
   }
   if utils.ContainsPartOfString(CommandlineExcludes, vm.ClassPath) {
-    log.Debug().Msgf("%+v is excluded by command", vm)
+    log.Debug().Msgf("%s is excluded by command", vm.ToDebugString())
     return true
   }
   return false

@@ -28,7 +28,7 @@ func WaitForConnection(pid int32, timeout time.Duration) bool {
 func GetConnection(pid int32) *InetSocketAddress {
   ipaddress, ok := connections.Load(pid)
   if !ok {
-    log.Warn().Msgf("No connection found for pid %d", pid)
+    log.Trace().Msgf("No connection found for pid %d", pid)
     return nil
   }
   return extutil.Ptr(ipaddress.(InetSocketAddress))
@@ -38,7 +38,7 @@ func AddConnection(pid int32, host string, port int) {
   connection := InetSocketAddress{Host: host, Port: port}
   existingConnection := GetConnection(pid)
   if existingConnection != nil && existingConnection.Host == host && existingConnection.Port == port {
-    log.Debug().Msgf("JVM connection with  with PID %d on %+v exists already. Skipping registration", pid, connection)
+    log.Debug().Msgf("JVM connection with with PID %d on %+v exists already. Skipping registration", pid, connection)
     return
   }
   connectionIsNew := false

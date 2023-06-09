@@ -12,6 +12,7 @@ import (
   "github.com/steadybit/extension-jvm/config"
   "github.com/steadybit/extension-jvm/extjvm"
   "github.com/steadybit/extension-jvm/extjvm/common"
+  "github.com/steadybit/extension-jvm/extjvm/controller"
   "github.com/steadybit/extension-jvm/extjvm/hotspot"
   "github.com/steadybit/extension-jvm/extjvm/java_process"
   "github.com/steadybit/extension-kit/extbuild"
@@ -57,6 +58,9 @@ func main() {
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
 
+
+  //Start Java agent controller
+  controller.Start(common.GetOwnJVMAttachmentPort())
   // Start JVM Watcher
   java_process.Start()
   // Start Hotspot JVM Watcher

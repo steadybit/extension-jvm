@@ -7,9 +7,10 @@ a [pull request](https://github.com/steadybit/reliability-hub-db) and add a link
 
 ## Configuration
 
-| Environment Variable                         | Meaning                   | Required | Default |
-|----------------------------------------------|---------------------------|----------|---------|
-| `STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED` | is jvm attachment enabled | yes      | true    |
+| Environment Variable                             | Meaning                    | Required | Default |
+|--------------------------------------------------|----------------------------|----------|---------|
+| `STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED`     | is jvm attachment enabled  | yes      | true    |
+| `STEADYBIT_EXTENSION_JAVA_AGENT_ATTACHMENT_PORT` | java agent attachment port | yes      | 8095    |
 
 The extension supports all environment variables provided by [steadybit/extension-kit](https://github.com/steadybit/extension-kit#environment-variables).
 
