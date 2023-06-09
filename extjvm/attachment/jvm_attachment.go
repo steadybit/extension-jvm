@@ -1,0 +1,101 @@
+package attachment
+
+import (
+  "context"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/extension-jvm/extjvm/jvm"
+  "os"
+  "os/exec"
+  "os/user"
+  "path/filepath"
+  "strconv"
+  "time"
+)
+
+func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHttpPort int, host string, addNsEnter bool) bool {
+	initJarAbsPath, err := filepath.Abs(initJar)
+	if err != nil {
+		log.Error().Err(err).Msgf("Could not determine absolute path of init jar %s", initJar)
+		return false
+	}
+	agentJarAbsPath, err := filepath.Abs(agentJar)
+	if err != nil {
+		log.Error().Err(err).Msgf("Could not determine absolute path of agent jar %s", agentJar)
+		return false
+	}
+	attachCommand := []string{
+		getJavaExecutable(jvm),
+		"-Xms16m",
+		"-Xmx16m",
+		"-XX:+UseSerialGC",
+		"-XX:+PerfDisableSharedMem",
+		"-Dsun.tools.attach.attachTimeout=30000",
+		"-Dsteadybit.agent.disable-jvm-attachment",
+		"-jar",
+		initJarAbsPath,
+		"pid=" + strconv.Itoa(int(jvm.Pid)),
+		"hostpid=" + strconv.Itoa(int(jvm.Pid)),
+		"host=" + host,
+		"port=" + strconv.Itoa(agentHttpPort),
+		"agentJar=" + agentJarAbsPath,
+	}
+
+  if addNsEnter {
+    nsEnterCommand := []string{"nsenter", "-t", strconv.Itoa(int(jvm.Pid))}
+    if jvm.UserId != "" {
+      nsEnterCommand = append(nsEnterCommand, "-U", jvm.UserId)
+    }
+    if jvm.GroupId != "" {
+      nsEnterCommand = append(nsEnterCommand, "-G", jvm.GroupId)
+    }
+    nsEnterCommand = append(nsEnterCommand, "-C", "--")
+    attachCommand = append(nsEnterCommand, attachCommand...)
+  }
+
+	if needsUserSwitch(jvm) {
+		attachCommand = addUserIdAndGroupId(jvm, attachCommand)
+	}
+
+	log.Debug().Msgf("Executing attach command on host: %s", attachCommand)
+
+	var ctx, cancel = context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
+	defer cancel()
+	err = exec.CommandContext(ctx, attachCommand[0], attachCommand[1:]...).Run()
+	if err != nil {
+		log.Error().Err(err).Msgf("Error attaching to JVM %+v: %s", jvm, err)
+		return false
+	}
+	return true
+}
+
+func addUserIdAndGroupId(vm *jvm.JavaVm, attachCommand []string) []string {
+	if vm.GroupId != "" && vm.UserId != "" {
+		return append(attachCommand, "uid="+vm.UserId, "gid="+vm.GroupId)
+	}
+	return attachCommand
+}
+
+func needsUserSwitch(jvm *jvm.JavaVm) bool {
+	current, err := user.Current()
+	if err != nil {
+		log.Warn().Err(err).Msg("Could not determine current user")
+		return false
+	}
+	return !(jvm.UserId == current.Uid && jvm.GroupId == current.Gid)
+}
+
+func getJavaExecutable(jvm *jvm.JavaVm) string {
+	if jvm.Path != "" && isExecAny(jvm.Path) {
+		return jvm.Path
+	} else {
+		return "java"
+	}
+}
+
+func isExecAny(path string) bool {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return stat.Mode()&0111 != 0
+}

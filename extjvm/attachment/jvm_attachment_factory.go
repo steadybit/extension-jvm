@@ -13,7 +13,7 @@ type JvmAttachment interface {
 func GetAttachment(jvm *jvm.JavaVm) JvmAttachment {
 	if jvm.IsRunningInContainer() {
 		return ContainerJvmAttachment{
-      jvm: jvm,
+      Jvm: jvm,
     }
 	}
 	return HostJvmAttachment{
