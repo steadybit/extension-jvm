@@ -59,6 +59,8 @@ func main() {
 	action_kit_sdk.InstallSignalHandler()
 
 
+  // Shutdown Discovery on SIGTERM
+  extjvm.InstallSignalHandler()
   //Start Java agent controller
   controller.Start(common.GetOwnJVMAttachmentPort())
   // Start JVM Watcher
@@ -67,12 +69,16 @@ func main() {
   hotspot.Start()
   // Start listening for JVM events
   extjvm.Activate(0)
-  //Start discover Spring Applications
+  //Init discover Spring Applications
   extjvm.InitSpringDiscovery()
+  //Init discover Datasources
+  extjvm.InitDataSourceDiscovery()
   //Start attaching to JVMs
   extjvm.StartAttachment()
   // Start Spring Discovery
   extjvm.StartSpringDiscovery()
+  // Start Datasource Discovery
+  extjvm.StartDataSourceDiscovery()
 
 
 	//This will switch the readiness state of the application to true.

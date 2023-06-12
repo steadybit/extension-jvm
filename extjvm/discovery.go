@@ -5,16 +5,16 @@
 package extjvm
 
 import (
-  "fmt"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/steadybit/extension-jvm/extjvm/jvm"
-  "github.com/steadybit/extension-kit/extbuild"
+	"fmt"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
 	"net/http"
-  "strconv"
-  "strings"
+	"strconv"
+	"strings"
 )
 
 const discoveryBasePath = basePath + "/discovery"
@@ -149,85 +149,102 @@ func getAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
 }
 
 func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
-  vms := GetJVMs()
-  targets := make([]discovery_kit_api.Target, len(vms))
-  for i, jvm := range vms {
-    targets[i] = discovery_kit_api.Target{
+	vms := GetJVMs()
+	targets := make([]discovery_kit_api.Target, len(vms))
+	for i, jvm := range vms {
+		targets[i] = discovery_kit_api.Target{
 			Id:         fmt.Sprintf("%d/%s", jvm.Pid, getApplicationName(jvm, "?")),
 			TargetType: targetID,
 			Label:      getApplicationName(jvm, "?"),
 			Attributes: map[string][]string{
-        "application.type": {"java"},
-        "application.name": {getApplicationName(jvm, "")},
-        "container.id": {jvm.ContainerId},
-        "process.pid": {strconv.Itoa(int(jvm.Pid))},
-      },
+				"application.type": {"java"},
+				"application.name": {getApplicationName(jvm, "")},
+				"container.id":     {jvm.ContainerId},
+				"process.pid":      {strconv.Itoa(int(jvm.Pid))},
+			},
 		}
 	}
-  // enhance with spring infos
-  springApplications := GetSpringApplications()
-  for _, app := range springApplications {
-    target := findTargetByPid(targets, app.Pid)
-    if target != nil {
-      target.Attributes["application.name"] = append(target.Attributes["application.name"], app.Name)
-      target.Attributes["spring.application.name"] = []string{app.Name}
-      target.Attributes["application.type"] = append(target.Attributes["application.type"], "spring")
-      if app.SpringBoot {
-        target.Attributes["application.type"] = append(target.Attributes["application.type"], "spring-boot")
-      }
-      if app.UsingJdbcTemplate {
-        target.Attributes["spring.jdbc-template"] = []string{"true"}
-      }
-      if app.UsingHttpClient {
-        target.Attributes["spring.http-client"] = []string{"true"}
-      }
-      addMvcMappings(target, app.MvcMappings)
-      addHttpClientRequests(target, app.HttpClientRequests)
-    }
-  }
-  exthttp.WriteBody(w, discovery_kit_api.DiscoveredTargets{Targets: targets})
+	// enhance with spring infos
+	enhanceTargetsWithSpringAttributes(targets)
+	enhanceTargetsWithDataSourceAttributes(targets)
+	exthttp.WriteBody(w, discovery_kit_api.DiscoveredTargets{Targets: targets})
+}
+
+func enhanceTargetsWithDataSourceAttributes(targets []discovery_kit_api.Target) {
+	dataSourceApplications := GetDataSourceApplications()
+	for _, dataSourceApplication := range dataSourceApplications {
+		target := findTargetByPid(targets, dataSourceApplication.Pid)
+		if target != nil {
+			for _, dataSourceConnection := range dataSourceApplication.DataSourceConnections {
+				target.Attributes["datasource.jdbc-url"] = append(target.Attributes["datasource.jdbc-url"], dataSourceConnection.JdbcUrl)
+			}
+		}
+	}
+}
+
+func enhanceTargetsWithSpringAttributes(targets []discovery_kit_api.Target) {
+	springApplications := GetSpringApplications()
+	for _, app := range springApplications {
+		target := findTargetByPid(targets, app.Pid)
+		if target != nil {
+			target.Attributes["application.name"] = append(target.Attributes["application.name"], app.Name)
+			target.Attributes["spring.application.name"] = []string{app.Name}
+			target.Attributes["application.type"] = append(target.Attributes["application.type"], "spring")
+			if app.SpringBoot {
+				target.Attributes["application.type"] = append(target.Attributes["application.type"], "spring-boot")
+			}
+			if app.UsingJdbcTemplate {
+				target.Attributes["spring.jdbc-template"] = []string{"true"}
+			}
+			if app.UsingHttpClient {
+				target.Attributes["spring.http-client"] = []string{"true"}
+			}
+			addMvcMappings(target, app.MvcMappings)
+			addHttpClientRequests(target, app.HttpClientRequests)
+		}
+	}
 }
 
 func addHttpClientRequests(target *discovery_kit_api.Target, requests *[]HttpRequest) {
-  if requests == nil {
-    return
-  }
-  for _, request := range *requests {
-    target.Attributes["application.http-outgoing-calls"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
-  }
+	if requests == nil {
+		return
+	}
+	for _, request := range *requests {
+		target.Attributes["application.http-outgoing-calls"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
+	}
 }
 
 func addMvcMappings(target *discovery_kit_api.Target, mappings *[]SpringMvcMapping) {
-  if mappings == nil {
-    return
-  }
-  mappingsByPath := make(map[string]SpringMvcMapping)
-  for _, mapping := range *mappings {
-    if mapping.Patterns != nil {
-      for _, pattern := range mapping.Patterns {
-        mappingsByPath[pattern] = mapping
-      }
-    }
-  }
-  log.Trace().Msgf("mappingsByPath: %v", mappingsByPath)
-  for pattern, _ := range mappingsByPath {
-   target.Attributes["spring.mvc-mapping"] = append(target.Attributes["spring.mvc-mapping"], pattern)
-  }
+	if mappings == nil {
+		return
+	}
+	mappingsByPath := make(map[string]SpringMvcMapping)
+	for _, mapping := range *mappings {
+		if mapping.Patterns != nil {
+			for _, pattern := range mapping.Patterns {
+				mappingsByPath[pattern] = mapping
+			}
+		}
+	}
+	log.Trace().Msgf("mappingsByPath: %v", mappingsByPath)
+	for pattern, _ := range mappingsByPath {
+		target.Attributes["spring.mvc-mapping"] = append(target.Attributes["spring.mvc-mapping"], pattern)
+	}
 }
 
 func findTargetByPid(targets []discovery_kit_api.Target, pid int32) *discovery_kit_api.Target {
-  for _, target := range targets {
-    if target.Attributes["process.pid"][0] == strconv.Itoa(int(pid)) {
-      return extutil.Ptr(target)
-    }
-  }
-  return nil
+	for _, target := range targets {
+		if target.Attributes["process.pid"][0] == strconv.Itoa(int(pid)) {
+			return extutil.Ptr(target)
+		}
+	}
+	return nil
 }
 
 func getApplicationName(jvm jvm.JavaVm, defaultIfEmpty string) string {
-  name := strings.Replace(jvm.MainClass, ".jar", "", -1)
-  if name == "" {
-    name = defaultIfEmpty
-  }
-  return name
+	name := strings.Replace(jvm.MainClass, ".jar", "", -1)
+	if name == "" {
+		name = defaultIfEmpty
+	}
+	return name
 }

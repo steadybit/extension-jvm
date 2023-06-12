@@ -74,7 +74,7 @@ func InitSpringDiscovery() {
 }
 
 func StartSpringDiscovery() {
-	task30s, err := scheduleDiscovery(30 * time.Second)
+	task30s, err := scheduleSpringDiscovery(30 * time.Second)
 
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 30s interval.")
@@ -87,7 +87,7 @@ func StartSpringDiscovery() {
 		time.Sleep(5 * time.Minute)
 		task30s.Cancel()
 		log.Info().Msg("Spring Watcher in 30s interval has been canceled.")
-		task60s, err := scheduleDiscovery(60 * time.Second)
+		task60s, err := scheduleSpringDiscovery(60 * time.Second)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 60s interval.")
 			return
@@ -98,7 +98,7 @@ func StartSpringDiscovery() {
 			time.Sleep(5 * time.Minute)
 			task60s.Cancel()
 			log.Info().Msg("Spring Watcher in 60s interval has been canceled.")
-			_, err = scheduleDiscovery(1 * time.Hour)
+			_, err = scheduleSpringDiscovery(1 * time.Hour)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 1h interval.")
 				return
@@ -110,7 +110,7 @@ func StartSpringDiscovery() {
 	}()
 }
 
-func scheduleDiscovery(interval time.Duration) (chrono.ScheduledTask, error) {
+func scheduleSpringDiscovery(interval time.Duration) (chrono.ScheduledTask, error) {
 	taskScheduler := chrono.NewDefaultTaskScheduler()
 	return taskScheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
 		jvMs := GetJVMs()
@@ -124,8 +124,10 @@ func (s SpringDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
 	springDiscover(jvm)
 }
 func springDiscover(jvm *jvm.JavaVm) {
-	if hasPlugin(jvm) {
-		SpringApplications.Store(jvm.Pid, createSpringApplication(jvm))
+	if hasSpringPlugin(jvm) {
+    springApplication := createSpringApplication(jvm)
+    SpringApplications.Store(jvm.Pid, springApplication)
+    log.Trace().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", springApplication.Name, jvm.Pid, springApplication)
 	}
 }
 
@@ -155,7 +157,7 @@ func readHttpClientRequest(vm *jvm.JavaVm) *[]HttpRequest {
 			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned: %s", "spring-httpclient-requests", "", vm.Pid, resultMessage)
 			return requests
 		} else {
-			log.Warn().Msgf("Command '%s:%s' to agent on PID %s returned empty result", "spring-httpclient-requests", "", vm.Pid)
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned empty result", "spring-httpclient-requests", "", vm.Pid)
 			return make([]HttpRequest, 0)
 		}
 	})
@@ -173,7 +175,7 @@ func readRequestMappings(vm *jvm.JavaVm) *[]SpringMvcMapping {
 			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned: %s", "spring-mvc-mappings", "", vm.Pid, resultMessage)
 			return mappings
 		} else {
-			log.Warn().Msgf("Command '%s:%s' to agent on PID %s returned empty result", "spring-mvc-mappings", "", vm.Pid)
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned empty result", "spring-mvc-mappings", "", vm.Pid)
 			return make([]SpringMvcMapping, 0)
 		}
 	})
@@ -209,6 +211,6 @@ func readSpringApplicationName(vm *jvm.JavaVm) string {
 	})
 }
 
-func hasPlugin(vm *jvm.JavaVm) bool {
+func hasSpringPlugin(vm *jvm.JavaVm) bool {
 	return HasAgentPlugin(vm, SpringPlugin)
 }

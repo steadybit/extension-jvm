@@ -12,13 +12,16 @@ import (
   "github.com/steadybit/extension-jvm/extjvm/utils"
   "github.com/steadybit/extension-kit/extutil"
   "github.com/xin053/hsperfdata"
+  "golang.org/x/sys/unix"
   "math"
   "os"
+  "os/signal"
   "path/filepath"
   "runtime"
   "strconv"
   "strings"
   "sync"
+  "syscall"
 )
 
 var (
@@ -313,4 +316,32 @@ func isExcluded(vm *jvm.JavaVm) bool {
     return true
   }
   return false
+}
+
+func InstallSignalHandler() {
+  signalChannel := make(chan os.Signal, 1)
+  signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
+  go func(signals <-chan os.Signal) {
+    for s := range signals {
+      signalName := unix.SignalName(s.(syscall.Signal))
+
+      log.Debug().Str("signal", signalName).Msg("received signal - stopping all active discoveries")
+      jvms.Range(func(key, value interface{}) bool {
+        //jvm := value.(*jvm.JavaVm)
+        // TODO: do something with the jvm
+        return true
+      })
+
+
+      switch s {
+      case syscall.SIGINT:
+        fmt.Println()
+        os.Exit(128 + int(s.(syscall.Signal)))
+
+      case syscall.SIGTERM:
+        fmt.Printf("Terminated: %d\n", int(s.(syscall.Signal)))
+        os.Exit(128 + int(s.(syscall.Signal)))
+      }
+    }
+  }(signalChannel)
 }

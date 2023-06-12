@@ -199,7 +199,7 @@ func SendCommandToAgent(jvm *jvm.JavaVm, command string, args string) bool {
 			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned %s", command, args, jvm.Pid, resultMessage)
 			return extutil.ToBool(resultMessage)
 		} else {
-			log.Warn().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", command, args, jvm.Pid, resultMessage)
+			log.Debug().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", command, args, jvm.Pid, resultMessage)
 			return false
 		}
 	})
