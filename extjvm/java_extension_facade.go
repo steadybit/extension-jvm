@@ -113,7 +113,9 @@ func doAttach(job AttachJvmWork) {
 
 func informListeners(vm *jvm.JavaVm) {
 	for _, listener := range attachedListeners {
-		listener.JvmAttachedSuccessfully(vm)
+    go func() {
+		  listener.JvmAttachedSuccessfully(vm)
+    }()
 	}
 }
 

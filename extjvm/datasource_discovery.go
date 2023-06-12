@@ -106,15 +106,15 @@ func (s DataSourceDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
 }
 func DataSourceDiscover(jvm *jvm.JavaVm) {
 	if hasDataSourcePlugin(jvm) {
-		dataSourceApplication := createDataSource(jvm)
-		if dataSourceApplication == nil {
-			DataSourceApplications.Store(jvm.Pid, dataSourceApplication)
+		dataSourceApplication := createDataSourceApplication(jvm)
+		if dataSourceApplication != nil {
+			DataSourceApplications.Store(jvm.Pid, *dataSourceApplication)
 			log.Trace().Msgf("DataSource discovered on PID %d: %+v", jvm.Pid, dataSourceApplication)
 		}
 	}
 }
 
-func createDataSource(vm *jvm.JavaVm) *DataSourceApplication {
+func createDataSourceApplication(vm *jvm.JavaVm) *DataSourceApplication {
 	dataSourceConnections := readDataSourceConnections(vm)
 	if dataSourceConnections != nil && len(*dataSourceConnections) > 0 {
 		return &DataSourceApplication{
