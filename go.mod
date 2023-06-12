@@ -3,6 +3,7 @@ module github.com/steadybit/extension-jvm
 go 1.20
 
 require (
+	github.com/dimchansky/utfbom v1.1.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/procyon-projects/chrono v1.1.2
 	github.com/rs/zerolog v1.29.1

@@ -1,17 +1,19 @@
 package extjvm
 
 import (
-	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
+	"github.com/dimchansky/utfbom"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/extjvm/attachment"
 	"github.com/steadybit/extension-jvm/extjvm/attachment/plugin_tracking"
 	"github.com/steadybit/extension-jvm/extjvm/attachment/remote_jvm_connections"
 	"github.com/steadybit/extension-jvm/extjvm/common"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
-  "github.com/steadybit/extension-jvm/extjvm/jvm"
-  "github.com/steadybit/extension-kit/extutil"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-kit/extutil"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -32,7 +34,8 @@ type AutoloadPlugin struct {
 }
 
 type AttachedListener interface {
-  JvmAttachedSuccessfully(jvm *jvm.JavaVm)
+	JvmAttachedSuccessfully(jvm *jvm.JavaVm)
+  AttachedProcessStopped(jvm *jvm.JavaVm)
 }
 
 var (
@@ -44,12 +47,12 @@ var (
 	//JavaagentMainJar = "/javaagent/javaagent-main.jar"
 	JavaagentMainJar = "/Users/atze/Workspaces/steadybit/repos/agent/agent-bundles-core/javaagent-setup/target/javaagent/javaagent-main.jar"
 
-  attachedListeners []AttachedListener
+	attachedListeners []AttachedListener
 )
 
 func StartAttachment() {
 	attachmentEnabled := os.Getenv("STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED")
-	if attachmentEnabled!= "" && strings.ToLower(attachmentEnabled) != "true" {
+	if attachmentEnabled != "" && strings.ToLower(attachmentEnabled) != "true" {
 		return
 	}
 	// create worker pool
@@ -60,20 +63,20 @@ func StartAttachment() {
 }
 
 func AddAttachedListener(attachedListener AttachedListener) {
-  attachedListeners = append(attachedListeners, attachedListener)
-  for _, jvm := range GetJVMs() {
-    attachedListener.JvmAttachedSuccessfully(&jvm)
-  }
+	attachedListeners = append(attachedListeners, attachedListener)
+	for _, jvm := range GetJVMs() {
+		attachedListener.JvmAttachedSuccessfully(&jvm)
+	}
 }
 
 func worker(jobs chan AttachJvmWork) {
 	for job := range jobs {
-    job.retries--
-    if job.retries > 0 {
-		  doAttach(job)
-    } else {
-      log.Warn().Msgf("Attach retries for %s exceeded.", job.jvm.ToDebugString())
-    }
+		job.retries--
+		if job.retries > 0 {
+			doAttach(job)
+		} else {
+			log.Warn().Msgf("Attach retries for %s exceeded.", job.jvm.ToDebugString())
+		}
 	}
 
 }
@@ -101,7 +104,7 @@ func doAttach(job AttachJvmWork) {
 		for _, plugin := range autoloadPlugins {
 			loadAutoLoadPlugin(jvm, plugin.MarkerClass, plugin.Plugin)
 		}
-    informListeners(jvm)
+		informListeners(jvm)
 	} else {
 		log.Debug().Msgf("Attach to JVM skipped. Excluding %+v", jvm)
 	}
@@ -109,9 +112,9 @@ func doAttach(job AttachJvmWork) {
 }
 
 func informListeners(vm *jvm.JavaVm) {
-  for _, listener := range attachedListeners {
-    listener.JvmAttachedSuccessfully(vm)
-  }
+	for _, listener := range attachedListeners {
+		listener.JvmAttachedSuccessfully(vm)
+	}
 }
 
 func LoadAgentPlugin(jvm *jvm.JavaVm, plugin string, args string) (bool, error) {
@@ -127,14 +130,14 @@ func LoadAgentPlugin(jvm *jvm.JavaVm, plugin string, args string) (bool, error) 
 
 	var pluginPath string
 	if jvm.IsRunningInContainer() {
-    //TODO: check if this is still needed
+		//TODO: check if this is still needed
 		file := filepath.Base(plugin)
 		file = fmt.Sprintf("steadybit-%s", file)
 		attachment.GetAttachment(jvm).CopyFiles("/tmp", map[string]string{
 			file: plugin,
 		})
 		pluginPath = "/tmp/" + file
-    pluginPath = plugin
+		pluginPath = plugin
 	} else {
 		pluginPath = plugin
 	}
@@ -243,13 +246,16 @@ func SendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args st
 		log.Error().Msgf("Error sending command '%s:%s' to JVM %d: %s", command, args, pid, err)
 		return nil
 	}
-	message, err := bufio.NewReader(conn).ReadString('\n')
+	var buf bytes.Buffer
+	io.Copy(&buf, conn)
+	trimmedBytes := bytes.Trim(buf.Bytes(), "\000")
+	output, err := io.ReadAll(utfbom.SkipOnly(bytes.NewReader(trimmedBytes)))
 	if err != nil {
-		log.Error().Msgf("Error reading result from JVM %d: %s", pid, err)
+		log.Error().Msgf("Error reading response from JVM %d: %s", pid, err)
 		return nil
 	}
-  message = strings.Trim(message, "\n")
-  message = strings.ReplaceAll(message, "\000", "")
+	message := string(output)
+	message = strings.Trim(message, "\n")
 	return extutil.Ptr(handler(message))
 }
 
@@ -309,6 +315,9 @@ func (j JavaExtensionFacade) RemovedJvm(jvm *jvm.JavaVm) {
 	//TODO: implement
 	//abortAttach(jvm.Pid)
 	plugin_tracking.RemoveAll(jvm.Pid)
+  for _, listener := range attachedListeners {
+    listener.AttachedProcessStopped(jvm)
+  }
 }
 
 func AddAutoloadAgentPlugin(plugin string, markerClass string) {

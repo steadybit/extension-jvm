@@ -71,6 +71,8 @@ func main() {
   extjvm.InitSpringDiscovery()
   //Start attaching to JVMs
   extjvm.StartAttachment()
+  // Start Spring Discovery
+  extjvm.StartSpringDiscovery()
 
 
 	//This will switch the readiness state of the application to true.
