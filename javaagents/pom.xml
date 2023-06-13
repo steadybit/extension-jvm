@@ -545,6 +545,14 @@
                   </artifactItem>
                   <artifactItem>
                     <groupId>com.steadybit</groupId>
+                    <artifactId>javaagent-init</artifactId>
+                    <version>${revision}</version>
+                    <type>jar</type>
+                    <overWrite>true</overWrite>
+                    <outputDirectory>${project.build.directory}/javaagent</outputDirectory>
+                  </artifactItem>
+                  <artifactItem>
+                    <groupId>com.steadybit</groupId>
                     <artifactId>discovery-java-javaagent</artifactId>
                     <version>${revision}</version>
                     <type>jar</type>

@@ -69,7 +69,7 @@ jobs:
           cache: maven
 
       - name: "mvn verify"
-        run: mvn clean verify -B -V -U
+        run: mvn clean verify -B -V -U -f javaagents/pom.xml
 
 
   build-images:
