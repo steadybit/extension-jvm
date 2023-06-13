@@ -227,7 +227,7 @@ func addMvcMappings(target *discovery_kit_api.Target, mappings *[]SpringMvcMappi
 		}
 	}
 	log.Trace().Msgf("mappingsByPath: %v", mappingsByPath)
-	for pattern, _ := range mappingsByPath {
+	for pattern := range mappingsByPath {
 		target.Attributes["spring.mvc-mapping"] = append(target.Attributes["spring.mvc-mapping"], pattern)
 	}
 }

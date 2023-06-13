@@ -29,6 +29,11 @@ func javaagent(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			status, err = handleInternal(r.RemoteAddr, string(body))
+      if err != nil {
+        log.Err(err).Msg("Failed to handle request.")
+        w.WriteHeader(400)
+        return
+      }
 		}
 		w.WriteHeader(int(status))
 	default:

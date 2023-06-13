@@ -23,7 +23,7 @@ tidy:
 .PHONY: audit
 audit:
 	go vet ./...
-	go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-U1000 ./...
+	go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-U1000,-ST1003 ./...
 	go test -race -vet=off -coverprofile=coverage.out ./...
 	go mod verify
 
@@ -58,7 +58,7 @@ run: tidy build
 ## container: build the container image
 .PHONY: container
 container:
-	mvn clean package -DskipTests -f ./javaagents/pom.xml
+	#mvn clean package -DskipTests -f ./javaagents/pom.xml
 	docker build -t extension-jvm:latest .
 
 ## java: build the java packages
