@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"github.com/procyon-projects/chrono"
 	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/extjvm/common"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"sync"
 	"time"
 )
 
 var (
-	//DataSourcePlugin = "javaagent/discovery-java-javaagent.jar"
-	DataSourcePlugin       = "/Users/atze/Workspaces/steadybit/repos/agent/agent-bundles-discovery/discovery-java-javaagent/target/discovery-java-javaagent-1.0.0-SNAPSHOT.jar"
+	DataSourcePlugin       = common.GetJarPath("discovery-java-javaagent.jar")
 	DataSourceMarkerClass  = "javax.sql.DataSource"
 	DataSourceApplications = sync.Map{} // map[Pid int32]DataSourceApplication
 )

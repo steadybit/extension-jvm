@@ -21,6 +21,7 @@ func (attachment ContainerJvmAttachment) Attach(agentJar string, initJar string,
 func (attachment ContainerJvmAttachment) CopyFiles(dstPath string, files map[string]string) {
   //via root cmd
   //TODO: implement
+  //tempDir := os.TempDir()
 }
 
 func (attachment ContainerJvmAttachment) GetAgentHost() string {

@@ -42,6 +42,7 @@ WORKDIR /
 COPY --from=build /app/extension /extension
 COPY javaagents/target/javaagent /javaagent
 
-EXPOSE 8080
+ENV STEADYBIT_EXTENSION_JAVA_AGENT_PATH=/javaagent
+EXPOSE 8085
 
 ENTRYPOINT ["/extension"]

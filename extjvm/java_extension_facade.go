@@ -35,17 +35,15 @@ type AutoloadPlugin struct {
 
 type AttachedListener interface {
 	JvmAttachedSuccessfully(jvm *jvm.JavaVm)
-  AttachedProcessStopped(jvm *jvm.JavaVm)
+	AttachedProcessStopped(jvm *jvm.JavaVm)
 }
 
 var (
 	jobs            = make(chan AttachJvmWork)
 	autoloadPlugins = make([]AutoloadPlugin, 0)
 
-	//JavaagentInitJar = "/javaagent/javaagent-init.jar"
-	JavaagentInitJar = "/Users/atze/Workspaces/steadybit/repos/agent/agent-bundles-core/javaagent-setup/target/javaagent/javaagent-init.jar"
-	//JavaagentMainJar = "/javaagent/javaagent-main.jar"
-	JavaagentMainJar = "/Users/atze/Workspaces/steadybit/repos/agent/agent-bundles-core/javaagent-setup/target/javaagent/javaagent-main.jar"
+	JavaagentInitJar = common.GetJarPath("javaagent-init.jar")
+	JavaagentMainJar = common.GetJarPath("javaagent-main.jar")
 
 	attachedListeners []AttachedListener
 )
@@ -113,10 +111,10 @@ func doAttach(job AttachJvmWork) {
 
 func informListeners(vm *jvm.JavaVm) {
 	for _, listener := range attachedListeners {
-    listener := listener
-    go func() {
-		  listener.JvmAttachedSuccessfully(vm)
-    }()
+		listener := listener
+		go func() {
+			listener.JvmAttachedSuccessfully(vm)
+		}()
 	}
 }
 
@@ -316,9 +314,9 @@ func (j JavaExtensionFacade) RemovedJvm(jvm *jvm.JavaVm) {
 	//TODO: implement
 	//abortAttach(jvm.Pid)
 	plugin_tracking.RemoveAll(jvm.Pid)
-  for _, listener := range attachedListeners {
-    listener.AttachedProcessStopped(jvm)
-  }
+	for _, listener := range attachedListeners {
+		listener.AttachedProcessStopped(jvm)
+	}
 }
 
 func AddAutoloadAgentPlugin(plugin string, markerClass string) {
