@@ -68,7 +68,7 @@ jobs:
           java-version: 17
           cache: maven
 
-      - name: "mvn verify"
+      - name: "mvn build"
         run: mvn -s .github/workflows/maven-settings.xml clean install -B -V -U -f javaagents/pom.xml
 
 

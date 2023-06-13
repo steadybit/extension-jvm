@@ -575,17 +575,17 @@
             </plugin>
         </plugins>
     </build>
-    <repositories>
-        <repository>
-            <id>central</id>
-            <url>https://repo1.maven.org/maven2/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-        </repository>
+<!--    <repositories>-->
+<!--        <repository>-->
+<!--            <id>central</id>-->
+<!--            <url>https://repo1.maven.org/maven2/</url>-->
+<!--            <snapshots>-->
+<!--                <enabled>false</enabled>-->
+<!--            </snapshots>-->
+<!--            <releases>-->
+<!--                <enabled>true</enabled>-->
+<!--            </releases>-->
+<!--        </repository>-->
 <!--        <repository>-->
 <!--            <id>github</id>-->
 <!--            <name>steadybit-github</name>-->
@@ -597,7 +597,7 @@
 <!--                <enabled>true</enabled>-->
 <!--            </releases>-->
 <!--        </repository>-->
-    </repositories>
+<!--    </repositories>-->
     <profiles>
         <profile>
             <id>ci</id>
