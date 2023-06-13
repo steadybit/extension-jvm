@@ -586,17 +586,17 @@
                 <enabled>true</enabled>
             </releases>
         </repository>
-        <repository>
-            <id>github</id>
-            <name>steadybit-github</name>
-            <url>https://maven.pkg.github.com/steadybit/*</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-        </repository>
+<!--        <repository>-->
+<!--            <id>github</id>-->
+<!--            <name>steadybit-github</name>-->
+<!--            <url>https://maven.pkg.github.com/steadybit/*</url>-->
+<!--            <snapshots>-->
+<!--                <enabled>true</enabled>-->
+<!--            </snapshots>-->
+<!--            <releases>-->
+<!--                <enabled>true</enabled>-->
+<!--            </releases>-->
+<!--        </repository>-->
     </repositories>
     <profiles>
         <profile>
