@@ -200,7 +200,7 @@ func isSpringBootApplication(vm *jvm.JavaVm) bool {
 }
 
 func readSpringApplicationName(vm *jvm.JavaVm) string {
-	return *SendCommandToAgentViaSocket(vm, "spring-env", "spring.application.name", func(resultMessage string) string {
+	result := SendCommandToAgentViaSocket(vm, "spring-env", "spring.application.name", func(resultMessage string) string {
 		if resultMessage == "" {
 			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned error: %s", "spring-env", "spring.application.name", vm.Pid, resultMessage)
 			return ""
@@ -209,6 +209,10 @@ func readSpringApplicationName(vm *jvm.JavaVm) string {
 			return resultMessage
 		}
 	})
+  if result == nil {
+    return ""
+  }
+  return *result
 }
 
 func hasSpringPlugin(vm *jvm.JavaVm) bool {
