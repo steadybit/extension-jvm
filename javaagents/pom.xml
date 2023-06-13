@@ -513,6 +513,58 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-dependency-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>copy</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                    <goal>copy</goal>
+                  </goals>
+                </execution>
+              </executions>
+              <configuration>
+                <artifactItems>
+                  <artifactItem>
+                    <groupId>com.steadybit</groupId>
+                    <artifactId>attack-java-javaagent</artifactId>
+                    <version>${revision}</version>
+                    <type>jar</type>
+                    <overWrite>true</overWrite>
+                    <outputDirectory>${project.build.directory}/javaagent</outputDirectory>
+                  </artifactItem>
+                  <artifactItem>
+                    <groupId>com.steadybit</groupId>
+                    <artifactId>javaagent-main</artifactId>
+                    <version>${revision}</version>
+                    <type>jar</type>
+                    <overWrite>true</overWrite>
+                    <outputDirectory>${project.build.directory}/javaagent</outputDirectory>
+                  </artifactItem>
+                  <artifactItem>
+                    <groupId>com.steadybit</groupId>
+                    <artifactId>discovery-java-javaagent</artifactId>
+                    <version>${revision}</version>
+                    <type>jar</type>
+                    <overWrite>true</overWrite>
+                    <outputDirectory>${project.build.directory}/javaagent</outputDirectory>
+                  </artifactItem>
+                  <artifactItem>
+                    <groupId>com.steadybit</groupId>
+                    <artifactId>discovery-springboot-javaagent</artifactId>
+                    <version>${revision}</version>
+                    <type>jar</type>
+                    <overWrite>true</overWrite>
+                    <outputDirectory>${project.build.directory}/javaagent</outputDirectory>
+                  </artifactItem>
+                </artifactItems>
+                <stripVersion>true</stripVersion>
+                <overWriteReleases>false</overWriteReleases>
+                <overWriteSnapshots>true</overWriteSnapshots>
+              </configuration>
+            </plugin>
         </plugins>
     </build>
     <repositories>

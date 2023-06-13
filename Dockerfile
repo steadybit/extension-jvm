@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 ##
-## Build
+## Build GO binary
 ##
 FROM golang:1.20-alpine AS build
 
@@ -40,6 +40,7 @@ USER $USERNAME
 WORKDIR /
 
 COPY --from=build /app/extension /extension
+COPY javaagents/target/javaagent /javaagent
 
 EXPOSE 8080
 
