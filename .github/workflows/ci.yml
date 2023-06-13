@@ -69,13 +69,14 @@ jobs:
           cache: maven
 
       - name: "mvn verify"
-        run: mvn clean verify -B -V -U -f javaagents/pom.xml
+        run: mvn clean package -B -V -U -f javaagents/pom.xml
 
 
   build-images:
     name: Build Docker Images
     needs:
       - audit
+      - javaagents-build
     runs-on: ubuntu-latest
     permissions:
       contents: read
