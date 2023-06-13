@@ -69,7 +69,7 @@ jobs:
           cache: maven
 
       - name: "mvn verify"
-        run: mvn clean package -B -V -U -f javaagents/pom.xml
+        run: mvn -s .github/workflows/maven-settings.xml clean package -B -V -U -f javaagents/pom.xml
 
 
   build-images:

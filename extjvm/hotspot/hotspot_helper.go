@@ -18,7 +18,7 @@ func GetJvmPids() []int32 {
   }
 
   jvmPids := make([]int32, 0)
-  for pid, _ := range filePaths {
+  for pid := range filePaths {
     jvmPids = append(jvmPids, extutil.ToInt32(pid))
   }
   return jvmPids
@@ -28,7 +28,7 @@ func GetJvmPidsForPath(hostPid int32, rootPath string) []int32 {
   filePaths := GetRootHsPerfPaths(hostPid, rootPath)
 
   jvmPids := make([]int32, len(filePaths))
-  for pid, _ := range filePaths {
+  for pid := range filePaths {
     jvmPids = append(jvmPids, extutil.ToInt32(pid))
   }
   return jvmPids

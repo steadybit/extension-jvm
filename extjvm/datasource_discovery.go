@@ -131,13 +131,13 @@ func readDataSourceConnections(vm *jvm.JavaVm) *[]DataSourceConnection {
 			connections := make([]DataSourceConnection, 0)
 			err := json.Unmarshal([]byte(resultMessage), &connections)
 			if err != nil {
-				log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
+				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
 				return make([]DataSourceConnection, 0)
 			}
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned: %s", "DataSource-connections", "", vm.Pid, resultMessage)
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned: %s", "DataSource-connections", "", vm.Pid, resultMessage)
 			return connections
 		} else {
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned empty result", "DataSource-connections", "", vm.Pid)
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned empty result", "DataSource-connections", "", vm.Pid)
 			return make([]DataSourceConnection, 0)
 		}
 	})

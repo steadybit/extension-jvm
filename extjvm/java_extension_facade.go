@@ -113,6 +113,7 @@ func doAttach(job AttachJvmWork) {
 
 func informListeners(vm *jvm.JavaVm) {
 	for _, listener := range attachedListeners {
+    listener := listener
     go func() {
 		  listener.JvmAttachedSuccessfully(vm)
     }()
@@ -132,14 +133,12 @@ func LoadAgentPlugin(jvm *jvm.JavaVm, plugin string, args string) (bool, error) 
 
 	var pluginPath string
 	if jvm.IsRunningInContainer() {
-		//TODO: check if this is still needed
 		file := filepath.Base(plugin)
 		file = fmt.Sprintf("steadybit-%s", file)
 		attachment.GetAttachment(jvm).CopyFiles("/tmp", map[string]string{
 			file: plugin,
 		})
 		pluginPath = "/tmp/" + file
-		pluginPath = plugin
 	} else {
 		pluginPath = plugin
 	}

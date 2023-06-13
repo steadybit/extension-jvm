@@ -42,7 +42,7 @@ func readPidFromSchedulerDebug(hostPid int32) int32 {
 	}
 	compile, err := regexp.Compile(`^.+ \((\d+), #threads: \d+\)`)
 	if err != nil {
-		fmt.Errorf("Error compiling regexp: %s", err)
+		log.Error().Msgf("Error compiling regexp: %s", err)
 	}
 	submatch := compile.FindStringSubmatch(string(file))
 	if len(submatch) < 2 {
@@ -53,14 +53,12 @@ func readPidFromSchedulerDebug(hostPid int32) int32 {
 
 func findNamespacePid(hostPid int32) int32 {
 	nsPids := readNsPids(hostPid)
-	if nsPids != nil {
-		for i, pid := range nsPids {
-			if pid == hostPid {
-				if i < len(nsPids) {
-					return nsPids[i+1]
-				} else {
-					return pid
-				}
+	for i, pid := range nsPids {
+		if pid == hostPid {
+			if i < len(nsPids) {
+				return nsPids[i+1]
+			} else {
+				return pid
 			}
 		}
 	}

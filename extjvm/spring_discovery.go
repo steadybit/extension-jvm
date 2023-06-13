@@ -151,13 +151,13 @@ func readHttpClientRequest(vm *jvm.JavaVm) *[]HttpRequest {
 			requests := make([]HttpRequest, 0)
 			err := json.Unmarshal([]byte(resultMessage), &requests)
 			if err != nil {
-				log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned error: %s", "spring-httpclient-requests", "", vm.Pid, resultMessage)
+				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-httpclient-requests", "", vm.Pid, resultMessage)
 				return make([]HttpRequest, 0)
 			}
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned: %s", "spring-httpclient-requests", "", vm.Pid, resultMessage)
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned: %s", "spring-httpclient-requests", "", vm.Pid, resultMessage)
 			return requests
 		} else {
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned empty result", "spring-httpclient-requests", "", vm.Pid)
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned empty result", "spring-httpclient-requests", "", vm.Pid)
 			return make([]HttpRequest, 0)
 		}
 	})
@@ -169,13 +169,13 @@ func readRequestMappings(vm *jvm.JavaVm) *[]SpringMvcMapping {
 			mappings := make([]SpringMvcMapping, 0)
 			err := json.Unmarshal([]byte(resultMessage), &mappings)
 			if err != nil {
-				log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned error: %s", "spring-mvc-mappings", "", vm.Pid, resultMessage)
+				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-mvc-mappings", "", vm.Pid, resultMessage)
 				return make([]SpringMvcMapping, 0)
 			}
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned: %s", "spring-mvc-mappings", "", vm.Pid, resultMessage)
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned: %s", "spring-mvc-mappings", "", vm.Pid, resultMessage)
 			return mappings
 		} else {
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned empty result", "spring-mvc-mappings", "", vm.Pid)
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned empty result", "spring-mvc-mappings", "", vm.Pid)
 			return make([]SpringMvcMapping, 0)
 		}
 	})
@@ -202,10 +202,10 @@ func isSpringBootApplication(vm *jvm.JavaVm) bool {
 func readSpringApplicationName(vm *jvm.JavaVm) string {
 	result := SendCommandToAgentViaSocket(vm, "spring-env", "spring.application.name", func(resultMessage string) string {
 		if resultMessage == "" {
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned error: %s", "spring-env", "spring.application.name", vm.Pid, resultMessage)
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-env", "spring.application.name", vm.Pid, resultMessage)
 			return ""
 		} else {
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %s returned : %s", "spring-env", "spring.application.name", vm.Pid, resultMessage)
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned : %s", "spring-env", "spring.application.name", vm.Pid, resultMessage)
 			return resultMessage
 		}
 	})

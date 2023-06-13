@@ -12,7 +12,7 @@ import (
   "time"
 )
 
-func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHttpPort int, host string, addNsEnter bool) bool {
+func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPPort int, host string, addNsEnter bool) bool {
 	initJarAbsPath, err := filepath.Abs(initJar)
 	if err != nil {
 		log.Error().Err(err).Msgf("Could not determine absolute path of init jar %s", initJar)
@@ -36,7 +36,7 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHttpP
 		"pid=" + strconv.Itoa(int(jvm.Pid)),
 		"hostpid=" + strconv.Itoa(int(jvm.Pid)),
 		"host=" + host,
-		"port=" + strconv.Itoa(agentHttpPort),
+		"port=" + strconv.Itoa(agentHTTPPort),
 		"agentJar=" + agentJarAbsPath,
 	}
 

@@ -10,12 +10,12 @@ type ContainerJvmAttachment struct {
   Jvm *jvm.JavaVm
 }
 
-func (attachment ContainerJvmAttachment) Attach(agentJar string, initJar string, agentHttpPort int) bool {
+func (attachment ContainerJvmAttachment) Attach(agentJar string, initJar string, agentHTTPPort int) bool {
   if !java_process.IsRunningProcess(attachment.Jvm.Pid) {
     log.Debug().Msgf("Process not running. Skipping attachment to JVM %+v", attachment.Jvm)
     return false
   }
-  return externalAttach(attachment.Jvm, agentJar, initJar, agentHttpPort, attachment.GetAgentHost(), true)
+  return externalAttach(attachment.Jvm, agentJar, initJar, agentHTTPPort, attachment.GetAgentHost(), true)
 }
 
 func (attachment ContainerJvmAttachment) CopyFiles(dstPath string, files map[string]string) {
