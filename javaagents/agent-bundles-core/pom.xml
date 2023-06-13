@@ -18,17 +18,11 @@
     <modules>
         <module>javaagent-init</module>
         <module>javaagent-main</module>
-        <module>javaagent-setup</module>
     </modules>
     <packaging>pom</packaging>
     <dependencyManagement>
         <!-- our own modules -->
         <dependencies>
-            <dependency>
-                <groupId>com.steadybit</groupId>
-                <artifactId>agent-commons</artifactId>
-                <version>${revision}</version>
-            </dependency>
             <dependency>
                 <groupId>com.steadybit</groupId>
                 <artifactId>javaagent-init</artifactId>

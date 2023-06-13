@@ -54,11 +54,6 @@
             </dependency>
             <dependency>
                 <groupId>com.steadybit</groupId>
-                <artifactId>agent-commons</artifactId>
-                <version>${agent-bundles-core.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.steadybit</groupId>
                 <artifactId>javaagent-setup</artifactId>
                 <version>${agent-bundles-core.version}</version>
             </dependency>
