@@ -28,21 +28,33 @@ RUN go build \
 ##
 ## Runtime
 ##
-FROM alpine:3.16
+FROM debian:bullseye-slim
 
 ARG USERNAME=steadybit
 ARG USER_UID=10000
+ARG USER_GID=$USER_UID
 
-RUN adduser -u $USER_UID -D $USERNAME
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
+
+RUN apt-get -qq update \
+    && apt-get -qq install -y --no-install-recommends libcap2-bin \
+    && apt-get -y autoremove \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /opt/steadybit/extension
+
+COPY --from=build /app/extension /opt/steadybit/extension/extension
+COPY javaagents/download/target/javaagent /javaagent
+RUN chown -R $USERNAME:$USERNAME /opt/steadybit/extension
+RUN setcap "cap_setuid,cap_setgid,cap_sys_admin,cap_dac_override+eip" /opt/steadybit/extension/extension
 
 USER $USERNAME
 
-WORKDIR /
+WORKDIR /opt/steadybit/extension
 
-COPY --from=build /app/extension /extension
-COPY javaagents/download/target/javaagent /javaagent
 
 ENV STEADYBIT_EXTENSION_JAVA_AGENT_PATH=/javaagent
-EXPOSE 8085
+EXPOSE 8085 8081
 
-ENTRYPOINT ["/extension"]
+ENTRYPOINT ["/opt/steadybit/extension/extension"]
