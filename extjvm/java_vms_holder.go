@@ -110,7 +110,7 @@ func removeStoppedJvms() {
     jvm := value.(jvm.JavaVm)
     p, err := process.NewProcess(jvm.Pid)
     if err != nil {
-      log.Warn().Err(err).Msg("Error in listener for newProcess")
+      log.Trace().Err(err).Msg("Process not found")
       return true
     }
     if !java_process.IsRunning(p) {

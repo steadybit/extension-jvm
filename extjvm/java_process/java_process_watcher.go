@@ -102,7 +102,7 @@ func IsRunning(p *process.Process) bool {
 func IsRunningProcess(pid int32) bool {
   p, err := process.NewProcess(pid)
   if err != nil {
-    log.Warn().Err(err).Msg("Error in listener for newProcess")
+    log.Trace().Err(err).Msg("Process not running anymore")
     return false
   }
   return IsRunning(p)

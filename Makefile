@@ -58,7 +58,7 @@ run: tidy build
 ## container: build the container image
 .PHONY: container
 container:
-	mvn clean package -DskipTests -f ./javaagents/pom.xml
+	#mvn clean package -DskipTests -f ./javaagents/pom.xml
 	docker build -t extension-jvm:latest .
 
 ## java: build the java packages

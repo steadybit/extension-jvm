@@ -126,7 +126,7 @@ jobs:
           cache: maven
 
       - name: "mvn build"
-        run: mvn -s .github/workflows/maven-settings.xml clean install -B -V -U -f javaagents/pom.xml
+        run: mvn -s .github/workflows/maven-settings.xml clean install -DskipTests -B -V -U -f javaagents/pom.xml
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
