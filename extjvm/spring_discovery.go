@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"github.com/procyon-projects/chrono"
 	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/extjvm/common"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"sync"
 	"time"
 )
 
 var (
-	//SpringPlugin = "discovery-springboot-agent/discovery-springboot-javaagent.jar"
-	SpringPlugin                       = "/Users/atze/Workspaces/steadybit/repos/agent/agent-bundles-discovery/discovery-springboot/target/discovery-springboot-agent/discovery-springboot-javaagent.jar"
+	SpringPlugin                       = common.GetJarPath("discovery-springboot-javaagent.jar")
 	SpringMarkerClass                  = "org.springframework.context.ApplicationContext"
 	SpringBootMarkerClass              = "org.springframework.boot.ApplicationRunner"
 	SpringJdbcTemplateBeanClass        = "org.springframework.jdbc.core.JdbcTemplate"
@@ -55,16 +55,16 @@ type SpringApplication struct {
 type SpringDiscovery struct{}
 
 func (s SpringDiscovery) AttachedProcessStopped(jvm *jvm.JavaVm) {
-  SpringApplications.Delete(jvm.Pid)
+	SpringApplications.Delete(jvm.Pid)
 }
 
 func GetSpringApplications() []SpringApplication {
-  var result []SpringApplication
-  SpringApplications.Range(func(key, value interface{}) bool {
-    result = append(result, value.(SpringApplication))
-    return true
-  })
-  return result
+	var result []SpringApplication
+	SpringApplications.Range(func(key, value interface{}) bool {
+		result = append(result, value.(SpringApplication))
+		return true
+	})
+	return result
 }
 
 func InitSpringDiscovery() {
@@ -125,9 +125,9 @@ func (s SpringDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
 }
 func springDiscover(jvm *jvm.JavaVm) {
 	if hasSpringPlugin(jvm) {
-    springApplication := createSpringApplication(jvm)
-    SpringApplications.Store(jvm.Pid, springApplication)
-    log.Trace().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", springApplication.Name, jvm.Pid, springApplication)
+		springApplication := createSpringApplication(jvm)
+		SpringApplications.Store(jvm.Pid, springApplication)
+		log.Trace().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", springApplication.Name, jvm.Pid, springApplication)
 	}
 }
 
@@ -209,10 +209,10 @@ func readSpringApplicationName(vm *jvm.JavaVm) string {
 			return resultMessage
 		}
 	})
-  if result == nil {
-    return ""
-  }
-  return *result
+	if result == nil {
+		return ""
+	}
+	return *result
 }
 
 func hasSpringPlugin(vm *jvm.JavaVm) bool {
