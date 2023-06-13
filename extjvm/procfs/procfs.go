@@ -1,14 +1,15 @@
 package procfs
 
 import (
-	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/process"
-	"github.com/steadybit/extension-jvm/extjvm/hotspot"
-	"github.com/steadybit/extension-kit/extutil"
-	"os"
-	"regexp"
-	"strings"
+  "github.com/rs/zerolog/log"
+  "github.com/shirou/gopsutil/process"
+  "github.com/steadybit/extension-jvm/extjvm/hotspot"
+  "github.com/steadybit/extension-kit/extutil"
+  "os"
+  "path/filepath"
+  "regexp"
+  "strconv"
+  "strings"
 )
 
 func GetContainerPid(hostPid int32) int32 {
@@ -34,7 +35,7 @@ func GetContainerPid(hostPid int32) int32 {
 }
 
 func readPidFromSchedulerDebug(hostPid int32) int32 {
-	schedPath := fmt.Sprintf("/proc/%d/sched", hostPid)
+	schedPath := filepath.Join("/proc", strconv.Itoa(int(hostPid)), "sched")
 	file, err := os.ReadFile(schedPath)
 	if err != nil {
 		log.Trace().Msgf("Could not read %s: %s", schedPath, err)
@@ -66,7 +67,7 @@ func findNamespacePid(hostPid int32) int32 {
 }
 
 func readNsPids(hostPid int32) []int32 {
-	nsPidsPath := fmt.Sprintf("/proc/%d/status", hostPid)
+	nsPidsPath := filepath.Join("/proc", strconv.Itoa(int(hostPid)), "status")
 	file, err := os.ReadFile(nsPidsPath)
 	if err != nil {
 		return nil
@@ -86,12 +87,11 @@ func readNsPids(hostPid int32) []int32 {
 }
 
 func GetProcessRoot(pid int32) string {
-	rootPath := fmt.Sprintf("/proc/%d/root", pid)
-	return rootPath
+  return filepath.Join("/proc", strconv.Itoa(int(pid)), "root")
 }
 
 func GetContainerIdForProcess(process *process.Process) string {
-	p := fmt.Sprintf("/proc/%d/cgroup", int(process.Pid))
+	p := filepath.Join("/proc", strconv.Itoa(int(process.Pid)), "cgroup")
 	cgroup, err := os.ReadFile(p)
 	if err != nil {
 		return ""

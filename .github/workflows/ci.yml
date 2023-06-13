@@ -31,6 +31,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 17
+          cache: maven
+
+      - name: "mvn build"
+        run: mvn -s .github/workflows/maven-settings.xml clean install -B -V -U -f javaagents/pom.xml
+        
       - name: Audit
         run: |
           go mod download
@@ -53,23 +63,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  javaagents-build:
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: zulu
-          java-version: 17
-          cache: maven
-
-      - name: "mvn build"
-        run: mvn -s .github/workflows/maven-settings.xml clean install -B -V -U -f javaagents/pom.xml
+#  javaagents-build:
+#    timeout-minutes: 60
+#    runs-on: ubuntu-latest
+#    permissions:
+#      contents: read
+#    steps:
+#      - uses: actions/checkout@v3
+#
+#      - name: Set up JDK 17
+#        uses: actions/setup-java@v3
+#        with:
+#          distribution: zulu
+#          java-version: 17
+#          cache: maven
+#
+#      - name: "mvn build"
+#        run: mvn -s .github/workflows/maven-settings.xml clean install -B -V -U -f javaagents/pom.xml
 
 
   build-images:
@@ -107,6 +117,16 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 17
+          cache: maven
+
+      - name: "mvn build"
+        run: mvn -s .github/workflows/maven-settings.xml clean install -B -V -U -f javaagents/pom.xml
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4

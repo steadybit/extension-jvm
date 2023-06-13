@@ -1,8 +1,11 @@
 package utils
 
 import (
+  "context"
+  "os/exec"
   "strings"
   "sync"
+  "syscall"
   "time"
 )
 
@@ -47,4 +50,15 @@ func WaitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
   case <-time.After(timeout):
     return true // timed out
   }
+}
+
+func RootCommandContext(ctx context.Context, name string, arg ...string) *exec.Cmd {
+  cmd := exec.CommandContext(ctx, name, arg...)
+  cmd.SysProcAttr = &syscall.SysProcAttr{
+    Credential: &syscall.Credential{
+      Uid: 0,
+      Gid: 0,
+    },
+  }
+  return cmd
 }

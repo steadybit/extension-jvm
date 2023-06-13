@@ -40,7 +40,7 @@ USER $USERNAME
 WORKDIR /
 
 COPY --from=build /app/extension /extension
-COPY javaagents/target/javaagent /javaagent
+COPY javaagents/download/target/javaagent /javaagent
 
 ENV STEADYBIT_EXTENSION_JAVA_AGENT_PATH=/javaagent
 EXPOSE 8085

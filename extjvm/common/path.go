@@ -11,7 +11,7 @@ func GetJavaagentPath() string {
 	if pathByEnv != "" {
 		return pathByEnv
 	}
-	return "javaagents/target/javaagent"
+	return "javaagents/download/target/javaagent"
 }
 
 func GetJarPath(jarName string) string {
