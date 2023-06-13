@@ -40,7 +40,7 @@ jobs:
 
       - name: "mvn build"
         run: mvn -s .github/workflows/maven-settings.xml clean install -B -V -U -f javaagents/pom.xml
-        
+
       - name: Audit
         run: |
           go mod download
@@ -86,7 +86,7 @@ jobs:
     name: Build Docker Images
     needs:
       - audit
-      - javaagents-build
+#      - javaagents-build
     runs-on: ubuntu-latest
     permissions:
       contents: read
