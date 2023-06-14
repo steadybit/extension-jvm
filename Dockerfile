@@ -49,7 +49,7 @@ RUN mkdir -p /opt/steadybit/extension
 COPY --from=build /app/extension /opt/steadybit/extension/extension
 COPY javaagents/download/target/javaagent /opt/steadybit/extension/javaagent
 RUN chown -R $USERNAME:$USERNAME /opt/steadybit/extension
-RUN setcap "cap_sys_resource,cap_sys_rawio,cap_sys_chroot,cap_setuid,cap_setgid,cap_sys_admin,cap_dac_override+eip" /opt/steadybit/extension/extension
+RUN setcap "cap_setuid,cap_setgid,cap_sys_admin,cap_dac_override+eip" /opt/steadybit/extension/extension
 USER $USERNAME
 
 WORKDIR /opt/steadybit/extension

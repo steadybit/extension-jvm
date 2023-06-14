@@ -85,6 +85,12 @@ func doAttach(job AttachJvmWork) {
 	if err != nil {
 		if java_process.IsRunningProcess(jvm.Pid) {
 			log.Warn().Msgf("Error attaching to JVM %+v: %s", jvm, err)
+      go func() {
+        time.Sleep(10 * time.Second)
+        // do retry
+        attach(job.jvm, job.retries)
+      }()
+
 		} else {
 			log.Trace().Msgf("Jvm stopped, attach failed. JVM %+v: %s", jvm, err)
 		}
@@ -98,7 +104,9 @@ func doAttach(job AttachJvmWork) {
 		if !setLogLevel(jvm, loglevel) {
 			//If setting the loglevel fails, the connection has some issue - do retry
 			attach(job.jvm, job.retries)
-		}
+		} else {
+      log.Info().Msgf("Successfully set loglevel %s for JVM %+v", loglevel, jvm)
+    }
 		for _, plugin := range autoloadPlugins {
 			loadAutoLoadPlugin(jvm, plugin.MarkerClass, plugin.Plugin)
 		}
@@ -133,10 +141,14 @@ func LoadAgentPlugin(jvm *jvm.JavaVm, plugin string, args string) (bool, error) 
 	if jvm.IsRunningInContainer() {
 		file := filepath.Base(plugin)
 		file = fmt.Sprintf("steadybit-%s", file)
-		attachment.GetAttachment(jvm).CopyFiles("/tmp", map[string]string{
-			file: plugin,
-		})
-		pluginPath = "/tmp/" + file
+    files, err := attachment.GetAttachment(jvm).CopyFiles("/tmp", map[string]string{
+      file: plugin,
+    })
+    if err != nil {
+      log.Error().Msgf("Error copying plugin %s to container: %s", plugin, err)
+      return false, err
+    }
+		pluginPath = files[file]
 	} else {
 		pluginPath = plugin
 	}
@@ -193,6 +205,7 @@ func setLogLevel(jvm *jvm.JavaVm, loglevel string) bool {
 }
 
 func SendCommandToAgent(jvm *jvm.JavaVm, command string, args string) bool {
+  log.Info().Msgf("Sending command %s:%s to agent on PID %d", command, args, jvm.Pid)
 	success := SendCommandToAgentViaSocket(jvm, command, args, func(resultMessage string) bool {
 		if resultMessage != "" {
 			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned %s", command, args, jvm.Pid, resultMessage)
@@ -329,8 +342,9 @@ func AddAutoloadAgentPlugin(plugin string, markerClass string) {
 }
 
 func loadAutoLoadPlugin(jvm *jvm.JavaVm, markerClass string, plugin string) {
-	if HasClassLoaded(jvm, markerClass) {
-		log.Debug().Msgf("Marker class %s already loaded on JVM %d. Loading plugin %s", markerClass, jvm.Pid, plugin)
+  log.Info().Msgf("Autoloading plugin %s for %s", plugin, jvm.ToDebugString())
+	if !HasClassLoaded(jvm, markerClass) {
+		log.Info().Msgf("First Autoloading plugin %s for %s: %s", plugin, jvm.ToDebugString(), markerClass)
 		_, err := LoadAgentPlugin(jvm, plugin, "")
 		if err != nil {
 			log.Warn().Msgf("Autoloading plugin failed %s for %s: %s", plugin, jvm.ToDebugString(), err)

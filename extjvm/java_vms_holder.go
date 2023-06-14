@@ -137,7 +137,7 @@ func createJvm(p *process.Process) *jvm.JavaVm {
 }
 
 func createContainerizedJvm(p *process.Process, containerId string, containerPid int32, containerFs string) *jvm.JavaVm {
-  log.Info().Msgf("Found containerized JVM %s with containerPid %d on FS %s", containerId, containerPid, containerFs)
+  log.Trace().Msgf("Found containerized JVM %s with containerPid %d on FS %s", containerId, containerPid, containerFs)
   filePaths := hotspot.GetRootHsPerfPaths(p.Pid, containerFs)
   if len(filePaths) == 0 {
     log.Error().Msgf("Could not find hsperfdata root path for container %s", containerId)
@@ -268,7 +268,6 @@ func parsePerfDataBuffer(p *process.Process, path string) *jvm.JavaVm {
     VmVersion:     hsperf.GetStringProperty(entryMap, "java.vm.version"),
   }
   uids, err := p.Uids()
-  log.Info().Msgf("UIDS: %v", uids)
   if err == nil && len(uids) > 0 {
     jvm.UserId = fmt.Sprintf("%d", uids[0])
   }

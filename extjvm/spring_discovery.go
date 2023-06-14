@@ -124,11 +124,14 @@ func (s SpringDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
 	springDiscover(jvm)
 }
 func springDiscover(jvm *jvm.JavaVm) {
+  log.Info().Msgf("Discovering Spring Application on PID %d", jvm.Pid)
 	if hasSpringPlugin(jvm) {
 		springApplication := createSpringApplication(jvm)
 		SpringApplications.Store(jvm.Pid, springApplication)
 		log.Trace().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", springApplication.Name, jvm.Pid, springApplication)
-	}
+	} else {
+    log.Info().Msgf("Spring Application on PID %d has not been discovered", jvm.Pid)
+  }
 }
 
 func createSpringApplication(vm *jvm.JavaVm) SpringApplication {
@@ -141,7 +144,7 @@ func createSpringApplication(vm *jvm.JavaVm) SpringApplication {
 		MvcMappings:        readRequestMappings(vm),
 		HttpClientRequests: readHttpClientRequest(vm),
 	}
-
+  log.Info().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", app.Name, vm.Pid, app)
 	return app
 }
 
