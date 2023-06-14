@@ -18,7 +18,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
+  "sync"
+  "time"
 )
 
 type JavaExtensionFacade struct{}
@@ -41,6 +42,8 @@ type AttachedListener interface {
 var (
 	jobs            = make(chan AttachJvmWork)
 	autoloadPlugins = make([]AutoloadPlugin, 0)
+
+  autoloadPluginsMutex sync.Mutex
 
 	JavaagentInitJar = common.GetJarPath("javaagent-init.jar")
 	JavaagentMainJar = common.GetJarPath("javaagent-main.jar")
@@ -85,11 +88,11 @@ func doAttach(job AttachJvmWork) {
 	if err != nil {
 		if java_process.IsRunningProcess(jvm.Pid) {
 			log.Warn().Msgf("Error attaching to JVM %+v: %s", jvm, err)
-      go func() {
-        time.Sleep(10 * time.Second)
-        // do retry
-        attach(job.jvm, job.retries)
-      }()
+			go func() {
+				time.Sleep(10 * time.Second)
+				// do retry
+				attach(job.jvm, job.retries)
+			}()
 
 		} else {
 			log.Trace().Msgf("Jvm stopped, attach failed. JVM %+v: %s", jvm, err)
@@ -105,8 +108,8 @@ func doAttach(job AttachJvmWork) {
 			//If setting the loglevel fails, the connection has some issue - do retry
 			attach(job.jvm, job.retries)
 		} else {
-      log.Info().Msgf("Successfully set loglevel %s for JVM %+v", loglevel, jvm)
-    }
+			log.Info().Msgf("Successfully set loglevel %s for JVM %+v", loglevel, jvm)
+		}
 		for _, plugin := range autoloadPlugins {
 			loadAutoLoadPlugin(jvm, plugin.MarkerClass, plugin.Plugin)
 		}
@@ -128,6 +131,7 @@ func informListeners(vm *jvm.JavaVm) {
 
 func LoadAgentPlugin(jvm *jvm.JavaVm, plugin string, args string) (bool, error) {
 	if HasAgentPlugin(jvm, plugin) {
+		log.Info().Msgf("Plugin %s already loaded for JVM %+v", plugin, jvm)
 		return true, nil
 	}
 
@@ -141,13 +145,13 @@ func LoadAgentPlugin(jvm *jvm.JavaVm, plugin string, args string) (bool, error) 
 	if jvm.IsRunningInContainer() {
 		file := filepath.Base(plugin)
 		file = fmt.Sprintf("steadybit-%s", file)
-    files, err := attachment.GetAttachment(jvm).CopyFiles("/tmp", map[string]string{
-      file: plugin,
-    })
-    if err != nil {
-      log.Error().Msgf("Error copying plugin %s to container: %s", plugin, err)
-      return false, err
-    }
+		files, err := attachment.GetAttachment(jvm).CopyFiles("/tmp", map[string]string{
+			file: plugin,
+		})
+		if err != nil {
+			log.Error().Msgf("Error copying plugin %s to container: %s", plugin, err)
+			return false, err
+		}
 		pluginPath = files[file]
 	} else {
 		pluginPath = plugin
@@ -155,8 +159,11 @@ func LoadAgentPlugin(jvm *jvm.JavaVm, plugin string, args string) (bool, error) 
 
 	loaded := SendCommandToAgent(jvm, "load-agent-plugin", fmt.Sprintf("%s,%s", pluginPath, args))
 	if loaded {
+    log.Info().Msgf("Plugin %s loaded for JVM %+v", plugin, jvm)
 		plugin_tracking.Add(jvm.Pid, plugin)
+		return true, nil
 	}
+  log.Warn().Msgf("Plugin %s not loaded for JVM %+v", plugin, jvm)
 	return false, nil
 }
 
@@ -205,13 +212,13 @@ func setLogLevel(jvm *jvm.JavaVm, loglevel string) bool {
 }
 
 func SendCommandToAgent(jvm *jvm.JavaVm, command string, args string) bool {
-  log.Info().Msgf("Sending command %s:%s to agent on PID %d", command, args, jvm.Pid)
+	log.Info().Msgf("Sending command %s:%s to agent on PID %d", command, args, jvm.Pid)
 	success := SendCommandToAgentViaSocket(jvm, command, args, func(resultMessage string) bool {
 		if resultMessage != "" {
 			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned %s", command, args, jvm.Pid, resultMessage)
 			return extutil.ToBool(resultMessage)
 		} else {
-			log.Debug().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", command, args, jvm.Pid, resultMessage)
+			log.Warn().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", command, args, jvm.Pid, resultMessage)
 			return false
 		}
 	})
@@ -333,7 +340,9 @@ func (j JavaExtensionFacade) RemovedJvm(jvm *jvm.JavaVm) {
 }
 
 func AddAutoloadAgentPlugin(plugin string, markerClass string) {
+  autoloadPluginsMutex.Lock()
 	autoloadPlugins = append(autoloadPlugins, AutoloadPlugin{Plugin: plugin, MarkerClass: markerClass})
+  autoloadPluginsMutex.Unlock()
 	jvms.Range(func(key, value interface{}) bool {
 		jvm := value.(*jvm.JavaVm)
 		loadAutoLoadPlugin(jvm, markerClass, plugin)
@@ -342,21 +351,37 @@ func AddAutoloadAgentPlugin(plugin string, markerClass string) {
 }
 
 func loadAutoLoadPlugin(jvm *jvm.JavaVm, markerClass string, plugin string) {
-  log.Info().Msgf("Autoloading plugin %s for %s", plugin, jvm.ToDebugString())
-	if !HasClassLoaded(jvm, markerClass) {
-		log.Info().Msgf("First Autoloading plugin %s for %s: %s", plugin, jvm.ToDebugString(), markerClass)
-		_, err := LoadAgentPlugin(jvm, plugin, "")
+	log.Info().Msgf("Autoloading plugin %s for %s", plugin, jvm.ToDebugString())
+	if HasClassLoaded(jvm, markerClass) {
+		log.Info().Msgf("Sending plugin %s for %s: %s", plugin, jvm.ToDebugString(), markerClass)
+		success, err := LoadAgentPlugin(jvm, plugin, "")
 		if err != nil {
 			log.Warn().Msgf("Autoloading plugin failed %s for %s: %s", plugin, jvm.ToDebugString(), err)
+      _, err := LoadAgentPlugin(jvm, plugin, "")
+      if err != nil {
+        log.Warn().Msgf("Autoloading plugin failed AGAIN %s for %s: %s", plugin, jvm.ToDebugString(), err)
+      }else {
+        log.Info().Msgf("Autoloading successful on second try plugin %s for %s", plugin, jvm.ToDebugString())
+      }
 			return
 		}
+    if !success {
+      //Retry
+      _, err := LoadAgentPlugin(jvm, plugin, "")
+      if err != nil {
+        return
+      }
+    }
+    log.Info().Msgf("Autoloading successful plugin %s for %s", plugin, jvm.ToDebugString())
 	}
 }
 
 func RemoveAutoloadAgentPlugin(plugin string, markerClass string) {
 	for i, p := range autoloadPlugins {
 		if p.Plugin == plugin && p.MarkerClass == markerClass {
+      autoloadPluginsMutex.Lock()
 			autoloadPlugins = append(autoloadPlugins[:i], autoloadPlugins[i+1:]...)
+      autoloadPluginsMutex.Unlock()
 			break
 		}
 	}
