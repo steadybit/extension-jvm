@@ -50,7 +50,7 @@
         <commons-net.version>3.9.0</commons-net.version>
         <errorprone.version>2.18.0</errorprone.version>
         <grpc.version>1.53.0</grpc.version>
-        <guava.version>31.1-jre</guava.version>
+        <guava.version>32.0.0-jre</guava.version>
         <hystrix.version>1.5.18</hystrix.version>
         <instana.trace.sdk.version>1.2.0</instana.trace.sdk.version>
         <io-fabric-kubernetes.version>5.12.4</io-fabric-kubernetes.version>
