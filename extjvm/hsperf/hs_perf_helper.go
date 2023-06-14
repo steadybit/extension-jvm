@@ -1,24 +1,34 @@
 package hsperf
 
 import (
-	"fmt"
-	"github.com/rs/zerolog/log"
-	"path/filepath"
+  "context"
+  "fmt"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/extension-jvm/extjvm/utils"
+  "path/filepath"
+  "strings"
 )
 
 func FindHsPerfDataDirs(dirsGlob string) map[string]string {
+  log.Trace().Msgf("Looking for hsperfdata files in %s", dirsGlob)
 	filePaths := make(map[string]string)
-	paths, err := filepath.Glob(dirsGlob)
+  cmd := utils.RootCommandContext(context.Background(), "find", dirsGlob, "-maxdepth", "1", "-type", "d", "-name", "hsperfdata_*", "-exec", "find", "{}", "-name", "?", ";")
+  output, err := cmd.Output()
 	if err != nil {
 		log.Error().Msgf("Error while globbing %s: %s", dirsGlob, err)
 		return filePaths
 	}
+  paths := strings.Split(string(output), "\n")
+  for _, path := range paths {
+    if path == "" {
+      continue
+    }
+    pid := filepath.Base(path)
+    log.Trace().Msgf("Found hsperfdata file for pid %s: %s", pid, path)
+    filePaths[pid] = path
+  }
 
-	for _, path := range paths {
-		pid := filepath.Base(path)
-		filePaths[pid] = path
-	}
-	return filePaths
+  return filePaths
 }
 
 func IsAttachable(entryMap map[string]interface{}) bool {

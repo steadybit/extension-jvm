@@ -20,7 +20,7 @@ func TestWithMinikube(t *testing.T) {
 		Name: "extension-jvm",
 		Port: 8085,
 		ExtraArgs: func(m *e2e.Minikube) []string {
-			return []string{"--set", "logging.level=debug"}
+			return []string{"--set", "logging.level=INFO"}
 		},
 	}
 
@@ -56,7 +56,7 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
   })
 
   require.NoError(t, err)
-  assert.Equal(t, target.TargetType, "host")
+  assert.Equal(t, target.TargetType, "application")
 }
 
 func testRunJVM(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {

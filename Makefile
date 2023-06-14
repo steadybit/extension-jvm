@@ -59,7 +59,8 @@ run: tidy build
 .PHONY: container
 container:
 	#mvn clean package -DskipTests -f ./javaagents/pom.xml
-	docker build -t extension-jvm:latest .
+	docker buildx build --build-arg ADDITIONAL_BUILD_PARAMS="-cover" -t extension-jvm:latest --output=type=docker .
+	#docker buildx build --build-arg ADDITIONAL_BUILD_PARAMS="-cover" -t extension-jvm:latest --output=type=docker . -f Dockerfile-Debug
 
 ## java: build the java packages
 .PHONY: java

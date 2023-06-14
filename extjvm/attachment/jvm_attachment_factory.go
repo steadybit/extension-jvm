@@ -6,7 +6,7 @@ import (
 
 type JvmAttachment interface {
 	Attach(agentJar string, initJar string, port int) bool
-	CopyFiles(dstPath string, files map[string]string)
+	CopyFiles(dstPath string, files map[string]string) (map[string]string, error)
 	GetAgentHost() string
 }
 

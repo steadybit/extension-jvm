@@ -1,6 +1,7 @@
 package extjvm
 
 import (
+  "context"
   "fmt"
   "github.com/rs/zerolog/log"
   "github.com/shirou/gopsutil/process"
@@ -136,12 +137,13 @@ func createJvm(p *process.Process) *jvm.JavaVm {
 }
 
 func createContainerizedJvm(p *process.Process, containerId string, containerPid int32, containerFs string) *jvm.JavaVm {
+  log.Info().Msgf("Found containerized JVM %s with containerPid %d on FS %s", containerId, containerPid, containerFs)
   filePaths := hotspot.GetRootHsPerfPaths(p.Pid, containerFs)
   if len(filePaths) == 0 {
     log.Error().Msgf("Could not find hsperfdata root path for container %s", containerId)
     return nil
   }
-  hsPerfDataPath := filePaths[containerId]
+  hsPerfDataPath := filePaths[strconv.Itoa(int(containerPid))]
   if hsPerfDataPath == "" {
     log.Error().Msgf("Could not find hsperfdata path for container %s", containerId)
     return nil
@@ -159,7 +161,7 @@ func createContainerizedJvm(p *process.Process, containerId string, containerPid
 func createHostJvm(p *process.Process) *jvm.JavaVm {
   if runtime.GOOS != "windows" {
     rootPath := procfs.GetProcessRoot(p.Pid)
-    dirsGlob := filepath.Join(rootPath, os.TempDir(), "hsperfdata_*", strconv.Itoa(int(p.Pid)))
+    dirsGlob := filepath.Join(rootPath, os.TempDir())
     jvm := findJvmOnPath(p, dirsGlob)
     if jvm != nil {
       return jvm
@@ -173,7 +175,7 @@ func createHostJvm(p *process.Process) *jvm.JavaVm {
     if strings.HasPrefix(arg[0], "-Djava.io.tmpdir") {
       tokens := strings.Split(arg[0], "=")
       if len(tokens) > 1 {
-        dirsGlob := filepath.Join(tokens[1], "hsperfdata_*", strconv.Itoa(int(p.Pid)))
+        dirsGlob := filepath.Join(tokens[1])
         jvm := findJvmOnPath(p, dirsGlob)
         if jvm != nil {
           return jvm
@@ -231,7 +233,21 @@ func findJvm(p *process.Process, paths map[string]string) *jvm.JavaVm {
 }
 
 func parsePerfDataBuffer(p *process.Process, path string) *jvm.JavaVm {
-  entryMap, err := hsperfdata.ReadPerfData(path, false)
+  tempFile := os.TempDir() + "/hsperfdata"+strconv.Itoa(int(p.Pid))
+  cmd := utils.RootCommandContext(context.Background(), "cp", path, tempFile)
+  err := cmd.Run()
+  if err != nil {
+    log.Error().Msgf("Error while copying perf data from %s to %s: %s", path, tempFile, err)
+    return nil
+  }
+  defer func(name string) {
+    err := os.Remove(name)
+    if err != nil {
+      log.Warn().Msgf("Error while removing temp file %s: %s", name, err)
+    }
+  }(tempFile)
+
+  entryMap, err := hsperfdata.ReadPerfData(tempFile, false)
   if err != nil {
     log.Error().Msgf("Error while reading perf data from %s: %s", path, err)
     return nil
@@ -252,6 +268,7 @@ func parsePerfDataBuffer(p *process.Process, path string) *jvm.JavaVm {
     VmVersion:     hsperf.GetStringProperty(entryMap, "java.vm.version"),
   }
   uids, err := p.Uids()
+  log.Info().Msgf("UIDS: %v", uids)
   if err == nil && len(uids) > 0 {
     jvm.UserId = fmt.Sprintf("%d", uids[0])
   }
@@ -261,9 +278,14 @@ func parsePerfDataBuffer(p *process.Process, path string) *jvm.JavaVm {
     jvm.GroupId = fmt.Sprintf("%d", gids[0])
   }
 
-  exe, err := p.Exe()
-  if err == nil && exe != "" {
-    jvm.Path = exe
+  processPath, err := java_process.GetProcessPath(p)
+  if err == nil && processPath != "" {
+    jvm.Path = processPath
+  } else{
+    exe, err := p.Exe()
+    if err == nil && exe != "" {
+      jvm.Path = exe
+    }
   }
 
   return jvm

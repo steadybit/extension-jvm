@@ -4,8 +4,8 @@ import (
   "context"
   "github.com/rs/zerolog/log"
   "github.com/steadybit/extension-jvm/extjvm/jvm"
+  "github.com/steadybit/extension-jvm/extjvm/utils"
   "os"
-  "os/exec"
   "os/user"
   "path/filepath"
   "strconv"
@@ -33,7 +33,7 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
 		"-Dsteadybit.agent.disable-jvm-attachment",
 		"-jar",
 		initJarAbsPath,
-		"pid=" + strconv.Itoa(int(jvm.Pid)),
+		"pid=" + strconv.Itoa(jvm.InContainerPid),
 		"hostpid=" + strconv.Itoa(int(jvm.Pid)),
 		"host=" + host,
 		"port=" + strconv.Itoa(agentHTTPPort),
@@ -42,13 +42,13 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
 
   if addNsEnter {
     nsEnterCommand := []string{"nsenter", "-t", strconv.Itoa(int(jvm.Pid))}
-    if jvm.UserId != "" {
-      nsEnterCommand = append(nsEnterCommand, "-U", jvm.UserId)
-    }
-    if jvm.GroupId != "" {
-      nsEnterCommand = append(nsEnterCommand, "-G", jvm.GroupId)
-    }
-    nsEnterCommand = append(nsEnterCommand, "-C", "--")
+    //if jvm.UserId != "" {
+    //  nsEnterCommand = append(nsEnterCommand, "-U", jvm.UserId)
+    //}
+    //if jvm.GroupId != "" {
+    //  nsEnterCommand = append(nsEnterCommand, "-G", jvm.GroupId)
+    //}
+    nsEnterCommand = append(nsEnterCommand, "-a", "--")
     attachCommand = append(nsEnterCommand, attachCommand...)
   }
 
@@ -56,11 +56,12 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
 		attachCommand = addUserIdAndGroupId(jvm, attachCommand)
 	}
 
-	log.Debug().Msgf("Executing attach command on host: %s", attachCommand)
+	log.Info().Msgf("Executing attach command on host: %s", attachCommand)
 
 	var ctx, cancel = context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
 	defer cancel()
-	err = exec.CommandContext(ctx, attachCommand[0], attachCommand[1:]...).Run()
+	//err = exec.CommandContext(ctx, attachCommand[0], attachCommand[1:]...).Run()
+	err = utils.RootCommandContext(ctx, attachCommand[0], attachCommand[1:]...).Run()
 	if err != nil {
 		log.Error().Err(err).Msgf("Error attaching to JVM %+v: %s", jvm, err)
 		return false
@@ -85,7 +86,7 @@ func needsUserSwitch(jvm *jvm.JavaVm) bool {
 }
 
 func getJavaExecutable(jvm *jvm.JavaVm) string {
-	if jvm.Path != "" && isExecAny(jvm.Path) {
+	if jvm.Path != "" && (isExecAny(jvm.Path) || jvm.ContainerId != "") {
 		return jvm.Path
 	} else {
 		return "java"
