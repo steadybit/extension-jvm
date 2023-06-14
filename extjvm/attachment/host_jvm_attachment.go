@@ -18,7 +18,7 @@ func (attachment HostJvmAttachment) Attach(agentJar string, initJar string, agen
 	return externalAttach(attachment.Jvm, agentJar, initJar, agentHTTPPort, attachment.GetAgentHost(), false)
 }
 
-func (attachment HostJvmAttachment) CopyFiles(_ string, _ map[string]string) {
+func (attachment HostJvmAttachment) CopyFiles(_ string, _ map[string]string) (map[string]string, error) {
 	panic("not supported")
 }
 

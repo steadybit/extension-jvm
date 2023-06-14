@@ -7,7 +7,6 @@ import (
   "github.com/xin053/hsperfdata"
   "os"
   "path/filepath"
-  "strconv"
 )
 
 func GetJvmPids() []int32 {
@@ -35,7 +34,7 @@ func GetJvmPidsForPath(hostPid int32, rootPath string) []int32 {
 }
 
 func GetRootHsPerfPaths(hostPid int32, rootPath string) map[string]string {
-  dirsGlob := filepath.Join(rootPath, os.TempDir(), "hsperfdata_*", strconv.Itoa(int(hostPid)))
-  filePaths := hsperf.FindHsPerfDataDirs(dirsGlob)
+  log.Trace().Msgf("Looking for hsperfdata files in %s with hostPid %d", rootPath, hostPid)
+  filePaths := hsperf.FindHsPerfDataDirs(filepath.Join(rootPath, os.TempDir()))
   return filePaths
 }

@@ -1,13 +1,15 @@
 package java_process
 
 import (
-	"context"
-	"github.com/procyon-projects/chrono"
-	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/process"
-	"github.com/steadybit/extension-jvm/extjvm/utils"
-	"strings"
-	"time"
+  "context"
+  "github.com/procyon-projects/chrono"
+  "github.com/rs/zerolog/log"
+  "github.com/shirou/gopsutil/process"
+  "github.com/steadybit/extension-jvm/extjvm/utils"
+  "path/filepath"
+  "strconv"
+  "strings"
+  "time"
 )
 
 type Listener interface {
@@ -82,12 +84,26 @@ func RemoveListener(listener Listener) {
 }
 
 func isJava(p *process.Process) bool {
-	exe, err := p.Exe()
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to get process exe")
-		return false
-	}
-	return strings.HasSuffix(strings.TrimSpace(exe), "java")
+  path, err := GetProcessPath(p)
+  if err != nil {
+    return false
+  }
+  return strings.HasSuffix(strings.TrimSpace(path), "java")
+}
+
+func GetProcessPath(p *process.Process) (string, error) {
+  exePath := filepath.Join("/proc", strconv.Itoa(int(p.Pid)), "exe")
+  cmd := utils.RootCommandContext(context.Background(), "readlink", exePath)
+  output, err := cmd.Output()
+  if err != nil {
+    exe, err := p.Exe()
+    if err != nil {
+      log.Error().Err(err).Msg("Failed to get process exe")
+      return "", err
+    }
+    output = []byte(exe)
+  }
+  return string(output), nil
 }
 
 func IsRunning(p *process.Process) bool {

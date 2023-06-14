@@ -84,6 +84,8 @@ func main() {
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)
 
+  common.PrintCaps()
+
 	exthttp.Listen(exthttp.ListenOpts{
 		// This is the default port under which your extension is accessible.
 		// The port can be configured externally through the
