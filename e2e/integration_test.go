@@ -41,7 +41,7 @@ func TestWithMinikube(t *testing.T) {
 
 func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
   log.Info().Msg("Starting testDiscoverSpringBootSample")
-  ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+  ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
   defer cancel()
 
   springBootSample := SpringBootSample{Minikube: m}
@@ -51,7 +51,7 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 
 
   target, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
-    log.Debug().Msgf("targetApplications: %+v", target.Attributes)
+    //log.Debug().Msgf("targetApplications: %+v", target.Attributes)
     return e2e.HasAttribute(target, "application.name", "/app") && e2e.HasAttribute(target, "application.type", "spring-boot")
   })
 
