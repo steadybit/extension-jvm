@@ -1,6 +1,7 @@
 package attachment
 
 import (
+  "bytes"
   "context"
   "github.com/rs/zerolog/log"
   "github.com/steadybit/extension-jvm/extjvm/jvm"
@@ -42,12 +43,6 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
 
   if addNsEnter {
     nsEnterCommand := []string{"nsenter", "-t", strconv.Itoa(int(jvm.Pid))}
-    //if jvm.UserId != "" {
-    //  nsEnterCommand = append(nsEnterCommand, "-U", jvm.UserId)
-    //}
-    //if jvm.GroupId != "" {
-    //  nsEnterCommand = append(nsEnterCommand, "-G", jvm.GroupId)
-    //}
     nsEnterCommand = append(nsEnterCommand, "-a", "--")
     attachCommand = append(nsEnterCommand, attachCommand...)
   }
@@ -56,12 +51,18 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
 		attachCommand = addUserIdAndGroupId(jvm, attachCommand)
 	}
 
-	log.Info().Msgf("Executing attach command on host: %s", attachCommand)
+	log.Trace().Msgf("Executing attach command on host: %s", attachCommand)
 
 	var ctx, cancel = context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
 	defer cancel()
 	//err = exec.CommandContext(ctx, attachCommand[0], attachCommand[1:]...).Run()
-	err = utils.RootCommandContext(ctx, attachCommand[0], attachCommand[1:]...).Run()
+	cmd := utils.RootCommandContext(ctx, attachCommand[0], attachCommand[1:]...)
+  var outb, errb bytes.Buffer
+  cmd.Stdout = &outb
+  cmd.Stderr = &errb
+  err = cmd.Run()
+  log.Trace().Msgf("Attach command output: %s", outb.String())
+  log.Trace().Msgf("Attach command error: %s", errb.String())
 	if err != nil {
 		log.Error().Err(err).Msgf("Error attaching to JVM %+v: %s", jvm, err)
 		return false
@@ -86,7 +87,7 @@ func needsUserSwitch(jvm *jvm.JavaVm) bool {
 }
 
 func getJavaExecutable(jvm *jvm.JavaVm) string {
-	if jvm.Path != "" && (isExecAny(jvm.Path) || jvm.ContainerId != "") {
+	if jvm.Path != "" && (isExecAny(jvm.Path)) {
 		return jvm.Path
 	} else {
 		return "java"

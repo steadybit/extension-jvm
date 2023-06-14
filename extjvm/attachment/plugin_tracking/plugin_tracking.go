@@ -1,7 +1,8 @@
 package plugin_tracking
 
 import (
-	"sync"
+  "path/filepath"
+  "sync"
 )
 
 var (
@@ -9,6 +10,7 @@ var (
 )
 
 func Add(pid int32, plugin string) {
+  plugin = filepath.Base(plugin)
 	value, ok := plugins.Load(pid)
 	if !ok {
 		value = []string{}
@@ -18,6 +20,7 @@ func Add(pid int32, plugin string) {
 }
 
 func Remove(pid int32, plugin string) {
+  plugin = filepath.Base(plugin)
 	value, ok := plugins.Load(pid)
 	if !ok {
 		return
@@ -31,6 +34,7 @@ func RemoveAll(pid int32) {
 }
 
 func Has(pid int32, plugin string) bool {
+  plugin = filepath.Base(plugin)
 	value, ok := plugins.Load(pid)
 	if !ok {
 		return false

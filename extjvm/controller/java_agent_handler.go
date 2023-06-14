@@ -63,7 +63,8 @@ func handleInternal(remoteAddress string, body string) (uint16, error) {
 			host = addr[0].String()
 			port = extutil.ToInt(jvmRemoteSplitted[1])
 		} else {
-			host = remoteAddress
+      splittedRemoteAddress := strings.Split(remoteAddress, ":")
+      host = splittedRemoteAddress[0]
 			port = extutil.ToInt(jvmRemote)
 		}
 		remote_jvm_connections.AddConnection(pid, host, port)

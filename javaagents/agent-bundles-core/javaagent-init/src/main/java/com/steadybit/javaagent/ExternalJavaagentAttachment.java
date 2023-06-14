@@ -58,7 +58,13 @@ public class ExternalJavaagentAttachment {
         if (!new File(agentJar).exists()) {
             throw new IllegalStateException("Could not find agentJar file to load: " + ownJar.getAbsolutePath());
         }
-        ByteBuddyAgent.attach(ownJar, pid, options);
+        try {
+          ByteBuddyAgent.attach(ownJar, pid, options);
+        } catch (Exception e) {
+          //Fallback on Emulated Attach
+          System.out.println("Fallback on Emulated Attach");
+          ByteBuddyAgent.attach(ownJar, pid, options, new ByteBuddyAgent.AttachmentProvider.Compound(ByteBuddyAgent.AttachmentProvider.ForEmulatedAttachment.INSTANCE));
+        }
     }
 
     private static void switchUser(LibCAPI api, int uid, int gid) {
