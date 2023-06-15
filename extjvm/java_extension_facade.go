@@ -1,26 +1,25 @@
 package extjvm
 
 import (
-	"bufio"
-	"bytes"
-	"errors"
-	"fmt"
-	"github.com/dimchansky/utfbom"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-jvm/extjvm/attachment"
-	"github.com/steadybit/extension-jvm/extjvm/attachment/plugin_tracking"
-	"github.com/steadybit/extension-jvm/extjvm/attachment/remote_jvm_connections"
-	"github.com/steadybit/extension-jvm/extjvm/common"
-	"github.com/steadybit/extension-jvm/extjvm/java_process"
-	"github.com/steadybit/extension-jvm/extjvm/jvm"
-	"github.com/steadybit/extension-kit/extutil"
-	"io"
-	"net"
-	"os"
-	"path/filepath"
-	"strings"
-	"sync"
-	"time"
+  "bufio"
+  "errors"
+  "fmt"
+  "github.com/dimchansky/utfbom"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/extension-jvm/extjvm/attachment"
+  "github.com/steadybit/extension-jvm/extjvm/attachment/plugin_tracking"
+  "github.com/steadybit/extension-jvm/extjvm/attachment/remote_jvm_connections"
+  "github.com/steadybit/extension-jvm/extjvm/common"
+  "github.com/steadybit/extension-jvm/extjvm/java_process"
+  "github.com/steadybit/extension-jvm/extjvm/jvm"
+  "github.com/steadybit/extension-kit/extutil"
+  "io"
+  "net"
+  "os"
+  "path/filepath"
+  "strings"
+  "sync"
+  "time"
 )
 
 type JavaExtensionFacade struct{}
@@ -352,24 +351,7 @@ func sendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args st
 		rc = "UNKNOWN"
 	}
 	log.Info().Msgf("Return code from JVM %s for command %s:%s on pid %d", rc, command, args, pid)
-
-	//scanner := bufio.NewScanner(conn)
-
-	//var buf bytes.Buffer
-	//_, err = io.Copy(&buf, conn)
-	//if err != nil {
-	//  log.Error().Msgf("Error reading response from JVM %d: %s", pid, err)
-	//  return nil
-	//}
-	//trimmedBytes := bytes.Trim(resultBytes, "\000")
-	//output, err := io.ReadAll(utfbom.SkipOnly(bytes.NewReader(trimmedBytes)))
-	//if err != nil {
-	//	log.Error().Msgf("Error reading response from JVM %d: %s", pid, err)
-	//	return nil
-	//}
-	//message := string(output)
-	//message = strings.Trim(message, "\n")
-	return extutil.Ptr(handler(rc, conn))
+	return extutil.Ptr(handler(rc, utfbom.SkipOnly(conn)))
 }
 
 func GetCleanSocketCommandResult(response io.Reader) (string, error) {
@@ -377,12 +359,7 @@ func GetCleanSocketCommandResult(response io.Reader) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	output, err := io.ReadAll(utfbom.SkipOnly(bytes.NewReader([]byte(resultMessage))))
-	if err != nil {
-		return "", err
-	}
-	message := string(output)
-	message = strings.Trim(message, "\n")
+	message := strings.Trim(resultMessage, "\n")
 	return message, nil
 }
 

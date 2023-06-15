@@ -1,16 +1,16 @@
 package extjvm
 
 import (
-	"bufio"
-	"context"
-	"encoding/json"
-	"github.com/procyon-projects/chrono"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-jvm/extjvm/common"
-	"github.com/steadybit/extension-jvm/extjvm/jvm"
-	"io"
-	"sync"
-	"time"
+  "bufio"
+  "context"
+  "encoding/json"
+  "github.com/procyon-projects/chrono"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/extension-jvm/extjvm/common"
+  "github.com/steadybit/extension-jvm/extjvm/jvm"
+  "io"
+  "sync"
+  "time"
 )
 
 var (
