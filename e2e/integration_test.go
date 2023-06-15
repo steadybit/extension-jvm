@@ -51,6 +51,13 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 
 	go m.TailLog(ctx, springBootSample.Pod)
 
+  fashionBestseller := FashionBestseller{Minikube: m}
+	err = fashionBestseller.Deploy("fashion-bestseller")
+	require.NoError(t, err, "failed to create pod")
+	defer func() { _ = fashionBestseller.Delete() }()
+
+	go m.TailLog(ctx, fashionBestseller.Pod)
+
 	target, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
 		//log.Debug().Msgf("targetApplications: %+v", target.Attributes)
     return e2e.HasAttribute(target, "application.name", "/app") &&
@@ -60,9 +67,15 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
       e2e.HasAttribute(target, "datasource.jdbc-url", "jdbc:h2:mem:testdb") &&
       e2e.HasAttribute(target, "spring.jdbc-template", "true")
 	})
-
 	require.NoError(t, err)
 	assert.Equal(t, target.TargetType, "application")
+
+  targetFashion, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
+		log.Debug().Msgf("targetApplications: %+v", target.Attributes)
+    return e2e.HasAttribute(target, "application.name", "fashion-bestseller")
+	})
+	require.NoError(t, err)
+	assert.Equal(t, targetFashion.TargetType, "application")
 }
 
 func testRunJVM(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {

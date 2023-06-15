@@ -147,8 +147,8 @@ func createSpringApplication(vm *jvm.JavaVm) SpringApplication {
     HttpClientRequests: readHttpClientRequest(vm),
   }
   log.Info().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", app.Name, vm.Pid, app)
-  log.Info().Msgf("MvcMappings: %+v", app.MvcMappings)
-  log.Info().Msgf("HttpClientRequests: %+v", app.HttpClientRequests)
+  log.Trace().Msgf("MvcMappings: %+v", app.MvcMappings)
+  log.Trace().Msgf("HttpClientRequests: %+v", app.HttpClientRequests)
   return app
 }
 
