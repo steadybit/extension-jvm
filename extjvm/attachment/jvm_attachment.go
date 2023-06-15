@@ -14,7 +14,7 @@ import (
   "time"
 )
 
-func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPPort int, host string, addNsEnter bool) bool {
+func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPPort int, host string, addNsEnter bool, pid string, hostpid string) bool {
 	initJarAbsPath, err := filepath.Abs(initJar)
 	if err != nil {
 		log.Error().Err(err).Msgf("Could not determine absolute path of init jar %s", initJar)
@@ -35,8 +35,8 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
 		"-Dsteadybit.agent.disable-jvm-attachment",
 		"-jar",
 		initJarAbsPath,
-		"pid=" + strconv.Itoa(jvm.InContainerPid),
-		"hostpid=" + strconv.Itoa(int(jvm.Pid)),
+		"pid=" + pid,
+		"hostpid=" + hostpid,
 		"host=" + host,
 		"port=" + strconv.Itoa(agentHTTPPort),
 		"agentJar=" + agentJarAbsPath,
@@ -56,13 +56,14 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
 
 	var ctx, cancel = context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
 	defer cancel()
+  log.Info().Msgf("Command: %s", attachCommand)
 	cmd := utils.RootCommandContext(ctx, attachCommand[0], attachCommand[1:]...)
   var outb, errb bytes.Buffer
   cmd.Stdout = &outb
   cmd.Stderr = &errb
   err = cmd.Run()
-  log.Trace().Msgf("Attach command output: %s", outb.String())
-  log.Trace().Msgf("Attach command error: %s", errb.String())
+  log.Info().Msgf("Attach command output: %s", outb.String())
+  log.Info().Msgf("Attach command error: %s", errb.String())
 	if err != nil {
 		log.Error().Err(err).Msgf("Error attaching to JVM %+v: %s", jvm, err)
 		return false

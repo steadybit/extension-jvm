@@ -4,6 +4,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
+  "strconv"
 )
 
 type HostJvmAttachment struct {
@@ -15,7 +16,7 @@ func (attachment HostJvmAttachment) Attach(agentJar string, initJar string, agen
 		log.Debug().Msgf("Process not running. Skipping attachment to JVM %+v", attachment.Jvm)
 		return false
 	}
-	return externalAttach(attachment.Jvm, agentJar, initJar, agentHTTPPort, attachment.GetAgentHost(), false)
+	return externalAttach(attachment.Jvm, agentJar, initJar, agentHTTPPort, attachment.GetAgentHost(), false, strconv.Itoa(int(attachment.Jvm.Pid)), strconv.Itoa(int(attachment.Jvm.Pid)))
 }
 
 func (attachment HostJvmAttachment) CopyFiles(_ string, _ map[string]string) (map[string]string, error) {
