@@ -48,6 +48,8 @@ manifest should match snapshot with TLS:
                     - SYS_ADMIN
                     - SYS_RESOURCE
                     - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
@@ -127,6 +129,8 @@ manifest should match snapshot with extra env vars:
                     - SYS_ADMIN
                     - SYS_RESOURCE
                     - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
@@ -215,6 +219,8 @@ manifest should match snapshot with mutual TLS:
                     - SYS_ADMIN
                     - SYS_RESOURCE
                     - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
@@ -294,6 +300,8 @@ manifest should match snapshot without TLS:
                     - SYS_ADMIN
                     - SYS_RESOURCE
                     - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
