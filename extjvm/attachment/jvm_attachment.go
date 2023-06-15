@@ -49,7 +49,7 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
   }
 
 	if needsUserSwitch(jvm) {
-		//attachCommand = addUserIdAndGroupId(jvm, attachCommand)
+		attachCommand = addUserIdAndGroupId(jvm, attachCommand)
 	}
 
 	log.Trace().Msgf("Executing attach command on host: %s", attachCommand)
