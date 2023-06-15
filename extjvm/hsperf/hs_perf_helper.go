@@ -15,7 +15,7 @@ func FindHsPerfDataDirs(dirsGlob string) map[string]string {
   cmd := utils.RootCommandContext(context.Background(), "find", dirsGlob, "-maxdepth", "1", "-type", "d", "-name", "hsperfdata_*", "-exec", "find", "{}", "-name", "?", ";")
   output, err := cmd.Output()
 	if err != nil {
-		log.Error().Msgf("Error while globbing %s: %s", dirsGlob, err)
+		log.Trace().Msgf("Error while globbing %s: %s", dirsGlob, err)
 		return filePaths
 	}
   paths := strings.Split(string(output), "\n")

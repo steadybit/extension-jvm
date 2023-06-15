@@ -10,6 +10,7 @@ import (
   "net"
   "os"
 	"path/filepath"
+  "strconv"
 )
 
 var (
@@ -35,7 +36,7 @@ func (attachment ContainerJvmAttachment) Attach(agentJar string, initJar string,
     log.Error().Err(err).Msgf("Error copying files to container")
     return false
   }
-	return externalAttach(attachment.Jvm, copiedFiles["steadybit-javaagent-main.jar"], copiedFiles["steadybit-javaagent-init.jar"], agentHTTPPort, attachment.GetAgentHost(), true)
+	return externalAttach(attachment.Jvm, copiedFiles["steadybit-javaagent-main.jar"], copiedFiles["steadybit-javaagent-init.jar"], agentHTTPPort, attachment.GetAgentHost(), true, strconv.Itoa(attachment.Jvm.InContainerPid), strconv.Itoa(int(attachment.Jvm.Pid)))
 }
 
 func (attachment ContainerJvmAttachment) CopyFiles(dstPath string, files map[string]string) (map[string]string, error) {
