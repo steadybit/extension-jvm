@@ -46,6 +46,7 @@ func javaagent(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleInternal(remoteAddress string, body string) (uint16, error) {
+  log.Info().Msgf("Received request from %s with body %s", remoteAddress, body)
 	compile := regexp.MustCompile("[\n\n\t]")
 	bodySanitized := compile.ReplaceAllString(body, "_")
 	bodySplitted := strings.SplitN(bodySanitized, "=", 2)

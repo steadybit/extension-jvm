@@ -51,6 +51,7 @@ func GetConnection(pid int32) *InetSocketAddress {
 }
 
 func AddConnection(pid int32, host string, port int) {
+  log.Info().Msgf("Adding connection for PID %d on %s:%d", pid, host, port)
   connection := InetSocketAddress{Host: host, Port: port}
   existingConnection := GetConnection(pid)
   if existingConnection != nil && existingConnection.Host == host && existingConnection.Port == port {
