@@ -4,15 +4,15 @@
 package e2e
 
 import (
-  "context"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"context"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/stretchr/testify/assert"
-  "github.com/stretchr/testify/require"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
-  "time"
+	"time"
 )
 
 func TestWithMinikube(t *testing.T) {
@@ -32,7 +32,7 @@ func TestWithMinikube(t *testing.T) {
 		//	Name: "run jvm",
 		//	Test: testRunJVM,
 		//},
-    {
+		{
 			Name: "discover spring boot sample",
 			Test: testDiscoverSpringBootSample,
 		},
@@ -40,26 +40,28 @@ func TestWithMinikube(t *testing.T) {
 }
 
 func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testDiscoverSpringBootSample")
-  ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
-  defer cancel()
+	log.Info().Msg("Starting testDiscoverSpringBootSample")
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
 
-  springBootSample := SpringBootSample{Minikube: m}
-  err := springBootSample.Deploy("spring-boot-sample")
-  require.NoError(t, err, "failed to create pod")
-  defer func() { _ = springBootSample.Delete() }()
+	springBootSample := SpringBootSample{Minikube: m}
+	err := springBootSample.Deploy("spring-boot-sample")
+	require.NoError(t, err, "failed to create pod")
+	defer func() { _ = springBootSample.Delete() }()
 
+	go m.TailLog(ctx, springBootSample.Pod)
 
-  go m.TailLog(ctx, springBootSample.Pod)
+	target, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
+		//log.Debug().Msgf("targetApplications: %+v", target.Attributes)
+    return e2e.HasAttribute(target, "application.name", "/app") &&
+			e2e.HasAttribute(target, "application.type", "spring-boot") &&
+      e2e.HasAttribute(target, "spring.application.name", "spring-boot-sample") &&
+      e2e.HasAttribute(target, "spring.http-client", "true") &&
+      e2e.HasAttribute(target, "spring.jdbc-template", "true")
+	})
 
-
-  target, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
-    //log.Debug().Msgf("targetApplications: %+v", target.Attributes)
-    return e2e.HasAttribute(target, "application.name", "/app") && e2e.HasAttribute(target, "application.type", "spring-boot")
-  })
-
-  require.NoError(t, err)
-  assert.Equal(t, target.TargetType, "application")
+	require.NoError(t, err)
+	assert.Equal(t, target.TargetType, "application")
 }
 
 func testRunJVM(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
