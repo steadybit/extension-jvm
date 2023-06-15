@@ -50,6 +50,9 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
   defer func() { _ = springBootSample.Delete() }()
 
 
+  //go m.TailLog(ctx, springBootSample.Pod)
+
+
   target, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
     //log.Debug().Msgf("targetApplications: %+v", target.Attributes)
     return e2e.HasAttribute(target, "application.name", "/app") && e2e.HasAttribute(target, "application.type", "spring-boot")

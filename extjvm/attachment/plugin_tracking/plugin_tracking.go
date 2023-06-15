@@ -43,7 +43,7 @@ func Has(pid int32, plugin string) bool {
   key := strconv.Itoa(int(pid))
 	value, ok := plugins.Load(key)
 	if !ok {
-    log.Error().Msgf("No plugins found for pid %d", pid)
+    log.Trace().Msgf("No plugins found for pid %d", pid)
 		return false
 	}
 	for _, v := range value.([]string) {
