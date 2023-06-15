@@ -202,7 +202,7 @@ func LoadAgentPlugin(jvm *jvm.JavaVm, plugin string, args string) (bool, error) 
 		pluginPath = plugin
 	}
 
-	loaded := sendCommandToAgent(jvm, "load-agent-plugin", fmt.Sprintf("%s,%s", pluginPath, args), 30*time.Second)
+	loaded := sendCommandToAgent(jvm, "load-agent-plugin", fmt.Sprintf("%s,%s", pluginPath, args), time.Duration(30)*time.Second)
 	if loaded {
 		log.Info().Msgf("Plugin %s loaded for JVM %+v", plugin, jvm)
 		plugin_tracking.Add(jvm.Pid, plugin)
@@ -285,9 +285,16 @@ func sendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args st
 		log.Debug().Msgf("RemoteJvmConnection from PID %d not found. Command '%s:%s' not sent.", pid, command, args)
 		return nil
 	}
-
+  //socketMutex.Lock()
 	d := net.Dialer{Timeout: timeout}
 	conn, err := d.Dial("tcp", connection.Address())
+  //defer socketMutex.Unlock()
+  defer func(conn net.Conn) {
+    err := conn.Close()
+    if err != nil {
+      log.Error().Msgf("Error closing socket connection to JVM %d: %s", pid, err)
+    }
+  }(conn)
 	if err != nil {
 		if java_process.IsRunningProcess(pid) {
 			log.Error().Msgf("Command '%s' could not be sent over socket to %+v (%s): %s", command, jvm, connection.Address(), err)
@@ -299,7 +306,7 @@ func sendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args st
 		return nil
 	}
 	err = conn.SetDeadline(time.Now().Add(timeout))
-	if err != nil {
+  if err != nil {
 		log.Error().Msgf("Error setting deadline for connection to JVM %d: %s", pid, err)
 		return nil
 	}
