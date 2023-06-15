@@ -1,12 +1,14 @@
 package extjvm
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"github.com/procyon-projects/chrono"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/extjvm/common"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"io"
 	"sync"
 	"time"
 )
@@ -126,20 +128,32 @@ func createDataSourceApplication(vm *jvm.JavaVm) *DataSourceApplication {
 }
 
 func readDataSourceConnections(vm *jvm.JavaVm) *[]DataSourceConnection {
-	return SendCommandToAgentViaSocket(vm, "java-datasource-connection", "", func(resultMessage string) []DataSourceConnection {
-		if resultMessage != "" {
+	return SendCommandToAgentViaSocket(vm, "java-datasource-connection", "", func(rc string, response io.Reader) []DataSourceConnection {
+
+		if rc == "OK" {
 			connections := make([]DataSourceConnection, 0)
-			err := json.Unmarshal([]byte(resultMessage), &connections)
+			//bytes, err := io.ReadAll(response)
+      err := json.NewDecoder(response).Decode(&connections)
 			if err != nil {
-				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
+				log.Error().Err(err).Msgf("Failed to read response from agent on PID %d", vm.Pid)
+        resultMessage, _ := bufio.NewReader(response).ReadString('\n')
+        log.Error().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
 				return make([]DataSourceConnection, 0)
 			}
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned: %s", "DataSource-connections", "", vm.Pid, resultMessage)
+			//err = json.Unmarshal(bytes, &connections)
+			//if err != nil {
+			//	resultMessage, _ := bufio.NewReader(response).ReadString('\n')
+			//	log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
+			//	return make([]DataSourceConnection, 0)
+			//}
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned: %+v", "DataSource-connections", "", vm.Pid, connections)
 			return connections
 		} else {
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned empty result", "DataSource-connections", "", vm.Pid)
+			resultMessage, _ := bufio.NewReader(response).ReadString('\n')
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
 			return make([]DataSourceConnection, 0)
 		}
+
 	})
 }
 func hasDataSourcePlugin(vm *jvm.JavaVm) bool {

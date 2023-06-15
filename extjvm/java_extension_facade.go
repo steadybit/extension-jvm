@@ -1,6 +1,7 @@
 package extjvm
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -262,8 +263,14 @@ func SendCommandToAgent(jvm *jvm.JavaVm, command string, args string) bool {
 
 func sendCommandToAgent(jvm *jvm.JavaVm, command string, args string, timeout time.Duration) bool {
 	log.Info().Msgf("Sending command %s:%s to agent on PID %d", command, args, jvm.Pid)
-	success := sendCommandToAgentViaSocket(jvm, command, args, timeout, func(resultMessage string) bool {
-		if resultMessage != "" {
+	success := sendCommandToAgentViaSocket(jvm, command, args, timeout, func(rc string, response io.Reader) bool {
+    resultMessage, err := GetCleanSocketCommandResult(response)
+		log.Info().Msgf("Result from command %s:%s agent on PID %d: %s", command, args, jvm.Pid, resultMessage)
+		if err != nil {
+			log.Error().Msgf("Error reading result from command %s:%s agent on PID %d: %s", command, args, jvm.Pid, err)
+			return false
+		}
+		if resultMessage != "" && rc == "OK" {
 			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned %s", command, args, jvm.Pid, resultMessage)
 			return extutil.ToBool(resultMessage)
 		} else {
@@ -274,27 +281,28 @@ func sendCommandToAgent(jvm *jvm.JavaVm, command string, args string, timeout ti
 	return success != nil && *success
 }
 
-func SendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args string, handler func(resultMessage string) T) *T {
+func SendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args string, handler func(rc string, response io.Reader) T) *T {
 	return sendCommandToAgentViaSocket(jvm, command, args, SocketTimeout, handler)
 }
 
-func sendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args string, timeout time.Duration, handler func(resultMessage string) T) *T {
+func sendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args string, timeout time.Duration, handler func(rc string, response io.Reader) T) *T {
 	pid := jvm.Pid
 	connection := remote_jvm_connections.GetConnection(pid)
 	if connection == nil {
 		log.Debug().Msgf("RemoteJvmConnection from PID %d not found. Command '%s:%s' not sent.", pid, command, args)
 		return nil
 	}
-  //socketMutex.Lock()
+  connection.Mutex.Lock()
+  defer connection.Mutex.Unlock()
+
 	d := net.Dialer{Timeout: timeout}
 	conn, err := d.Dial("tcp", connection.Address())
-  //defer socketMutex.Unlock()
-  defer func(conn net.Conn) {
-    err := conn.Close()
-    if err != nil {
-      log.Error().Msgf("Error closing socket connection to JVM %d: %s", pid, err)
-    }
-  }(conn)
+	defer func(conn net.Conn) {
+		err := conn.Close()
+		if err != nil {
+			log.Error().Msgf("Error closing socket connection to JVM %d: %s", pid, err)
+		}
+	}(conn)
 	if err != nil {
 		if java_process.IsRunningProcess(pid) {
 			log.Error().Msgf("Command '%s' could not be sent over socket to %+v (%s): %s", command, jvm, connection.Address(), err)
@@ -306,7 +314,7 @@ func sendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args st
 		return nil
 	}
 	err = conn.SetDeadline(time.Now().Add(timeout))
-  if err != nil {
+	if err != nil {
 		log.Error().Msgf("Error setting deadline for connection to JVM %d: %s", pid, err)
 		return nil
 	}
@@ -321,26 +329,61 @@ func sendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args st
 		return nil
 	}
 	log.Trace().Msgf("Sending command '%s:%s' to agent on PID %d", command, args, pid)
-	_, err = conn.Write([]byte(command + ":" + args + "\n"))
+	//_, err = conn.Write([]byte(command + ":" + args + "\n"))
+	// Commands must end with newline
+	_, err = fmt.Fprintf(conn, "%s:%s\n", command, args)
 	if err != nil {
 		log.Error().Msgf("Error sending command '%s:%s' to JVM %d: %s", command, args, pid, err)
 		return nil
 	}
-	var buf bytes.Buffer
-  _, err = io.Copy(&buf, conn)
-  if err != nil {
-    log.Error().Msgf("Error reading response from JVM %d: %s", pid, err)
-    return nil
-  }
-	trimmedBytes := bytes.Trim(buf.Bytes(), "\000")
-	output, err := io.ReadAll(utfbom.SkipOnly(bytes.NewReader(trimmedBytes)))
+	// First byte is always the return code
+	rcByte := make([]byte, 1)
+	_, err = conn.Read(rcByte)
 	if err != nil {
-		log.Error().Msgf("Error reading response from JVM %d: %s", pid, err)
+		log.Error().Msgf("Error reading response return code from JVM %d: %s", pid, err)
 		return nil
+	}
+	var rc string
+	if rcByte[0] == 0 {
+		rc = "OK"
+	} else if rcByte[0] == 1 {
+		rc = "ERROR"
+	} else {
+		rc = "UNKNOWN"
+	}
+	log.Info().Msgf("Return code from JVM %s for command %s:%s on pid %d", rc, command, args, pid)
+
+	//scanner := bufio.NewScanner(conn)
+
+	//var buf bytes.Buffer
+	//_, err = io.Copy(&buf, conn)
+	//if err != nil {
+	//  log.Error().Msgf("Error reading response from JVM %d: %s", pid, err)
+	//  return nil
+	//}
+	//trimmedBytes := bytes.Trim(resultBytes, "\000")
+	//output, err := io.ReadAll(utfbom.SkipOnly(bytes.NewReader(trimmedBytes)))
+	//if err != nil {
+	//	log.Error().Msgf("Error reading response from JVM %d: %s", pid, err)
+	//	return nil
+	//}
+	//message := string(output)
+	//message = strings.Trim(message, "\n")
+	return extutil.Ptr(handler(rc, conn))
+}
+
+func GetCleanSocketCommandResult(response io.Reader) (string, error) {
+	resultMessage, err := bufio.NewReader(response).ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+	output, err := io.ReadAll(utfbom.SkipOnly(bytes.NewReader([]byte(resultMessage))))
+	if err != nil {
+		return "", err
 	}
 	message := string(output)
 	message = strings.Trim(message, "\n")
-	return extutil.Ptr(handler(message))
+	return message, nil
 }
 
 func getJvmExtensionLogLevel() string {
