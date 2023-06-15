@@ -297,6 +297,9 @@ func sendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args st
 	d := net.Dialer{Timeout: timeout}
 	conn, err := d.Dial("tcp", connection.Address())
 	defer func(conn net.Conn) {
+    if conn == nil {
+      return
+    }
 		err := conn.Close()
 		if err != nil {
 			log.Error().Msgf("Error closing socket connection to JVM %d: %s", pid, err)
