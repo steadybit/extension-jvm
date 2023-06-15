@@ -3,7 +3,6 @@ package remote_jvm_connections
 import (
   "github.com/rs/zerolog/log"
   "github.com/steadybit/extension-jvm/extjvm/utils"
-  "github.com/steadybit/extension-kit/extutil"
   "strconv"
   "sync"
   "time"
@@ -16,7 +15,7 @@ type SocketConnection struct {
   Mutex sync.Mutex
 }
 
-func (a SocketConnection) Address() string {
+func (a *SocketConnection) Address() string {
   return a.Host + ":" + strconv.Itoa(a.Port)
 }
 var (
@@ -48,7 +47,7 @@ func GetConnection(pid int32) *SocketConnection {
     log.Trace().Msgf("No connection found for pid %d", pid)
     return nil
   }
-  return extutil.Ptr(ipaddress.(SocketConnection))
+  return ipaddress.(*SocketConnection)
 }
 
 func AddConnection(pid int32, host string, port int) {
@@ -56,18 +55,18 @@ func AddConnection(pid int32, host string, port int) {
   connection := SocketConnection{Host: host, Port: port}
   existingConnection := GetConnection(pid)
   if existingConnection != nil && existingConnection.Host == host && existingConnection.Port == port {
-    log.Debug().Msgf("JVM connection with with PID %d on %+v exists already. Skipping registration", pid, connection)
+    log.Debug().Msgf("JVM connection with with PID %d on %s exists already. Skipping registration", pid, connection.Address())
     return
   }
   connectionIsNew := false
   if existingConnection == nil {
     connectionIsNew = true
   }
-  connections.Store(pid, connection)
+  connections.Store(pid, &connection)
   if connectionIsNew {
-    log.Debug().Msgf("JVM connection with PID %d on %+v registered", pid, connection)
+    log.Debug().Msgf("JVM connection with PID %d on %s registered", pid, connection.Address())
   } else {
-    log.Debug().Msgf("JVM connection with PID %d on %+v updated", pid, connection)
+    log.Debug().Msgf("JVM connection with PID %d on %s updated", pid, connection.Address())
   }
 }
 
