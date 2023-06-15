@@ -9,6 +9,7 @@ import (
   "os"
   "os/user"
   "path/filepath"
+  "runtime"
   "strconv"
   "time"
 )
@@ -48,14 +49,13 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
   }
 
 	if needsUserSwitch(jvm) {
-		attachCommand = addUserIdAndGroupId(jvm, attachCommand)
+		//attachCommand = addUserIdAndGroupId(jvm, attachCommand)
 	}
 
 	log.Trace().Msgf("Executing attach command on host: %s", attachCommand)
 
 	var ctx, cancel = context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
 	defer cancel()
-	//err = exec.CommandContext(ctx, attachCommand[0], attachCommand[1:]...).Run()
 	cmd := utils.RootCommandContext(ctx, attachCommand[0], attachCommand[1:]...)
   var outb, errb bytes.Buffer
   cmd.Stdout = &outb
@@ -90,6 +90,9 @@ func getJavaExecutable(jvm *jvm.JavaVm) string {
 	if jvm.Path != "" && (isExecAny(jvm.Path)) {
 		return jvm.Path
 	} else {
+    if runtime.GOOS == "windows" {
+      return "java.exe"
+    }
 		return "java"
 	}
 }

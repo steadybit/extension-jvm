@@ -50,7 +50,7 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
   defer func() { _ = springBootSample.Delete() }()
 
 
-  //go m.TailLog(ctx, springBootSample.Pod)
+  go m.TailLog(ctx, springBootSample.Pod)
 
 
   target, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {

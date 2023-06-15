@@ -10,16 +10,17 @@ import (
 )
 
 
-type InetSocketAddress struct {
+type SocketConnection struct {
   Host string
   Port int
+  Mutex sync.Mutex
 }
 
-func (a InetSocketAddress) Address() string {
+func (a SocketConnection) Address() string {
   return a.Host + ":" + strconv.Itoa(a.Port)
 }
 var (
-  connections = sync.Map{} //map[int32]InetSocketAddress (IP address)
+  connections = sync.Map{} //map[int32]SocketConnection (IP address)
 )
 
 func WaitForConnection(pid int32, timeout time.Duration) bool {
@@ -41,18 +42,18 @@ func WaitForConnection(pid int32, timeout time.Duration) bool {
   }
 }
 
-func GetConnection(pid int32) *InetSocketAddress {
+func GetConnection(pid int32) *SocketConnection {
   ipaddress, ok := connections.Load(pid)
   if !ok {
     log.Trace().Msgf("No connection found for pid %d", pid)
     return nil
   }
-  return extutil.Ptr(ipaddress.(InetSocketAddress))
+  return extutil.Ptr(ipaddress.(SocketConnection))
 }
 
 func AddConnection(pid int32, host string, port int) {
   log.Info().Msgf("Adding connection for PID %d on %s:%d", pid, host, port)
-  connection := InetSocketAddress{Host: host, Port: port}
+  connection := SocketConnection{Host: host, Port: port}
   existingConnection := GetConnection(pid)
   if existingConnection != nil && existingConnection.Host == host && existingConnection.Port == port {
     log.Debug().Msgf("JVM connection with with PID %d on %+v exists already. Skipping registration", pid, connection)
