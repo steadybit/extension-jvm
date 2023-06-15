@@ -57,6 +57,7 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 			e2e.HasAttribute(target, "application.type", "spring-boot") &&
       e2e.HasAttribute(target, "spring.application.name", "spring-boot-sample") &&
       e2e.HasAttribute(target, "spring.http-client", "true") &&
+      e2e.HasAttribute(target, "datasource.jdbc-url", "jdbc:h2:mem:testdb") &&
       e2e.HasAttribute(target, "spring.jdbc-template", "true")
 	})
 
