@@ -10,7 +10,7 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.6.2-0.20230605101927-e69e724f9c15
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.2
-	github.com/steadybit/action-kit/go/action_kit_test v1.0.0
+	github.com/steadybit/action-kit/go/action_kit_test v1.0.5
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
 	github.com/steadybit/event-kit/go/event_kit_api v1.1.0
 	github.com/steadybit/extension-kit v1.7.19
