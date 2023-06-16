@@ -16,7 +16,7 @@ require (
 	github.com/steadybit/extension-kit v1.7.19
 	github.com/stretchr/testify v1.8.2
 	github.com/xin053/hsperfdata v0.2.3
-	golang.org/x/sys v0.8.0
+	golang.org/x/sys v0.9.0
 	k8s.io/api v0.27.1
 	k8s.io/apimachinery v0.27.1
 	k8s.io/client-go v0.27.1
