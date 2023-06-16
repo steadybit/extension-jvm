@@ -18,7 +18,7 @@ import (
 func TestWithMinikube(t *testing.T) {
 	extFactory := e2e.HelmExtensionFactory{
 		Name: "extension-jvm",
-		Port: 8085,
+		Port: 8087,
 		ExtraArgs: func(m *e2e.Minikube) []string {
 			return []string{"--set", "logging.level=INFO"}
 		},
