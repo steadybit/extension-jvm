@@ -44,7 +44,7 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
 
   if addNsEnter {
     nsEnterCommand := []string{"nsenter", "-t", strconv.Itoa(int(jvm.Pid))}
-    nsEnterCommand = append(nsEnterCommand, "-a", "--")
+    nsEnterCommand = append(nsEnterCommand, "-m", "-p", "--")
     attachCommand = append(nsEnterCommand, attachCommand...)
   }
 
