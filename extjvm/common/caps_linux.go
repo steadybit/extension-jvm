@@ -7,5 +7,5 @@ import "kernel.org/pub/linux/libs/security/libcap/cap"
 
 func PrintCaps() {
 	proc := cap.GetProc()
-	log.Debug().Msgf("Capabilities: %s", proc.String())
+	log.Info().Msgf("Capabilities: %s", proc.String())
 }

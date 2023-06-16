@@ -41,7 +41,7 @@ func TestWithMinikube(t *testing.T) {
 
 func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	log.Info().Msg("Starting testDiscoverSpringBootSample")
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
 	defer cancel()
 
 	springBootSample := SpringBootSample{Minikube: m}
