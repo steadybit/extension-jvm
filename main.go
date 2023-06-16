@@ -35,7 +35,7 @@ func main() {
 	// The information is mostly handy for debugging purposes.
 	extbuild.PrintBuildInformation()
 
-	//This will start /health/liveness and /health/readiness endpoints on port 8081 for use with kubernetes
+	//This will start /health/liveness and /health/readiness endpoints on port 8083 for use with kubernetes
 	//The port can be configured using the STEADYBIT_EXTENSION_HEALTH_PORT environment variable
 	exthealth.SetReady(false)
 	exthealth.StartProbes(int(common.GetOwnHealthPort()))
