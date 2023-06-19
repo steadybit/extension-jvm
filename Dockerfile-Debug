@@ -12,7 +12,7 @@ ARG REVISION
 WORKDIR /app
 
 RUN apt-get -qq update \
-    && apt-get -qq install -y --no-install-recommends build-essential
+    && apt-get -qq install -y --no-install-recommends build-essential runc
 COPY go.mod ./
 COPY go.sum ./
 RUN go mod download
