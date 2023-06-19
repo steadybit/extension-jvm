@@ -50,7 +50,7 @@ func discoverWorker(hotspotDiscoveryJobs chan DiscoveryWork) {
 		if job.retries > 0 {
 			discoverHotspotJvm(job)
 		} else {
-			log.Warn().Msgf("Attach retries for %d exceeded.", job.pid)
+			log.Warn().Msgf("Hotspot discovery retries for %d exceeded.", job.pid)
 		}
 	}
 }

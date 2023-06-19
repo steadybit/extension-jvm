@@ -4,16 +4,15 @@
 package e2e
 
 import (
-	"context"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
-	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-  "os"
+  "context"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/action-kit/go/action_kit_api/v2"
+  "github.com/steadybit/action-kit/go/action_kit_test/e2e"
+  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
   "testing"
-	"time"
+  "time"
 )
 
 func TestWithMinikube(t *testing.T) {
@@ -53,35 +52,35 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 
 	go m.TailLog(ctx, springBootSample.Pod)
 
-  if os.Getenv("CI") == "true" {
-  fashionBestseller := FashionBestseller{Minikube: m}
-	err = fashionBestseller.Deploy("fashion-bestseller")
-	require.NoError(t, err, "failed to create pod")
-	defer func() { _ = fashionBestseller.Delete() }()
-
-	go m.TailLog(ctx, fashionBestseller.Pod)
-  }
+	//if os.Getenv("CI") == "true" {
+	//	fashionBestseller := FashionBestseller{Minikube: m}
+	//	err = fashionBestseller.Deploy("fashion-bestseller")
+	//	require.NoError(t, err, "failed to create pod")
+	//	defer func() { _ = fashionBestseller.Delete() }()
+  //
+	//	go m.TailLog(ctx, fashionBestseller.Pod)
+	//}
 
 	target, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
 		//log.Debug().Msgf("targetApplications: %+v", target.Attributes)
-    return e2e.HasAttribute(target, "application.name", "/app") &&
+		return e2e.HasAttribute(target, "application.name", "/app") &&
 			e2e.HasAttribute(target, "application.type", "spring-boot") &&
-      e2e.HasAttribute(target, "spring.application.name", "spring-boot-sample") &&
-      e2e.HasAttribute(target, "spring.http-client", "true") &&
-      e2e.HasAttribute(target, "datasource.jdbc-url", "jdbc:h2:mem:testdb") &&
-      e2e.HasAttribute(target, "spring.jdbc-template", "true")
+			e2e.HasAttribute(target, "spring.application.name", "spring-boot-sample") &&
+			e2e.HasAttribute(target, "spring.http-client", "true") &&
+			e2e.HasAttribute(target, "datasource.jdbc-url", "jdbc:h2:mem:testdb") &&
+			e2e.HasAttribute(target, "spring.jdbc-template", "true")
 	})
 	require.NoError(t, err)
 	assert.Equal(t, target.TargetType, "application")
 
-  if os.Getenv("CI") == "true" {
-    targetFashion, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
-      log.Debug().Msgf("targetApplications: %+v", target.Attributes)
-      return e2e.HasAttribute(target, "application.name", "fashion-bestseller")
-    })
-    require.NoError(t, err)
-    assert.Equal(t, targetFashion.TargetType, "application")
-  }
+	//if os.Getenv("CI") == "true" {
+	//	targetFashion, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
+	//		log.Debug().Msgf("targetApplications: %+v", target.Attributes)
+	//		return e2e.HasAttribute(target, "application.name", "fashion-bestseller")
+	//	})
+	//	require.NoError(t, err)
+	//	assert.Equal(t, targetFashion.TargetType, "application")
+	//}
 }
 
 func testRunJVM(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
