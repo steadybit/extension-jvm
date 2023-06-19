@@ -5,16 +5,20 @@
 package extjvm
 
 import (
-	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/steadybit/extension-jvm/extjvm/jvm"
-	"github.com/steadybit/extension-kit/extbuild"
-	"github.com/steadybit/extension-kit/exthttp"
-	"github.com/steadybit/extension-kit/extutil"
-	"net/http"
-	"strconv"
-	"strings"
+  "fmt"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
+  "github.com/steadybit/extension-jvm/extjvm/common"
+  "github.com/steadybit/extension-jvm/extjvm/controller"
+  "github.com/steadybit/extension-jvm/extjvm/hotspot"
+  "github.com/steadybit/extension-jvm/extjvm/java_process"
+  "github.com/steadybit/extension-jvm/extjvm/jvm"
+  "github.com/steadybit/extension-kit/extbuild"
+  "github.com/steadybit/extension-kit/exthttp"
+  "github.com/steadybit/extension-kit/extutil"
+  "net/http"
+  "strconv"
+  "strings"
 )
 
 const discoveryBasePath = basePath + "/discovery"
@@ -24,6 +28,35 @@ func RegisterDiscoveryHandlers() {
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/target-description", exthttp.GetterAsHandler(getTargetDescription))
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/attribute-descriptions", exthttp.GetterAsHandler(getAttributeDescriptions))
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/discovered-targets", getDiscoveredTargets)
+}
+
+func InitDiscovery() {
+
+  // Shutdown Discovery on SIGTERM
+  InstallSignalHandler()
+
+  //Start Java agent controller
+  controller.Start(common.GetOwnJVMAttachmentPort())
+
+  //Init discover Datasources
+  InitDataSourceDiscovery()
+  //Init discover Spring Applications
+  InitSpringDiscovery()
+  // Start listening for JVM events
+  AddJVMListener(0)
+
+  // Start Datasource Discovery
+  StartDataSourceDiscovery()
+  // Start Spring Discovery
+  StartSpringDiscovery()
+
+  //Start attaching to JVMs
+  StartAttachment()
+
+  // Start JVM Watcher
+  java_process.Start()
+  // Start Hotspot JVM Watcher
+  hotspot.Start()
 }
 
 func GetDiscoveryList() discovery_kit_api.DiscoveryList {

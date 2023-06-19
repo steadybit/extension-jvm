@@ -111,7 +111,7 @@ func DataSourceDiscover(jvm *jvm.JavaVm) {
 		dataSourceApplication := createDataSourceApplication(jvm)
 		if dataSourceApplication != nil {
 			DataSourceApplications.Store(jvm.Pid, *dataSourceApplication)
-			log.Trace().Msgf("DataSource discovered on PID %d: %+v", jvm.Pid, dataSourceApplication)
+			log.Info().Msgf("DataSource discovered on PID %d: %+v", jvm.Pid, dataSourceApplication)
 		}
 	}
 }
@@ -132,7 +132,6 @@ func readDataSourceConnections(vm *jvm.JavaVm) *[]DataSourceConnection {
 
 		if rc == "OK" {
 			connections := make([]DataSourceConnection, 0)
-			//bytes, err := io.ReadAll(response)
       err := json.NewDecoder(response).Decode(&connections)
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to read response from agent on PID %d", vm.Pid)
@@ -140,12 +139,7 @@ func readDataSourceConnections(vm *jvm.JavaVm) *[]DataSourceConnection {
         log.Error().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
 				return make([]DataSourceConnection, 0)
 			}
-			//err = json.Unmarshal(bytes, &connections)
-			//if err != nil {
-			//	resultMessage, _ := bufio.NewReader(response).ReadString('\n')
-			//	log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
-			//	return make([]DataSourceConnection, 0)
-			//}
+
 			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned: %+v", "DataSource-connections", "", vm.Pid, connections)
 			return connections
 		} else {

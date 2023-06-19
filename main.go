@@ -12,9 +12,6 @@ import (
   "github.com/steadybit/extension-jvm/config"
   "github.com/steadybit/extension-jvm/extjvm"
   "github.com/steadybit/extension-jvm/extjvm/common"
-  "github.com/steadybit/extension-jvm/extjvm/controller"
-  "github.com/steadybit/extension-jvm/extjvm/hotspot"
-  "github.com/steadybit/extension-jvm/extjvm/java_process"
   "github.com/steadybit/extension-kit/extbuild"
   "github.com/steadybit/extension-kit/exthealth"
   "github.com/steadybit/extension-kit/exthttp"
@@ -58,28 +55,7 @@ func main() {
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
 
-
-  // Shutdown Discovery on SIGTERM
-  extjvm.InstallSignalHandler()
-  //Start Java agent controller
-  controller.Start(common.GetOwnJVMAttachmentPort())
-  // Start JVM Watcher
-  java_process.Start()
-  // Start Hotspot JVM Watcher
-  hotspot.Start()
-  // Start listening for JVM events
-  extjvm.Activate(0)
-  //Init discover Spring Applications
-  extjvm.InitSpringDiscovery()
-  //Init discover Datasources
-  extjvm.InitDataSourceDiscovery()
-  //Start attaching to JVMs
-  extjvm.StartAttachment()
-  // Start Spring Discovery
-  extjvm.StartSpringDiscovery()
-  // Start Datasource Discovery
-  extjvm.StartDataSourceDiscovery()
-
+  extjvm.InitDiscovery()
 
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)

@@ -27,6 +27,10 @@ var (
 	hotspotDiscoveryJobs = make(chan DiscoveryWork)
 )
 
+const (
+	initialRetries = 3
+)
+
 func Start() {
 	taskScheduler := chrono.NewDefaultTaskScheduler()
 
@@ -40,11 +44,11 @@ func Start() {
 
 	// create hotspot discovery worker pool
 	for w := 1; w <= 4; w++ {
-		go discoverWorker(hotspotDiscoveryJobs)
+		go discoveryWorker(hotspotDiscoveryJobs)
 	}
 }
 
-func discoverWorker(hotspotDiscoveryJobs chan DiscoveryWork) {
+func discoveryWorker(hotspotDiscoveryJobs chan DiscoveryWork) {
 	for job := range hotspotDiscoveryJobs {
 		job.retries--
 		if job.retries > 0 {
@@ -56,12 +60,15 @@ func discoverWorker(hotspotDiscoveryJobs chan DiscoveryWork) {
 }
 
 func discover(pid int32, retries int) {
+	if retries != initialRetries {
+		time.Sleep(1 * time.Second)
+	}
 	hotspotDiscoveryJobs <- DiscoveryWork{pid: pid, retries: retries}
 }
 func updatePids() {
 	newPids := GetJvmPids()
 	for _, pid := range newPids {
-		discover(pid, 5)
+		discover(pid, initialRetries)
 	}
 }
 
