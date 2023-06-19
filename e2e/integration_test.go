@@ -5,6 +5,7 @@ package e2e
 
 import (
   "context"
+  "fmt"
   "github.com/rs/zerolog/log"
   "github.com/steadybit/action-kit/go/action_kit_api/v2"
   "github.com/steadybit/action-kit/go/action_kit_test/e2e"
@@ -20,7 +21,10 @@ func TestWithMinikube(t *testing.T) {
 		Name: "extension-jvm",
 		Port: 8087,
 		ExtraArgs: func(m *e2e.Minikube) []string {
-			return []string{"--set", "logging.level=INFO"}
+      return []string{
+        "--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
+        "--set", "logging.level=INFO",
+      }
 		},
 	}
 
