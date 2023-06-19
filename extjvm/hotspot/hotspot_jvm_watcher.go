@@ -6,15 +6,26 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/process"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
+	"sync"
 	"time"
 )
 
 type Listener interface {
-	NewHotspotProcess(p *process.Process)
+	NewHotspotProcess(p *process.Process) bool
 }
 
-var pids []int32
-var listeners []Listener
+type DiscoveryWork struct {
+	pid     int32
+	retries int
+}
+
+var (
+	hotspotPidsMutex sync.Mutex
+	hotspotPids      []int32
+	listeners        []Listener
+
+	hotspotDiscoveryJobs = make(chan DiscoveryWork)
+)
 
 func Start() {
 	taskScheduler := chrono.NewDefaultTaskScheduler()
@@ -26,32 +37,74 @@ func Start() {
 	if err == nil {
 		log.Info().Msg("Hotspot JVM Watcher Task has been scheduled successfully.")
 	}
+
+	// create hotspot discovery worker pool
+	for w := 1; w <= 4; w++ {
+		go discoverWorker(hotspotDiscoveryJobs)
+	}
 }
-func updatePids() {
-	newPids := GetJvmPids()
-	for _, pid := range newPids {
-		if !utils.Contains(pids, pid) {
-			pids = append(pids, pid)
-			p, err := process.NewProcess(pid)
-			if err != nil {
-				log.Warn().Err(err).Msg("Error in connecting to newProcess")
-				continue
-			}
-			newProcess(p)
+
+func discoverWorker(hotspotDiscoveryJobs chan DiscoveryWork) {
+	for job := range hotspotDiscoveryJobs {
+		job.retries--
+		if job.retries > 0 {
+			discoverHotspotJvm(job)
+		} else {
+			log.Warn().Msgf("Attach retries for %d exceeded.", job.pid)
 		}
 	}
 }
 
-func newProcess(p *process.Process) {
-	log.Trace().Msgf("Discovered new java process: %+v", p)
-	for _, listener := range listeners {
-		listener.NewHotspotProcess(p)
+func discover(pid int32, retries int) {
+	hotspotDiscoveryJobs <- DiscoveryWork{pid: pid, retries: retries}
+}
+func updatePids() {
+	newPids := GetJvmPids()
+	for _, pid := range newPids {
+		discover(pid, 5)
 	}
+}
+
+func discoverHotspotJvm(work DiscoveryWork) {
+	if !utils.Contains(hotspotPids, work.pid) {
+		p, err := process.NewProcess(work.pid)
+		if err != nil {
+			log.Warn().Err(err).Msg("Error in connecting to newProcess")
+			//retry
+			discover(work.pid, work.retries)
+			return
+		}
+		success := newProcess(p)
+		if success {
+			addToDiscoveredHotspotPids(work.pid)
+		} else {
+			//retry
+			discover(work.pid, work.retries)
+		}
+	}
+}
+
+func addToDiscoveredHotspotPids(pid int32) {
+	hotspotPidsMutex.Lock()
+	hotspotPids = append(hotspotPids, pid)
+	hotspotPidsMutex.Unlock()
+}
+
+func newProcess(p *process.Process) bool {
+	log.Trace().Msgf("Discovered new java process: %+v", p)
+	success := true
+	for _, listener := range listeners {
+		lastResult := listener.NewHotspotProcess(p)
+		if !lastResult {
+			success = false
+		}
+	}
+	return success
 }
 
 func AddListener(listener Listener) {
 	listeners = append(listeners, listener)
-	for _, pid := range pids {
+	for _, pid := range hotspotPids {
 		p, err := process.NewProcess(pid)
 		if err != nil {
 			log.Warn().Err(err).Msg("Error in listener for newProcess")

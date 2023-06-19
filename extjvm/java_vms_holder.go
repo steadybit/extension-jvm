@@ -76,13 +76,19 @@ func (j *JavaVMS) NewProcess(p *process.Process) {
   }
 }
 
-func (j *JavaVMS) NewHotspotProcess(p *process.Process) {
+func (j *JavaVMS) NewHotspotProcess(p *process.Process)  bool{
   if !utils.Contains(pidExludes, p.Pid) {
     _, ok := jvms.Load(p.Pid)
     if !ok && java_process.IsRunning(p) {
-      addJvm(createJvm(p))
+      vm := createJvm(p)
+      if vm != nil {
+        addJvm(vm)
+        return true
+      }
     }
+    return false
   }
+  return true
 }
 
 func addJvm(jvm *jvm.JavaVm) {
