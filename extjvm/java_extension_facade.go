@@ -261,10 +261,10 @@ func SendCommandToAgent(jvm *jvm.JavaVm, command string, args string) bool {
 }
 
 func sendCommandToAgent(jvm *jvm.JavaVm, command string, args string, timeout time.Duration) bool {
-	log.Info().Msgf("Sending command %s:%s to agent on PID %d", command, args, jvm.Pid)
+	log.Trace().Msgf("Sending command %s:%s to agent on PID %d", command, args, jvm.Pid)
 	success := sendCommandToAgentViaSocket(jvm, command, args, timeout, func(rc string, response io.Reader) bool {
     resultMessage, err := GetCleanSocketCommandResult(response)
-		log.Info().Msgf("Result from command %s:%s agent on PID %d: %s", command, args, jvm.Pid, resultMessage)
+		log.Trace().Msgf("Result from command %s:%s agent on PID %d: %s", command, args, jvm.Pid, resultMessage)
 		if err != nil {
 			log.Error().Msgf("Error reading result from command %s:%s agent on PID %d: %s", command, args, jvm.Pid, err)
 			return false
@@ -353,7 +353,7 @@ func sendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args st
 	} else {
 		rc = "UNKNOWN"
 	}
-	log.Info().Msgf("Return code from JVM %s for command %s:%s on pid %d", rc, command, args, pid)
+	log.Trace().Msgf("Return code from JVM %s for command %s:%s on pid %d", rc, command, args, pid)
 	return extutil.Ptr(handler(rc, utfbom.SkipOnly(conn)))
 }
 

@@ -126,7 +126,7 @@ func (s SpringDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
   springDiscover(jvm)
 }
 func springDiscover(jvm *jvm.JavaVm) {
-  log.Info().Msgf("Discovering Spring Application on PID %d", jvm.Pid)
+  log.Trace().Msgf("Discovering Spring Application on PID %d", jvm.Pid)
   if hasSpringPlugin(jvm) {
     springApplication := createSpringApplication(jvm)
     SpringApplications.Store(jvm.Pid, springApplication)

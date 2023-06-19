@@ -1,6 +1,10 @@
 # Default values for steadybit-extension-kubernetes.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+container:
+  # container.runtime -- The container runtime to use. Valid values are: docker, containerd, crio
+  runtime: containerd
+
 image:
   # image.name -- The container image to use for the Steadybit scaffold extension.
   name: ghcr.io/steadybit/extension-jvm
@@ -71,3 +75,14 @@ extraEnv: []
 #  - secretRef:
 #    name: env-secrets
 extraEnvFrom: []
+
+containerRuntimes:
+  docker:
+    socket: /var/run/docker.sock
+    runcRoot: /run/docker/runtime-runc/moby
+  containerd:
+    socket: /run/containerd/containerd.sock
+    runcRoot: /run/containerd/runc/k8s.io
+  cri-o:
+    socket: /var/run/crio/crio.sock
+    runcRoot: /run/runc

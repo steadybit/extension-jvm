@@ -103,7 +103,7 @@ func GetProcessPath(p *process.Process) (string, error) {
     }
     output = []byte(exe)
   }
-  return string(output), nil
+  return strings.Trim(string(output), "\n") , nil
 }
 
 func IsRunning(p *process.Process) bool {
