@@ -47,7 +47,7 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
   if addRuncExec {
     // We first enter the init process of the container and then execute the runc exec command because otherwise we fail with "exec failed: container_linux.go:367: starting container process caused: process_linux.go:96: starting setns process caused: fork/ │
     //│ exec /proc/self/exe: no such file or directory"  "
-    runcExecCommand := []string{"nsenter", "-t", "1", "-m", "-u", "-n", "-i", "-p", "-r", "--", "runc", "--root", container.GetRuncRoot(), "exec", jvm.ContainerId}
+    runcExecCommand := []string{"nsenter", "-t", "1", "-m", "-u", "-n", "-i", "-p", "-r", "-C", "--", "runc", "--root", container.GetRuncRoot(), "exec", jvm.ContainerId}
     attachCommand = append(runcExecCommand, attachCommand...)
   }
 
