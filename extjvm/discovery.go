@@ -170,13 +170,13 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
         Src: discovery_kit_api.SourceOrDestination{
           Type: "container",
           Selector: map[string]string{
-            "container.id.stripped": "${dest.application.container.id}",
+            "container.id.stripped": "${dest.application.container.id.stripped}",
           },
         },
         Dest: discovery_kit_api.SourceOrDestination{
           Type: targetID,
           Selector: map[string]string{
-            "application.container.id": "${src.container.id.stripped}",
+            "container.id.stripped": "${src.container.id.stripped}",
           },
         },
         Attributes: []discovery_kit_api.Attribute{
@@ -275,7 +275,7 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 			Attributes: map[string][]string{
 				"application.type": {"java"},
 				"application.name": {getApplicationName(jvm, "")},
-				"container.id":     {jvm.ContainerId},
+				"container.id.stripped":     {jvm.ContainerId},
 				"process.pid":      {strconv.Itoa(int(jvm.Pid))},
         "application.hostname": {jvm.Hostname},
 			},
