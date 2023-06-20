@@ -29,7 +29,7 @@ func TestWithMinikube(t *testing.T) {
 	}
 
 	mOpts := e2e.DefaultMiniKubeOpts
-	//mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker}
+	mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker, e2e.RuntimeContainerd}
 	mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeCrio}
 	//mOpts.Runtimes =e2e.AllRuntimes
 
