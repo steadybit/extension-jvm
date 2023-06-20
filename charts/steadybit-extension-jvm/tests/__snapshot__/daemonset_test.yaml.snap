@@ -63,6 +63,12 @@ manifest should match snapshot with TLS:
               volumeMounts:
                 - mountPath: /tmp
                   name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: runtime-socket
+                - mountPath: /run/containerd/runc/k8s.io
+                  name: runtime-runc-root
                 - mountPath: /etc/extension/certificates/server-cert
                   name: certificate-server-cert
                   readOnly: true
@@ -72,6 +78,18 @@ manifest should match snapshot with TLS:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: runtime-socket
+            - hostPath:
+                path: /run/containerd/runc/k8s.io
+                type: Directory
+              name: runtime-runc-root
             - name: certificate-server-cert
               secret:
                 optional: false
@@ -144,12 +162,30 @@ manifest should match snapshot with extra env vars:
               volumeMounts:
                 - mountPath: /tmp
                   name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: runtime-socket
+                - mountPath: /run/containerd/runc/k8s.io
+                  name: runtime-runc-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: runtime-socket
+            - hostPath:
+                path: /run/containerd/runc/k8s.io
+                type: Directory
+              name: runtime-runc-root
 manifest should match snapshot with mutual TLS:
   1: |
     apiVersion: apps/v1
@@ -234,6 +270,12 @@ manifest should match snapshot with mutual TLS:
               volumeMounts:
                 - mountPath: /tmp
                   name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: runtime-socket
+                - mountPath: /run/containerd/runc/k8s.io
+                  name: runtime-runc-root
                 - mountPath: /etc/extension/certificates/client-cert-a
                   name: certificate-client-cert-a
                   readOnly: true
@@ -246,6 +288,18 @@ manifest should match snapshot with mutual TLS:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: runtime-socket
+            - hostPath:
+                path: /run/containerd/runc/k8s.io
+                type: Directory
+              name: runtime-runc-root
             - name: certificate-client-cert-a
               secret:
                 optional: false
@@ -315,9 +369,27 @@ manifest should match snapshot without TLS:
               volumeMounts:
                 - mountPath: /tmp
                   name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: runtime-socket
+                - mountPath: /run/containerd/runc/k8s.io
+                  name: runtime-runc-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: runtime-socket
+            - hostPath:
+                path: /run/containerd/runc/k8s.io
+                type: Directory
+              name: runtime-runc-root
