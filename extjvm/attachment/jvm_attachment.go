@@ -65,8 +65,10 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
   cmd.Stdout = &outb
   cmd.Stderr = &errb
   err = cmd.Run()
-  log.Info().Msgf("Attach command output: %s", outb.String())
-  log.Info().Msgf("Attach command error: %s", errb.String())
+  log.Trace().Msgf("Attach command output: %s", outb.String())
+  if errb.String() != "" {
+    log.Error().Msgf("Attach command error: %s", errb.String())
+  }
 	if err != nil {
 		log.Error().Err(err).Msgf("Error attaching to JVM %+v: %s", jvm, err)
 		return false

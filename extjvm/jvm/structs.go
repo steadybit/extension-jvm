@@ -13,18 +13,19 @@ func (vm JavaVm) IsRunningInContainer() bool {
   return vm.ContainerId != ""
 }
 type JavaVm struct {
-  Pid           int32
-  CommandLine   string
-  MainClass     string
-  ClassPath     string
+  Pid            int32
+  CommandLine    string
+  MainClass      string
+  ClassPath      string
   ContainerId    string
   InContainerPid int
   VmVersion      string
-  VmVendor      string
-  VmName        string
-  VmArgs        string
-  UserId        string
-  GroupId       string
-  Path          string
-  DiscoveredVia string
+  VmVendor       string
+  VmName         string
+  VmArgs         string
+  UserId         string
+  GroupId        string
+  Path           string
+  DiscoveredVia  string
+  Hostname       string
 }
