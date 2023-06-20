@@ -122,6 +122,83 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
 				},
 			},
 		},
+    EnrichmentRules: extutil.Ptr([]discovery_kit_api.TargetEnrichmentRule{
+      {
+        Src: discovery_kit_api.SourceOrDestination{
+          Type: "host",
+          Selector: map[string]string{
+            "host.hostname": "${dest.application.hostname}",
+          },
+        },
+        Dest: discovery_kit_api.SourceOrDestination{
+          Type: targetID,
+          Selector: map[string]string{
+            "application.hostname": "${src.host.hostname}",
+          },
+        },
+        Attributes: []discovery_kit_api.Attribute{
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "aws.account",
+          }, {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "aws.region",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "aws.zone",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "aws-ec2.instance.id",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "aws-ec2.instance.name",
+          },
+          {
+            Matcher: discovery_kit_api.StartsWith,
+            Name:    "label.",
+          },
+          {
+            Matcher: discovery_kit_api.StartsWith,
+            Name:    "host.",
+          },
+        },
+      },
+      {
+        Src: discovery_kit_api.SourceOrDestination{
+          Type: "container",
+          Selector: map[string]string{
+            "container.id.stripped": "${dest.application.container.id}",
+          },
+        },
+        Dest: discovery_kit_api.SourceOrDestination{
+          Type: targetID,
+          Selector: map[string]string{
+            "application.container.id": "${src.container.id.stripped}",
+          },
+        },
+        Attributes: []discovery_kit_api.Attribute{
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "container.host",
+          },
+          {
+            Matcher: discovery_kit_api.StartsWith,
+            Name:    "container.",
+          },
+          {
+            Matcher: discovery_kit_api.StartsWith,
+            Name:    "k8s.",
+          },
+          {
+            Matcher: discovery_kit_api.StartsWith,
+            Name:    "label.",
+          },
+        },
+      },
+    }),
 	}
 }
 
@@ -140,6 +217,12 @@ func getAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
 				Label: discovery_kit_api.PluralLabel{
 					One:   "Application Type",
 					Other: "Application Types",
+				},
+			},{
+				Attribute: "application.hostname",
+				Label: discovery_kit_api.PluralLabel{
+					One:   "Application Hostname",
+					Other: "Application Hostnames",
 				},
 			},
 			{
@@ -194,6 +277,7 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 				"application.name": {getApplicationName(jvm, "")},
 				"container.id":     {jvm.ContainerId},
 				"process.pid":      {strconv.Itoa(int(jvm.Pid))},
+        "application.hostname": {jvm.Hostname},
 			},
 		}
 	}

@@ -212,11 +212,17 @@ func createJvmFromProcess(p *process.Process) *jvm.JavaVm {
 	cmdline, _ := p.Cmdline()
 	path, _ := p.Exe()
 
-	jvm := &jvm.JavaVm{
+  hostname, err := os.Hostname()
+  if err != nil {
+    hostname = "unknown"
+  }
+
+  jvm := &jvm.JavaVm{
 		Pid:           p.Pid,
 		DiscoveredVia: "os-process",
 		CommandLine:   cmdline,
 		Path:          path,
+    Hostname:     hostname,
 	}
 
 	args := strings.Split(cmdline, " ")
@@ -268,6 +274,10 @@ func parsePerfDataBuffer(p *process.Process, path string) *jvm.JavaVm {
 		return nil
 	}
 	commandLine := hsperf.GetStringProperty(entryMap, "sun.rt.javaCommand")
+  hostname, err := os.Hostname()
+  if err != nil {
+    hostname = "unknown"
+  }
 	jvm := &jvm.JavaVm{
 		Pid:           p.Pid,
 		DiscoveredVia: "hsperfdata",
@@ -278,6 +288,7 @@ func parsePerfDataBuffer(p *process.Process, path string) *jvm.JavaVm {
 		VmName:        hsperf.GetStringProperty(entryMap, "java.vm.name"),
 		VmVendor:      hsperf.GetStringProperty(entryMap, "java.vm.vendor"),
 		VmVersion:     hsperf.GetStringProperty(entryMap, "java.vm.version"),
+    Hostname:      hostname,
 	}
 	uids, err := p.Uids()
 	if err == nil && len(uids) > 0 {
