@@ -419,8 +419,6 @@ func attach(jvm *jvm.JavaVm, retries int) {
 }
 
 func (j JavaExtensionFacade) RemovedJvm(jvm *jvm.JavaVm) {
-	//TODO: implement
-	//abortAttach(jvm.Pid)
 	plugin_tracking.RemoveAll(jvm.Pid)
 	for _, listener := range attachedListeners {
 		listener.AttachedProcessStopped(jvm)
