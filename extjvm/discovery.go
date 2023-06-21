@@ -158,11 +158,7 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
           },
           {
             Matcher: discovery_kit_api.StartsWith,
-            Name:    "label.",
-          },
-          {
-            Matcher: discovery_kit_api.StartsWith,
-            Name:    "host.",
+            Name:    "host.hostname",
           },
         },
       },
@@ -170,7 +166,7 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
         Src: discovery_kit_api.SourceOrDestination{
           Type: "container",
           Selector: map[string]string{
-            "container.id.stripped": "${dest.application.container.id.stripped}",
+            "container.id.stripped": "${dest.container.id.stripped}",
           },
         },
         Dest: discovery_kit_api.SourceOrDestination{
