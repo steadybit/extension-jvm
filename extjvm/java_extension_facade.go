@@ -1,25 +1,25 @@
 package extjvm
 
 import (
-  "bufio"
-  "errors"
-  "fmt"
-  "github.com/dimchansky/utfbom"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/extension-jvm/extjvm/attachment"
-  "github.com/steadybit/extension-jvm/extjvm/attachment/plugin_tracking"
-  "github.com/steadybit/extension-jvm/extjvm/attachment/remote_jvm_connections"
-  "github.com/steadybit/extension-jvm/extjvm/common"
-  "github.com/steadybit/extension-jvm/extjvm/java_process"
-  "github.com/steadybit/extension-jvm/extjvm/jvm"
-  "github.com/steadybit/extension-kit/extutil"
-  "io"
-  "net"
-  "os"
-  "path/filepath"
-  "strings"
-  "sync"
-  "time"
+	"bufio"
+	"errors"
+	"fmt"
+	"github.com/dimchansky/utfbom"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/extjvm/attachment"
+	"github.com/steadybit/extension-jvm/extjvm/attachment/plugin_tracking"
+	"github.com/steadybit/extension-jvm/extjvm/attachment/remote_jvm_connections"
+	"github.com/steadybit/extension-jvm/extjvm/common"
+	"github.com/steadybit/extension-jvm/extjvm/java_process"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-kit/extutil"
+	"io"
+	"net"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+	"time"
 )
 
 type JavaExtensionFacade struct{}
@@ -263,7 +263,7 @@ func SendCommandToAgent(jvm *jvm.JavaVm, command string, args string) bool {
 func sendCommandToAgent(jvm *jvm.JavaVm, command string, args string, timeout time.Duration) bool {
 	log.Trace().Msgf("Sending command %s:%s to agent on PID %d", command, args, jvm.Pid)
 	success := sendCommandToAgentViaSocket(jvm, command, args, timeout, func(rc string, response io.Reader) bool {
-    resultMessage, err := GetCleanSocketCommandResult(response)
+		resultMessage, err := GetCleanSocketCommandResult(response)
 		log.Trace().Msgf("Result from command %s:%s agent on PID %d: %s", command, args, jvm.Pid, resultMessage)
 		if err != nil {
 			log.Error().Msgf("Error reading result from command %s:%s agent on PID %d: %s", command, args, jvm.Pid, err)
@@ -291,15 +291,15 @@ func sendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args st
 		log.Debug().Msgf("RemoteJvmConnection from PID %d not found. Command '%s:%s' not sent.", pid, command, args)
 		return nil
 	}
-  connection.Mutex.Lock()
-  defer connection.Mutex.Unlock()
+	connection.Mutex.Lock()
+	defer connection.Mutex.Unlock()
 
 	d := net.Dialer{Timeout: timeout}
 	conn, err := d.Dial("tcp", connection.Address())
 	defer func(conn net.Conn) {
-    if conn == nil {
-      return
-    }
+		if conn == nil {
+			return
+		}
 		err := conn.Close()
 		if err != nil {
 			log.Error().Msgf("Error closing socket connection to JVM %d: %s", pid, err)
@@ -429,11 +429,10 @@ func AddAutoloadAgentPlugin(plugin string, markerClass string) {
 	autoloadPluginsMutex.Lock()
 	autoloadPlugins = append(autoloadPlugins, AutoloadPlugin{Plugin: plugin, MarkerClass: markerClass})
 	autoloadPluginsMutex.Unlock()
-	jvms.Range(func(key, value interface{}) bool {
-		jvm := value.(*jvm.JavaVm)
-		loadAutoLoadPlugin(jvm, markerClass, plugin)
-		return true
-	})
+	vms := GetJVMs()
+	for _, vm := range vms {
+		loadAutoLoadPlugin(&vm, markerClass, plugin)
+	}
 }
 
 func loadAutoLoadPlugin(jvm *jvm.JavaVm, markerClass string, plugin string) {
@@ -453,9 +452,8 @@ func RemoveAutoloadAgentPlugin(plugin string, markerClass string) {
 			break
 		}
 	}
-	jvms.Range(func(key, value interface{}) bool {
-		jvm := value.(*jvm.JavaVm)
-		unloadAutoLoadPlugin(jvm, plugin, markerClass)
-		return true
-	})
+	jvMs := GetJVMs()
+	for _, vm := range jvMs {
+		unloadAutoLoadPlugin(&vm, plugin, markerClass)
+	}
 }
