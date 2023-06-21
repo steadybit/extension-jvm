@@ -1,28 +1,28 @@
 package extjvm
 
 import (
-	"context"
-	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/process"
-	"github.com/steadybit/extension-jvm/extjvm/hotspot"
-	"github.com/steadybit/extension-jvm/extjvm/hsperf"
-	"github.com/steadybit/extension-jvm/extjvm/java_process"
-	"github.com/steadybit/extension-jvm/extjvm/jvm"
-	"github.com/steadybit/extension-jvm/extjvm/procfs"
-	"github.com/steadybit/extension-jvm/extjvm/utils"
-	"github.com/steadybit/extension-kit/extutil"
-	"github.com/xin053/hsperfdata"
-	"golang.org/x/sys/unix"
-	"math"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"runtime"
-	"strconv"
-	"strings"
-	"sync"
-	"syscall"
+  "context"
+  "fmt"
+  "github.com/rs/zerolog/log"
+  "github.com/shirou/gopsutil/process"
+  "github.com/steadybit/extension-jvm/extjvm/hotspot"
+  "github.com/steadybit/extension-jvm/extjvm/hsperf"
+  "github.com/steadybit/extension-jvm/extjvm/java_process"
+  "github.com/steadybit/extension-jvm/extjvm/jvm"
+  "github.com/steadybit/extension-jvm/extjvm/procfs"
+  "github.com/steadybit/extension-jvm/extjvm/utils"
+  "github.com/steadybit/extension-kit/extutil"
+  "github.com/xin053/hsperfdata"
+  "golang.org/x/sys/unix"
+  "math"
+  "os"
+  "os/signal"
+  "path/filepath"
+  "runtime"
+  "strconv"
+  "strings"
+  "sync"
+  "syscall"
 )
 
 var (
@@ -369,12 +369,9 @@ func InstallSignalHandler() {
 		for s := range signals {
 			signalName := unix.SignalName(s.(syscall.Signal))
 
-			log.Debug().Str("signal", signalName).Msg("received signal - stopping all active discoveries")
-			jvms.Range(func(key, value interface{}) bool {
-				//jvm := value.(*jvm.JavaVm)
-				// TODO: do something with the jvm
-				return true
-			})
+			log.Info().Str("signal", signalName).Msg("received signal - stopping all active discoveries")
+      DeactivateDataSourceDiscovery()
+      DeactivateSpringDiscovery()
 
 			switch s {
 			case syscall.SIGINT:

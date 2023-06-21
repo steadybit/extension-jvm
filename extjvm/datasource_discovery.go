@@ -52,7 +52,6 @@ func InitDataSourceDiscovery() {
 }
 
 func DeactivateDataSourceDiscovery() {
-	//TODO: use this method to deactivate the plugin
 	RemoveAutoloadAgentPlugin(DataSourcePlugin, DataSourceMarkerClass)
 }
 
