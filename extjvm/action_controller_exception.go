@@ -15,35 +15,34 @@ import (
   "time"
 )
 
-type controllerDelay struct{}
+type controllerException struct{}
 
-type ControllerDelayState struct {
-	Delay         time.Duration
-	DelayJitter   bool
+type ControllerExceptionState struct {
+	ErroneousCallRate int
   *ControllerState
 }
 
 // Make sure action implements all required interfaces
 var (
-	_ action_kit_sdk.Action[ControllerDelayState]         = (*controllerDelay)(nil)
-	_ action_kit_sdk.ActionWithStop[ControllerDelayState] = (*controllerDelay)(nil) // Optional, needed when the action needs a stop method
+	_ action_kit_sdk.Action[ControllerExceptionState]         = (*controllerException)(nil)
+	_ action_kit_sdk.ActionWithStop[ControllerExceptionState] = (*controllerException)(nil) // Optional, needed when the action needs a stop method
 
 )
 
-func NewControllerDelay() action_kit_sdk.Action[ControllerDelayState] {
-	return &controllerDelay{}
+func NewControllerException() action_kit_sdk.Action[ControllerExceptionState] {
+	return &controllerException{}
 }
 
-func (l *controllerDelay) NewEmptyState() ControllerDelayState {
-	return ControllerDelayState{}
+func (l *controllerException) NewEmptyState() ControllerExceptionState {
+	return ControllerExceptionState{}
 }
 
 // Describe returns the action description for the platform with all required information.
-func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
+func (l *controllerException) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          targetID + ".spring-mvc-delay-attack",
-		Label:       "Controller Delay",
-		Description: "Delay a Spring MVC controller http response by the given duration.",
+		Id:          targetID + ".spring-mvc-exception-attack",
+		Label:       "Controller Exception",
+		Description: "Throw an exception in an Spring MVC controller method",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(controllerDelayIcon),
 		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
@@ -72,15 +71,7 @@ func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 		// The parameters for the action
 		Parameters: []action_kit_api.ActionParameter{
       patternAttribute,
-      methodAttribute,
-			{
-				Name:         "delay",
-				Label:        "Delay",
-				Description:  extutil.Ptr("How much should the response be delayed?"),
-				Type:         action_kit_api.Duration,
-				DefaultValue: extutil.Ptr("500ms"),
-				Required:     extutil.Ptr(true),
-			},
+			methodAttribute,
 			{
 				Name:         "duration",
 				Label:        "Duration",
@@ -88,12 +79,15 @@ func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 				Type:         action_kit_api.Duration,
 				DefaultValue: extutil.Ptr("30s"),
 				Required:     extutil.Ptr(true),
-			}, {
-				Name:         "delayJitter",
-				Label:        "Jitter",
-				Description:  extutil.Ptr("Add random +/-30% jitter to response delay?"),
-				Type:         action_kit_api.Boolean,
-				DefaultValue: extutil.Ptr("true"),
+			},
+			{
+				Name:         "erroneousCallRate",
+				Label:        "Erroneous Call Rate",
+				Description:  extutil.Ptr("How many percent of requests should trigger an exception?"),
+				Type:         action_kit_api.Percentage,
+				MinValue:     extutil.Ptr(0),
+				MaxValue:     extutil.Ptr(100),
+				DefaultValue: extutil.Ptr("100"),
 				Required:     extutil.Ptr(true),
 				Advanced:     extutil.Ptr(true),
 			},
@@ -107,7 +101,7 @@ func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 // It must not cause any harmful effects.
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+func (l *controllerException) Prepare(_ context.Context, state *ControllerExceptionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
   state.ControllerState = &ControllerState{}
   errResult := extractPattern(request, state.ControllerState)
   if errResult != nil {
@@ -119,70 +113,56 @@ func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState
     return errResult, nil
   }
 
+  erroneousCallRate := extutil.ToInt(request.Config["erroneousCallRate"])
+  state.ErroneousCallRate = erroneousCallRate
+
   errResult = extractDuration(request, state.ControllerState)
   if errResult != nil {
     return errResult, nil
   }
+
 
   errResult = extractPid(request, state.ControllerState)
   if errResult != nil {
     return errResult, nil
   }
 
-	parsedDelay := extutil.ToUInt64(request.Config["delay"])
-	var delay time.Duration
-	if parsedDelay == 0 {
-		delay = 0
-	} else {
-		delay = time.Duration(parsedDelay) * time.Millisecond
-	}
-	state.Delay = delay
-
-
-	delayJitter := extutil.ToBool(request.Config["delayJitter"])
-	state.DelayJitter = delayJitter
-
   errResult = extractHandlerMethods(request, state.ControllerState)
   if errResult != nil {
     return errResult, nil
   }
 
-	var config = map[string]interface{}{
-		"attack-class": "com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation",
-		"duration":     int(state.Duration / time.Millisecond),
-		"delay":        int(state.Delay / time.Millisecond),
-		"delayJitter":  state.DelayJitter,
-		"methods":      state.HandlerMethods,
-	}
-	configJson, err := json.Marshal(config)
-	if err != nil {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Failed to marshal config",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}, err
-	}
-	vm := GetTarget(state.Pid)
-	if vm == nil {
+
+  var config = map[string]interface{}{
+    "attack-class": "com.steadybit.attacks.javaagent.instrumentation.JavaMethodExceptionInstrumentation",
+    "duration":     int(state.Duration / time.Millisecond),
+    "erroneousCallRate":        state.ErroneousCallRate,
+    "methods":      state.HandlerMethods,
+  }
+  configJson, err := json.Marshal(config)
+  if err != nil {
     return &action_kit_api.PrepareResult{
       Error: extutil.Ptr(action_kit_api.ActionKitError{
-        Title:  "VM not found",
+        Title:  "Failed to marshal config",
         Status: extutil.Ptr(action_kit_api.Errored),
       }),
-    }, nil
-	}
-	callbackUrl, attackEndpointPort := Prepare(vm, string(configJson))
-	state.EndpointPort = attackEndpointPort
-	state.CallbackUrl = callbackUrl
+    }, err
+  }
+  vm := GetTarget(state.Pid)
+  if vm == nil {
+    return nil, extension_kit.ToError("VM not found", nil)
+  }
+  callbackUrl, attackEndpointPort := Prepare(vm, string(configJson))
+  state.EndpointPort = attackEndpointPort
+  state.CallbackUrl = callbackUrl
 
-	return nil, nil
+  return nil, nil
 }
 
 // Start is called to start the action
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *controllerDelay) Start(_ context.Context, state *ControllerDelayState) (*action_kit_api.StartResult, error) {
+func (l *controllerException) Start(_ context.Context, state *ControllerExceptionState) (*action_kit_api.StartResult, error) {
 	vm := GetTarget(state.Pid)
 	if vm == nil {
 		return nil, extension_kit.ToError("VM not found", nil)
@@ -203,7 +183,7 @@ func (l *controllerDelay) Start(_ context.Context, state *ControllerDelayState) 
 // It will be called even if the start method did not complete successfully.
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *controllerDelay) Stop(_ context.Context, state *ControllerDelayState) (*action_kit_api.StopResult, error) {
+func (l *controllerException) Stop(_ context.Context, state *ControllerExceptionState) (*action_kit_api.StopResult, error) {
 	vm := GetTarget(state.Pid)
 	if vm == nil {
 		return nil, extension_kit.ToError("VM not found", nil)
@@ -217,5 +197,5 @@ func (l *controllerDelay) Stop(_ context.Context, state *ControllerDelayState) (
       }),
     }, nil
   }
-	return nil, nil
+  return nil, nil
 }
