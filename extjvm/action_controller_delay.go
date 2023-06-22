@@ -5,30 +5,33 @@
 package extjvm
 
 import (
-  "context"
-  "encoding/json"
-  "github.com/google/uuid"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_sdk"
-  extension_kit "github.com/steadybit/extension-kit"
-  "github.com/steadybit/extension-kit/extbuild"
-  "github.com/steadybit/extension-kit/extutil"
-  "time"
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/google/uuid"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
+	extension_kit "github.com/steadybit/extension-kit"
+	"github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-kit/extutil"
+	"time"
 )
 
 type controllerDelay struct{}
 
 type ControllerDelayState struct {
-	ExecutionID  uuid.UUID
-	Delay        time.Duration
-	Duration     time.Duration
-	Pattern      string
-	Method       string
-	DelayJitter  bool
-	Pid          int32
-	ConfigJson   string
-	EndpointPort int
-	CallbackUrl  string
+	ExecutionID   uuid.UUID
+	Delay         time.Duration
+	Duration      time.Duration
+	Pattern       string
+	Method        string
+	ConfigMethods []string
+	DelayJitter   bool
+	Pid           int32
+	ConfigJson    string
+	EndpointPort  int
+	CallbackUrl   string
 }
 
 type ExecutionRunData struct {
@@ -230,12 +233,36 @@ func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState
 	}
 	state.Pid = extutil.ToInt32(pids[0])
 
+	application := FindSpringApplication(state.Pid)
+	if application == nil {
+		return nil, extension_kit.ToError("Spring application not found", nil)
+	}
+
+	if application.MvcMappings == nil {
+		return nil, extension_kit.ToError("Spring MVC mappings not found", nil)
+	}
+	relevantMappings := make([]SpringMvcMapping, 0)
+	for _, m := range *application.MvcMappings {
+		if utils.ContainsString(m.Patterns, state.Pattern) {
+			if state.Method == "*" || (len(m.Methods) == 0 && state.Method == "GET") {
+				relevantMappings = append(relevantMappings, m)
+			} else if utils.ContainsString(m.Methods, state.Method) {
+				relevantMappings = append(relevantMappings, m)
+			}
+		}
+	}
+	configMethods := make([]string, 0)
+	for _, m := range relevantMappings {
+		method := fmt.Sprintf("%s#%s", m.HandlerClass, m.HandlerName)
+		configMethods = append(configMethods, method)
+	}
+	state.ConfigMethods = configMethods
 	var config = map[string]interface{}{
 		"attack-class": "com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation",
-		"duration":     state.Duration * time.Millisecond,
-		"delay":        state.Delay * time.Millisecond,
+		"duration":     int(state.Duration / time.Millisecond),
+		"delay":        int(state.Delay / time.Millisecond),
 		"delayJitter":  state.DelayJitter,
-		"methods":      state.Method,
+		"methods":      state.ConfigMethods,
 	}
 	configJson, err := json.Marshal(config)
 	if err != nil {
@@ -246,10 +273,10 @@ func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState
 			}),
 		}, err
 	}
-  vm := GetTarget(state.Pid)
-  if vm == nil {
-    return nil, extension_kit.ToError("VM not found", nil)
-  }
+	vm := GetTarget(state.Pid)
+	if vm == nil {
+		return nil, extension_kit.ToError("VM not found", nil)
+	}
 	callbackUrl, attackEndpointPort := Prepare(vm, string(configJson))
 	state.EndpointPort = attackEndpointPort
 	state.CallbackUrl = callbackUrl
@@ -261,10 +288,10 @@ func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *controllerDelay) Start(_ context.Context, state *ControllerDelayState) (*action_kit_api.StartResult, error) {
-  vm := GetTarget(state.Pid)
-  if vm == nil {
-    return nil, extension_kit.ToError("VM not found", nil)
-  }
+	vm := GetTarget(state.Pid)
+	if vm == nil {
+		return nil, extension_kit.ToError("VM not found", nil)
+	}
 	err := Start(vm, state.CallbackUrl)
 	if err != nil {
 		return &action_kit_api.StartResult{
@@ -282,10 +309,10 @@ func (l *controllerDelay) Start(_ context.Context, state *ControllerDelayState) 
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *controllerDelay) Stop(_ context.Context, state *ControllerDelayState) (*action_kit_api.StopResult, error) {
-  vm := GetTarget(state.Pid)
-  if vm == nil {
-    return nil, extension_kit.ToError("VM not found", nil)
-  }
+	vm := GetTarget(state.Pid)
+	if vm == nil {
+		return nil, extension_kit.ToError("VM not found", nil)
+	}
 	Stop(vm)
 	return nil, nil
 }
