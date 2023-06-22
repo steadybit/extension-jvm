@@ -1,16 +1,17 @@
 package extjvm
 
 import (
-  "bufio"
-  "context"
-  "encoding/json"
-  "github.com/procyon-projects/chrono"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/extension-jvm/extjvm/common"
-  "github.com/steadybit/extension-jvm/extjvm/jvm"
-  "io"
-  "sync"
-  "time"
+	"bufio"
+	"context"
+	"encoding/json"
+	"github.com/procyon-projects/chrono"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/extjvm/common"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-kit/extutil"
+	"io"
+	"sync"
+	"time"
 )
 
 var (
@@ -27,21 +28,21 @@ var (
 )
 
 type SpringMvcMapping struct {
-	Consumes          []string
-	Headers           []string
-	Methods           []string
-	Params            []string
-	Produces          []string
-	Patterns          []string
-	HandlerClass      string
-	HandlerName       string
-	HandlerDescriptor string
+	Consumes          []string `json:"consumes"`
+	Headers           []string `json:"headers"`
+	Methods           []string `json:"methods"`
+	Params            []string `json:"params"`
+	Produces          []string `json:"produces"`
+	Patterns          []string `json:"patterns"`
+	HandlerClass      string   `json:"handlerClass"`
+	HandlerName       string   `json:"handlerName"`
+	HandlerDescriptor string   `json:"handlerDescriptor"`
 }
 type HttpRequest struct {
-	Address        string
-	Scheme         string
-	Timeout        int
-	CircuitBreaker bool
+	Address        string `json:"address"`
+	Scheme         string `json:"scheme"`
+	Timeout        int    `json:"timeout"`
+	CircuitBreaker bool   `json:"circuitBreaker"`
 }
 
 type SpringApplication struct {
@@ -67,6 +68,16 @@ func GetSpringApplications() []SpringApplication {
 		return true
 	})
 	return result
+}
+
+func FindSpringApplication(pid int32) *SpringApplication {
+	applications := GetSpringApplications()
+	for _, application := range applications {
+		if application.Pid == pid {
+			return extutil.Ptr(application)
+		}
+	}
+	return nil
 }
 
 func InitSpringDiscovery() {

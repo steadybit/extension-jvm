@@ -28,7 +28,7 @@ import (
 var (
 	pidExludes          []int32
 	jvms                sync.Map //map[int32]java_process.JavaVm
-	ClasspathExcludes   = []string{"IntelliJ IDEA", "surefirebooter"}
+	ClasspathExcludes   = []string{"IntelliJ IDEA", "surefirebooter", "Eclipse"}
 	CommandlineExcludes = []string{"IntelliJ IDEA", "com.intellij.idea.Main", "jetbrains.buildServer.agent.Launcher",
 		"jetbrains.buildServer.agent.AgentMain", "org.jetbrains.jps.cmdline.BuildMain", "org.jetbrains.idea.maven.server.RemoteMavenServer",
 		"org.jetbrains.jps.cmdline.Launcher", "org.jetbrains.plugins.scala.nailgun.NailgunRunner", "sun.tools.",
@@ -355,7 +355,7 @@ func isExcluded(vm *jvm.JavaVm) bool {
 		log.Debug().Msgf("%s is excluded by classpath", vm.ToDebugString())
 		return true
 	}
-	if utils.ContainsPartOfString(CommandlineExcludes, vm.ClassPath) {
+	if utils.ContainsPartOfString(CommandlineExcludes, vm.CommandLine) {
 		log.Debug().Msgf("%s is excluded by command", vm.ToDebugString())
 		return true
 	}

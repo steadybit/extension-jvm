@@ -5,7 +5,8 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"sync"
+  "strconv"
+  "sync"
 )
 
 type AttackStatus struct {
@@ -37,22 +38,17 @@ func StartAttackEndpoint(pid int32, configJson string) int {
 	}
 	port := listener.Addr().(*net.TCPAddr).Port
 	log.Info().Msgf("Listening on port %d", port)
-	attackStatus.Store(port, AttackStatus{
-		Started:    false,
-		Stopped:    false,
-		Failure:    "",
-		Pid:        pid,
-		Port:       port,
-		Listener:   &listener,
-		ConfigJson: configJson,
-	})
-
+  saveAttackStatus(strconv.Itoa(port), AttackStatus{
+    Started:    false,
+    Stopped:    false,
+    Failure:    "",
+    Pid:        pid,
+    Port:       port,
+    Listener:   &listener,
+    ConfigJson: configJson,
+  })
 	go func() {
-		err = http.Serve(listener, serverMuxProbes)
-		if err != nil {
-			log.Err(err).Msg("Failed to start HTTP server.")
-			return
-		}
+		_ = http.Serve(listener, serverMuxProbes)
 	}()
 	return port
 }
@@ -66,12 +62,16 @@ func StopAttackEndpoint(pid int32) {
 			return
 		}
 	}
-	attackStatus.Delete(status.Port)
+	attackStatus.Delete(strconv.Itoa(status.Port))
 }
 func failed(writer http.ResponseWriter, request *http.Request) {
 	body := request.Body
-	defer body.Close()
-	// body as string
+	defer func(body io.ReadCloser) {
+    err := body.Close()
+    if err != nil {
+      log.Error().Msg("Failed to close body.")
+    }
+  }(body)
 	bodyBytes, err := io.ReadAll(body)
 	if err != nil {
 		log.Err(err).Msg("Failed to read body.")
@@ -85,7 +85,7 @@ func failed(writer http.ResponseWriter, request *http.Request) {
 	status := loadAttackStatus(port)
 	status.Failure = bodyString
 	status.Stopped = true
-	attackStatus.Store(port, status)
+  saveAttackStatus(port, status)
 	log.Error().Msgf("Attack failed: %s for pid %d.", bodyString, status.Pid)
 	writer.WriteHeader(http.StatusOK)
 }
@@ -105,7 +105,11 @@ func loadAttackStatus(port string) AttackStatus {
 	return status.(AttackStatus)
 }
 
-func stopped(writer http.ResponseWriter, request *http.Request) {
+func saveAttackStatus(port string, status AttackStatus) {
+	attackStatus.Store(port, status)
+}
+
+func stopped(_ http.ResponseWriter, request *http.Request) {
 	port, err := getPort(request)
 	if err != nil {
 		log.Error().Msg("Failed to get port.")
@@ -113,12 +117,11 @@ func stopped(writer http.ResponseWriter, request *http.Request) {
 	}
 	status := loadAttackStatus(port)
 	status.Stopped = true
-	attackStatus.Store(port, status)
+  saveAttackStatus(port, status)
 	log.Info().Msgf("Attack stopped for pid %d.", status.Pid)
-	writer.WriteHeader(http.StatusOK)
 }
 
-func started(writer http.ResponseWriter, request *http.Request) {
+func started(_ http.ResponseWriter, request *http.Request) {
 	port, err := getPort(request)
 	if err != nil {
 		log.Error().Msg("Failed to get port.")
@@ -126,9 +129,8 @@ func started(writer http.ResponseWriter, request *http.Request) {
 	}
 	status := loadAttackStatus(port)
 	status.Started = true
-	attackStatus.Store(port, status)
+  saveAttackStatus(port, status)
 	log.Info().Msgf("Attack started for pid %d.", status.Pid)
-	writer.WriteHeader(http.StatusOK)
 }
 
 func getConfig(writer http.ResponseWriter, request *http.Request) {
@@ -141,8 +143,11 @@ func getConfig(writer http.ResponseWriter, request *http.Request) {
 	configJson := status.ConfigJson
 	writer.Header().Set("Content-Type", "application/json")
 	_, err = writer.Write([]byte(configJson))
-	writer.WriteHeader(http.StatusOK)
-	log.Error().Msgf("Attack Config delivered for pid %d.", status.Pid)
+  if err != nil {
+    log.Error().Msg("Failed to write config.")
+    return
+  }
+	log.Info().Msgf("Attack Config delivered for pid %d.", status.Pid)
 }
 
 func GetAttackStatus(pid int32) AttackStatus {
