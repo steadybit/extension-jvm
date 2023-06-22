@@ -32,7 +32,11 @@ func NewControllerException() action_kit_sdk.Action[ControllerExceptionState] {
 }
 
 func (l *controllerException) NewEmptyState() ControllerExceptionState {
-	return ControllerExceptionState{}
+	return ControllerExceptionState{
+		ControllerState: &ControllerState{
+			AttackState: &AttackState{},
+		},
+	}
 }
 
 // Describe returns the action description for the platform with all required information.
@@ -90,9 +94,6 @@ func (l *controllerException) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *controllerException) Prepare(_ context.Context, state *ControllerExceptionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	state.ControllerState = &ControllerState{
-		AttackState: &AttackState{},
-	}
 	errResult := extractPattern(request, state.ControllerState)
 	if errResult != nil {
 		return errResult, nil

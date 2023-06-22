@@ -13,44 +13,43 @@ import (
 	"time"
 )
 
-type controllerDelay struct{}
+type jdbcTemplateDelay struct{}
 
-type ControllerDelayState struct {
+type JdbcTemplateDelayState struct {
 	Delay       time.Duration
 	DelayJitter bool
-	*ControllerState
+	Operations  string
+	JdbcUrl     string
+	*AttackState
 }
 
 // Make sure action implements all required interfaces
 var (
-	_ action_kit_sdk.Action[ControllerDelayState]         = (*controllerDelay)(nil)
-	_ action_kit_sdk.ActionWithStop[ControllerDelayState] = (*controllerDelay)(nil) // Optional, needed when the action needs a stop method
-
+	_ action_kit_sdk.Action[JdbcTemplateDelayState]         = (*jdbcTemplateDelay)(nil)
+	_ action_kit_sdk.ActionWithStop[JdbcTemplateDelayState] = (*jdbcTemplateDelay)(nil)
 )
 
-func NewControllerDelay() action_kit_sdk.Action[ControllerDelayState] {
-	return &controllerDelay{}
+func NewJdbcTemplateDelay() action_kit_sdk.Action[JdbcTemplateDelayState] {
+	return &jdbcTemplateDelay{}
 }
 
-func (l *controllerDelay) NewEmptyState() ControllerDelayState {
-	return ControllerDelayState{
-    ControllerState: &ControllerState{
-      AttackState: &AttackState{},
-    },
-  }
+func (l *jdbcTemplateDelay) NewEmptyState() JdbcTemplateDelayState {
+	return JdbcTemplateDelayState{
+		AttackState: &AttackState{},
+	}
 }
 
 // Describe returns the action description for the platform with all required information.
-func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
+func (l *jdbcTemplateDelay) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          targetID + ".spring-mvc-delay-attack",
-		Label:       "Controller Delay",
-		Description: "Delay a Spring MVC controller http response by the given duration.",
+		Id:          targetID + ".spring-jdbctemplate-delay-attack",
+		Label:       "JDBC Template Delay",
+		Description: "Delay a Spring JDBC Template response by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
-		Icon:        extutil.Ptr(controllerDelayIcon),
+		Icon:        extutil.Ptr(jdbcTemplateDelayIcon),
 		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
 			// The target type this action is for
-			TargetType: targetIDOld + "(application.type=spring;spring.mvc-mapping)",
+			TargetType: targetIDOld + "(application.type=spring;spring.jdbc-template)",
 			// You can provide a list of target templates to help the user select targets.
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
@@ -73,15 +72,27 @@ func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 
 		// The parameters for the action
 		Parameters: []action_kit_api.ActionParameter{
-			patternAttribute,
-			methodAttribute,
 			{
-				Name:         "delay",
-				Label:        "Delay",
-				Description:  extutil.Ptr("How much should the response be delayed?"),
-				Type:         action_kit_api.Duration,
-				DefaultValue: extutil.Ptr("500ms"),
+				Name:         "operations",
+				Label:        "Operation",
+				Description:  extutil.Ptr("Which operation should be attacked?"),
+				Type:         action_kit_api.String,
+				DefaultValue: extutil.Ptr("*"),
 				Required:     extutil.Ptr(true),
+				Options: extutil.Ptr([]action_kit_api.ParameterOption{
+					action_kit_api.ExplicitParameterOption{
+						Label: "Any",
+						Value: "*",
+					},
+					action_kit_api.ExplicitParameterOption{
+						Label: "Reads",
+						Value: "r",
+					},
+					action_kit_api.ExplicitParameterOption{
+						Label: "Writes",
+						Value: "w",
+					},
+				}),
 			},
 			{
 				Name:         "duration",
@@ -90,7 +101,16 @@ func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 				Type:         action_kit_api.Duration,
 				DefaultValue: extutil.Ptr("30s"),
 				Required:     extutil.Ptr(true),
-			}, {
+			},
+			{
+				Name:         "delay",
+				Label:        "Delay",
+				Description:  extutil.Ptr("How long should the db access be delayed?"),
+				Type:         action_kit_api.Duration,
+				DefaultValue: extutil.Ptr("500ms"),
+				Required:     extutil.Ptr(true),
+			},
+			{
 				Name:         "delayJitter",
 				Label:        "Jitter",
 				Description:  extutil.Ptr("Add random +/-30% jitter to response delay?"),
@@ -98,6 +118,24 @@ func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 				DefaultValue: extutil.Ptr("true"),
 				Required:     extutil.Ptr(true),
 				Advanced:     extutil.Ptr(true),
+			},
+			{
+				Name:         "jdbcUrl",
+				Label:        "JDBC connection url",
+				Description:  extutil.Ptr("Which JDBC connection should be attacked?"),
+				Type:         action_kit_api.String,
+				DefaultValue: extutil.Ptr("*"),
+				Required:     extutil.Ptr(true),
+				Advanced:     extutil.Ptr(true),
+				Options: extutil.Ptr([]action_kit_api.ParameterOption{
+					action_kit_api.ExplicitParameterOption{
+						Label: "Any",
+						Value: "*",
+					},
+					action_kit_api.ParameterOptionsFromTargetAttribute{
+						Attribute: "datasource.jdbc-url",
+					},
+				}),
 			},
 		},
 		Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
@@ -109,30 +147,9 @@ func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 // It must not cause any harmful effects.
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	state.ControllerState = &ControllerState{
-		AttackState: &AttackState{},
-	}
-	errResult := extractPattern(request, state.ControllerState)
-	if errResult != nil {
-		return errResult, nil
-	}
-
-	errResult = extractMethod(request, state.ControllerState)
-	if errResult != nil {
-		return errResult, nil
-	}
-
-	errResult = extractDuration(request, state.AttackState)
-	if errResult != nil {
-		return errResult, nil
-	}
-
-	errResult = extractPid(request, state.AttackState)
-	if errResult != nil {
-		return errResult, nil
-	}
-
+func (l *jdbcTemplateDelay) Prepare(_ context.Context, state *JdbcTemplateDelayState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+	state.JdbcUrl = extutil.ToString(request.Config["jdbcUrl"])
+	state.Operations = extutil.ToString(request.Config["operations"])
 	parsedDelay := extutil.ToUInt64(request.Config["delay"])
 	var delay time.Duration
 	if parsedDelay == 0 {
@@ -145,17 +162,23 @@ func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState
 	delayJitter := extutil.ToBool(request.Config["delayJitter"])
 	state.DelayJitter = delayJitter
 
-	errResult = extractHandlerMethods(request, state.ControllerState)
+	errResult := extractDuration(request, state.AttackState)
+	if errResult != nil {
+		return errResult, nil
+	}
+
+	errResult = extractPid(request, state.AttackState)
 	if errResult != nil {
 		return errResult, nil
 	}
 
 	var config = map[string]interface{}{
-		"attack-class": "com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation",
+		"attack-class": "com.steadybit.attacks.javaagent.instrumentation.SpringJdbcTemplateDelayInstrumentation",
 		"duration":     int(state.Duration / time.Millisecond),
 		"delay":        int(state.Delay / time.Millisecond),
 		"delayJitter":  state.DelayJitter,
-		"methods":      state.HandlerMethods,
+		"operations":   state.Operations,
+		"jdbc-url":     state.JdbcUrl,
 	}
 	return commonPrepareEnd(config, state.AttackState)
 }
@@ -163,7 +186,7 @@ func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState
 // Start is called to start the action
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *controllerDelay) Start(_ context.Context, state *ControllerDelayState) (*action_kit_api.StartResult, error) {
+func (l *jdbcTemplateDelay) Start(_ context.Context, state *JdbcTemplateDelayState) (*action_kit_api.StartResult, error) {
 	return commonStart(state.AttackState)
 }
 
@@ -171,6 +194,6 @@ func (l *controllerDelay) Start(_ context.Context, state *ControllerDelayState) 
 // It will be called even if the start method did not complete successfully.
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *controllerDelay) Stop(_ context.Context, state *ControllerDelayState) (*action_kit_api.StopResult, error) {
+func (l *jdbcTemplateDelay) Stop(_ context.Context, state *JdbcTemplateDelayState) (*action_kit_api.StopResult, error) {
 	return commonStop(state.AttackState)
 }
