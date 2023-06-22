@@ -23,7 +23,7 @@ var (
 	methodAttribute = action_kit_api.ActionParameter{
 		Name:         "method",
 		Label:        "Http Method",
-		Description:  extutil.Ptr("Which http method should be used to match the requests?"),
+		Description:  extutil.Ptr("Which HTTP methods should be attacked?"),
 		Type:         action_kit_api.String,
 		Required:     extutil.Ptr(true),
 		DefaultValue: extutil.Ptr("*"),
@@ -36,6 +36,18 @@ var (
 				Label: "GET",
 				Value: "GET",
 			},
+      action_kit_api.ExplicitParameterOption{
+				Label: "HEAD",
+				Value: "HEAD",
+			},
+      action_kit_api.ExplicitParameterOption{
+				Label: "OPTIONS",
+				Value: "OPTIONS",
+			},
+      action_kit_api.ExplicitParameterOption{
+				Label: "TRACE",
+				Value: "TRACE",
+			},
 			action_kit_api.ExplicitParameterOption{
 				Label: "POST",
 				Value: "POST",
@@ -47,10 +59,6 @@ var (
 			action_kit_api.ExplicitParameterOption{
 				Label: "PATCH",
 				Value: "PATCH",
-			},
-			action_kit_api.ExplicitParameterOption{
-				Label: "HEAD",
-				Value: "HEAD",
 			},
 			action_kit_api.ExplicitParameterOption{
 				Label: "DELETE",
