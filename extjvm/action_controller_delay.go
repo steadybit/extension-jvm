@@ -5,22 +5,20 @@
 package extjvm
 
 import (
-  "context"
-  "encoding/json"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_sdk"
-  extension_kit "github.com/steadybit/extension-kit"
-  "github.com/steadybit/extension-kit/extbuild"
-  "github.com/steadybit/extension-kit/extutil"
-  "time"
+	"context"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-kit/extutil"
+	"time"
 )
 
 type controllerDelay struct{}
 
 type ControllerDelayState struct {
-	Delay         time.Duration
-	DelayJitter   bool
-  *ControllerState
+	Delay       time.Duration
+	DelayJitter bool
+	*ControllerState
 }
 
 // Make sure action implements all required interfaces
@@ -71,8 +69,8 @@ func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 
 		// The parameters for the action
 		Parameters: []action_kit_api.ActionParameter{
-      patternAttribute,
-      methodAttribute,
+			patternAttribute,
+			methodAttribute,
 			{
 				Name:         "delay",
 				Label:        "Delay",
@@ -108,26 +106,28 @@ func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-  state.ControllerState = &ControllerState{}
-  errResult := extractPattern(request, state.ControllerState)
-  if errResult != nil {
-    return errResult, nil
-  }
+	state.ControllerState = &ControllerState{
+		AttackState: &AttackState{},
+	}
+	errResult := extractPattern(request, state.ControllerState)
+	if errResult != nil {
+		return errResult, nil
+	}
 
-  errResult = extractMethod(request, state.ControllerState)
-  if errResult != nil {
-    return errResult, nil
-  }
+	errResult = extractMethod(request, state.ControllerState)
+	if errResult != nil {
+		return errResult, nil
+	}
 
-  errResult = extractDuration(request, state.ControllerState)
-  if errResult != nil {
-    return errResult, nil
-  }
+	errResult = extractDuration(request, state.AttackState)
+	if errResult != nil {
+		return errResult, nil
+	}
 
-  errResult = extractPid(request, state.ControllerState)
-  if errResult != nil {
-    return errResult, nil
-  }
+	errResult = extractPid(request, state.AttackState)
+	if errResult != nil {
+		return errResult, nil
+	}
 
 	parsedDelay := extutil.ToUInt64(request.Config["delay"])
 	var delay time.Duration
@@ -138,14 +138,13 @@ func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState
 	}
 	state.Delay = delay
 
-
 	delayJitter := extutil.ToBool(request.Config["delayJitter"])
 	state.DelayJitter = delayJitter
 
-  errResult = extractHandlerMethods(request, state.ControllerState)
-  if errResult != nil {
-    return errResult, nil
-  }
+	errResult = extractHandlerMethods(request, state.ControllerState)
+	if errResult != nil {
+		return errResult, nil
+	}
 
 	var config = map[string]interface{}{
 		"attack-class": "com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation",
@@ -154,49 +153,14 @@ func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState
 		"delayJitter":  state.DelayJitter,
 		"methods":      state.HandlerMethods,
 	}
-	configJson, err := json.Marshal(config)
-	if err != nil {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Failed to marshal config",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}, err
-	}
-	vm := GetTarget(state.Pid)
-	if vm == nil {
-    return &action_kit_api.PrepareResult{
-      Error: extutil.Ptr(action_kit_api.ActionKitError{
-        Title:  "VM not found",
-        Status: extutil.Ptr(action_kit_api.Errored),
-      }),
-    }, nil
-	}
-	callbackUrl, attackEndpointPort := Prepare(vm, string(configJson))
-	state.EndpointPort = attackEndpointPort
-	state.CallbackUrl = callbackUrl
-
-	return nil, nil
+	return commonPrepareEnd(config, state.AttackState)
 }
 
 // Start is called to start the action
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *controllerDelay) Start(_ context.Context, state *ControllerDelayState) (*action_kit_api.StartResult, error) {
-	vm := GetTarget(state.Pid)
-	if vm == nil {
-		return nil, extension_kit.ToError("VM not found", nil)
-	}
-	err := Start(vm, state.CallbackUrl)
-	if err != nil {
-		return &action_kit_api.StartResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Failed to start attack",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}, err
-	}
-	return nil, nil
+	return commonStart(state.AttackState)
 }
 
 // Stop is called to stop the action
@@ -204,18 +168,5 @@ func (l *controllerDelay) Start(_ context.Context, state *ControllerDelayState) 
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *controllerDelay) Stop(_ context.Context, state *ControllerDelayState) (*action_kit_api.StopResult, error) {
-	vm := GetTarget(state.Pid)
-	if vm == nil {
-		return nil, extension_kit.ToError("VM not found", nil)
-	}
-  success := Stop(vm)
-  if !success {
-    return &action_kit_api.StopResult{
-      Error: extutil.Ptr(action_kit_api.ActionKitError{
-        Title:  "Failed to stop attack",
-        Status: extutil.Ptr(action_kit_api.Errored),
-      }),
-    }, nil
-  }
-	return nil, nil
+	return commonStop(state.AttackState)
 }
