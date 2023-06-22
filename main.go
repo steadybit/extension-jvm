@@ -53,6 +53,7 @@ func main() {
 	action_kit_sdk.RegisterAction(extjvm.NewControllerDelay())
 	action_kit_sdk.RegisterAction(extjvm.NewControllerException())
 	action_kit_sdk.RegisterAction(extjvm.NewJdbcTemplateException())
+	action_kit_sdk.RegisterAction(extjvm.NewJdbcTemplateDelay())
 
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()

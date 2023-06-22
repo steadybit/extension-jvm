@@ -5,14 +5,12 @@
 package extjvm
 
 import (
-	"context"
-	"encoding/json"
-	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	extension_kit "github.com/steadybit/extension-kit"
-	"github.com/steadybit/extension-kit/extbuild"
-	"github.com/steadybit/extension-kit/extutil"
-	"time"
+  "context"
+  "github.com/steadybit/action-kit/go/action_kit_api/v2"
+  "github.com/steadybit/action-kit/go/action_kit_sdk"
+  "github.com/steadybit/extension-kit/extbuild"
+  "github.com/steadybit/extension-kit/extutil"
+  "time"
 )
 
 type jdbcTemplateException struct{}
@@ -35,7 +33,9 @@ func NewJdbcTemplateException() action_kit_sdk.Action[JdbcTemplateExceptionState
 }
 
 func (l *jdbcTemplateException) NewEmptyState() JdbcTemplateExceptionState {
-	return JdbcTemplateExceptionState{}
+	return JdbcTemplateExceptionState{
+		AttackState: &AttackState{},
+	}
 }
 
 // Describe returns the action description for the platform with all required information.
@@ -131,8 +131,6 @@ func (l *jdbcTemplateException) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *jdbcTemplateException) Prepare(_ context.Context, state *JdbcTemplateExceptionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	state.AttackState = &AttackState{}
-
 	state.ErroneousCallRate = extutil.ToInt(request.Config["erroneousCallRate"])
 
 	state.JdbcUrl = extutil.ToString(request.Config["jdbcUrl"])
@@ -158,26 +156,6 @@ func (l *jdbcTemplateException) Prepare(_ context.Context, state *JdbcTemplateEx
 	return commonPrepareEnd(config, state.AttackState)
 }
 
-func commonPrepareEnd(config map[string]interface{}, state *AttackState) (*action_kit_api.PrepareResult, error) {
-	configJson, err := json.Marshal(config)
-	if err != nil {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Failed to marshal config",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}, err
-	}
-	vm := GetTarget(state.Pid)
-	if vm == nil {
-		return nil, extension_kit.ToError("VM not found", nil)
-	}
-	callbackUrl, attackEndpointPort := Prepare(vm, string(configJson))
-	state.EndpointPort = attackEndpointPort
-	state.CallbackUrl = callbackUrl
-
-	return nil, nil
-}
 
 // Start is called to start the action
 // You can mutate the state here.
