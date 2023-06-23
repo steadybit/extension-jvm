@@ -43,7 +43,7 @@ func (l *controllerDelay) NewEmptyState() ControllerDelayState {
 // Describe returns the action description for the platform with all required information.
 func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          targetID + ".spring-mvc-delay-attack",
+		Id:          TargetID + ".spring-mvc-delay-attack",
 		Label:       "Controller Delay",
 		Description: "Delay a Spring MVC controller http response by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
@@ -110,9 +110,6 @@ func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	state.ControllerState = &ControllerState{
-		AttackState: &AttackState{},
-	}
 	errResult := extractPattern(request, state.ControllerState)
 	if errResult != nil {
 		return errResult, nil

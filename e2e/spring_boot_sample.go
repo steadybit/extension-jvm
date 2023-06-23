@@ -5,13 +5,17 @@ package e2e
 
 import (
 	"errors"
-	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+  "fmt"
+  "github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
 	"github.com/steadybit/extension-kit/extutil"
-	corev1 "k8s.io/api/core/v1"
+  "github.com/stretchr/testify/require"
+  corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	acorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 	ametav1 "k8s.io/client-go/applyconfigurations/meta/v1"
+  "testing"
+  "time"
 )
 
 type SpringBootSample struct {
@@ -81,7 +85,7 @@ func (n *SpringBootSample) Deploy(podName string, opts ...func(c *acorev1.PodApp
 			Selector: n.Pod.GetLabels(),
 			Ports: []acorev1.ServicePortApplyConfiguration{
 				{
-					Port:     extutil.Ptr(int32(80)),
+					Port:     extutil.Ptr(int32(8080)),
 					Protocol: extutil.Ptr(corev1.ProtocolTCP),
 				},
 			},
@@ -106,12 +110,84 @@ func (n *SpringBootSample) IsReachable() error {
 	}
 	defer client.Close()
 
-	_, err = client.R().Get("/")
+	_, err = client.R().Get("/customers")
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (n *SpringBootSample) AssertIsReachable(t *testing.T, expected bool) {
+  t.Helper()
+
+  client, err := n.Minikube.NewRestClientForService(n.Service)
+  require.NoError(t, err)
+  defer client.Close()
+
+  e2e.Retry(t, 20, 500*time.Millisecond, func(r *e2e.R) {
+    _, err = client.R().Get("/customers")
+    if expected && err != nil {
+      r.Failed = true
+      _, _ = fmt.Fprintf(r.Log, "expected spring boot sample to be reachble, but was not: %s", err)
+    } else if !expected && err == nil {
+      r.Failed = true
+      _, _ = fmt.Fprintf(r.Log, "expected spring boot sample not to be reachble, but was")
+    }
+  })
+}
+
+func (n *SpringBootSample) GetHttpStatusOfCustomersEndpoint() (int, error) {
+	client, err := n.Minikube.NewRestClientForService(n.Service)
+	if err != nil {
+		return 0, err
+	}
+	defer client.Close()
+
+	response, err := client.R().Get("/customers")
+	if err != nil {
+		return 0, err
+	}
+
+	return response.StatusCode(), nil
+}
+
+func (n *SpringBootSample) MeasureLatency(expectedStatus int) (time.Duration, error) {
+	client, err := n.Minikube.NewRestClientForService(n.Service)
+	if err != nil {
+		return 0, err
+	}
+	defer client.Close()
+
+  //now := time.Now()
+	response, err := client.R().Get("/customers")
+  response.Time()
+  //duration := time.Since(now)
+	if err != nil {
+		return 0, err
+	}
+  if response.StatusCode() != expectedStatus {
+    return 0, errors.New("unexpected status code")
+  }
+	return response.Time(), nil
+}
+
+func (n *SpringBootSample) AssertLatency(t *testing.T, min time.Duration, max time.Duration) {
+  t.Helper()
+
+  measurements := make([]time.Duration, 0, 5)
+  e2e.Retry(t, 8, 500*time.Millisecond, func(r *e2e.R) {
+    latency, err := n.MeasureLatency(200)
+    if err != nil {
+      r.Failed = true
+      _, _ = fmt.Fprintf(r.Log, "failed to measure package latency: %s", err)
+    }
+    if latency < min || latency > max {
+      r.Failed = true
+      measurements = append(measurements, latency)
+      _, _ = fmt.Fprintf(r.Log, "package latency %v is not in expected range [%s, %s]", measurements, min, max)
+    }
+  })
 }
 
 func (n *SpringBootSample) ContainerStatus() (*corev1.ContainerStatus, error) {

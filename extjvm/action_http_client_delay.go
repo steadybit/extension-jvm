@@ -41,7 +41,7 @@ func (l *httpClientDelay) NewEmptyState() HttpClientDelayState {
 // Describe returns the action description for the platform with all required information.
 func (l *httpClientDelay) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          targetID + ".spring-httpclient-delay-attack",
+		Id:          TargetID + ".spring-httpclient-delay-attack",
 		Label:       "Http Client Delay",
 		Description: "Delays a response from a RestTemplate or WebClient by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
