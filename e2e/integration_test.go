@@ -12,6 +12,7 @@ import (
   "github.com/steadybit/discovery-kit/go/discovery_kit_api"
   "github.com/stretchr/testify/assert"
   "github.com/stretchr/testify/require"
+  "os"
   "testing"
   "time"
 )
@@ -58,14 +59,14 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 
 	go m.TailLog(ctx, springBootSample.Pod)
 
-	//if os.Getenv("CI") == "true" {
-	//	fashionBestseller := FashionBestseller{Minikube: m}
-	//	err = fashionBestseller.Deploy("fashion-bestseller")
-	//	require.NoError(t, err, "failed to create pod")
-	//	defer func() { _ = fashionBestseller.Delete() }()
-  //
-	//	go m.TailLog(ctx, fashionBestseller.Pod)
-	//}
+	if os.Getenv("CI") == "true" {
+		fashionBestseller := FashionBestseller{Minikube: m}
+		err = fashionBestseller.Deploy("fashion-bestseller")
+		require.NoError(t, err, "failed to create pod")
+		defer func() { _ = fashionBestseller.Delete() }()
+
+		go m.TailLog(ctx, fashionBestseller.Pod)
+	}
 
 	target, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
 		//log.Debug().Msgf("targetApplications: %+v", target.Attributes)
@@ -79,14 +80,14 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 	require.NoError(t, err)
 	assert.Equal(t, target.TargetType, "application")
 
-	//if os.Getenv("CI") == "true" {
-	//	targetFashion, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
-	//		log.Debug().Msgf("targetApplications: %+v", target.Attributes)
-	//		return e2e.HasAttribute(target, "application.name", "fashion-bestseller")
-	//	})
-	//	require.NoError(t, err)
-	//	assert.Equal(t, targetFashion.TargetType, "application")
-	//}
+	if os.Getenv("CI") == "true" {
+		targetFashion, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
+      log.Debug().Msgf("targetApplications: %+v", target.Attributes)
+      return e2e.HasAttribute(target, "application.name", "fashion-bestseller")
+    })
+  require.NoError(t, err)
+  assert.Equal(t, targetFashion.TargetType, "application")
+	}
 }
 
 func testRunJVM(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
