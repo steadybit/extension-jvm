@@ -42,7 +42,7 @@ func (l *jdbcTemplateDelay) NewEmptyState() JdbcTemplateDelayState {
 // Describe returns the action description for the platform with all required information.
 func (l *jdbcTemplateDelay) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          targetID + ".spring-jdbctemplate-delay-attack",
+		Id:          TargetID + ".spring-jdbctemplate-delay-attack",
 		Label:       "JDBC Template Delay",
 		Description: "Delay a Spring JDBC Template response by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),

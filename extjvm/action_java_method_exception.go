@@ -41,7 +41,7 @@ func (l *javaMethodException) NewEmptyState() JavaMethodExceptionState {
 // Describe returns the action description for the platform with all required information.
 func (l *javaMethodException) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          targetID + ".java-method-exception-attack",
+		Id:          TargetID + ".java-method-exception-attack",
 		Label:       "Java Method Exception",
 		Description: "Throw an exception in an public Java method.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),

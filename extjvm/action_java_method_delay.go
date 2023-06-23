@@ -42,7 +42,7 @@ func (l *javaMethodDelay) NewEmptyState() JavaMethodDelayState {
 // Describe returns the action description for the platform with all required information.
 func (l *javaMethodDelay) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          targetID + ".java-method-delay-attack",
+		Id:          TargetID + ".java-method-delay-attack",
 		Label:       "Java Method Delay",
 		Description: "Delay a public method call by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),

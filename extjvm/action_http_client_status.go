@@ -44,7 +44,7 @@ func (l *httpClientStatus) NewEmptyState() HttpClientStatusState {
 // Describe returns the action description for the platform with all required information.
 func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
   return action_kit_api.ActionDescription{
-    Id:          targetID + ".spring-httpclient-status-attack",
+    Id:          TargetID + ".spring-httpclient-status-attack",
     Label:       "Http Client Status",
     Description: "Returns the given status code for a RestTemplate or WebClient call. The original call is not executed.",
     Version:     extbuild.GetSemverVersionStringOrUnknown(),
