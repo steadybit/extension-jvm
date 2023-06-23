@@ -57,6 +57,7 @@ func main() {
 	action_kit_sdk.RegisterAction(extjvm.NewHttpClientStatus())
 	action_kit_sdk.RegisterAction(extjvm.NewHttpClientDelay())
 	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodDelay())
+	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodException())
 
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
