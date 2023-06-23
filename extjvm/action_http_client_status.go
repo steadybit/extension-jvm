@@ -129,7 +129,6 @@ func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
         Label:        "Failure Types",
         Description:  extutil.Ptr("What HTTP client behavior should be simulated? Will overwrite any HttpStatus configuration."),
         Type:         action_kit_api.StringArray,
-        DefaultValue: extutil.Ptr("*"),
         Required:     extutil.Ptr(false),
         Advanced:     extutil.Ptr(true),
         Options: extutil.Ptr([]action_kit_api.ParameterOption{
@@ -187,7 +186,7 @@ func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
         Label:        "HttpStatus",
         Description:  extutil.Ptr("Which Http Status should be returned? Will be ignored when when failure cause is configured."),
         Type:         "httpStatus",
-        DefaultValue: extutil.Ptr("50"),
+        DefaultValue: extutil.Ptr("500"),
         Required:     extutil.Ptr(false),
         Advanced:     extutil.Ptr(true),
       },
@@ -203,7 +202,7 @@ func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *httpClientStatus) Prepare(_ context.Context, state *HttpClientStatusState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-  
+
   errResult := extractDuration(request, state.AttackState)
   if errResult != nil {
     return errResult, nil
