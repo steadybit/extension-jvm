@@ -67,6 +67,10 @@ func TestWithMinikube(t *testing.T) {
 		Name: "java method exception",
 		Test: testJavaMethodException,
 		},
+		{
+			Name: "jdbc template delay",
+			Test: testJDBCTemplateDelay,
+		},
 	})
 }
 
@@ -410,9 +414,9 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			require.NoError(t, err)
 			if tt.erroneousCallRate > 0 {
 				springBootSample.AssertStatusOnPath(t, tt.expectedHttpStatus, "/remote/blocking?url=https://www.github.com")
-        if tt.expectedLogStatus != 200 {
-				  e2e.AssertLogContains(t, m, springBootSample.Pod, strconv.Itoa(tt.expectedLogStatus)+" Injected by steadybit")
-        }
+				if tt.expectedLogStatus != 200 {
+					e2e.AssertLogContains(t, m, springBootSample.Pod, strconv.Itoa(tt.expectedLogStatus)+" Injected by steadybit")
+				}
 			} else {
 				springBootSample.AssertStatusOnPath(t, tt.expectedHttpStatus, "/remote/blocking?url=https://www.github.com")
 			}
@@ -513,13 +517,13 @@ func testJavaMethodException(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		config := struct {
 			Duration          int    `json:"duration"`
 			ErroneousCallRate int    `json:"erroneousCallRate"`
-      ClassName  string `json:"className"`
-      MethodName string `json:"methodName"`
+			ClassName         string `json:"className"`
+			MethodName        string `json:"methodName"`
 		}{
 			Duration:          10000,
 			ErroneousCallRate: tt.erroneousCallRate,
-      ClassName:  "com.steadybit.samples.data.CustomerController",
-      MethodName: "getAllCustomers",
+			ClassName:         "com.steadybit.samples.data.CustomerController",
+			MethodName:        "getAllCustomers",
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -538,6 +542,114 @@ func testJavaMethodException(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 				springBootSample.AssertStatus(t, 500)
 			} else {
 				springBootSample.AssertStatus(t, 200)
+			}
+			require.NoError(t, action.Cancel())
+		})
+	}
+}
+
+func testJDBCTemplateDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+	springBootSample, pid, deleteSpringBootSample := initTest(t, m, e)
+	defer deleteSpringBootSample()
+
+	tests := []struct {
+		name          string
+		delay         uint64
+		jitter        bool
+		expectedDelay bool
+		operations    string
+		jdbcUrl       string
+	}{
+		{
+			name:          "should not delay jdbc template execution",
+			expectedDelay: false,
+		},
+		{
+			name:          "should delay jdbc template execution",
+			delay:         200,
+			jitter:        false,
+			expectedDelay: true,
+		},
+		{
+			name:          "should delay jdbc template execution with jitter",
+			delay:         200,
+			jitter:        true,
+			expectedDelay: true,
+		},
+		{
+			name:          "should delay jdbc template execution with jitter only for reads",
+			delay:         200,
+			jitter:        true,
+			expectedDelay: true,
+			operations:    "r",
+		},
+		{
+			name:          "should not delay jdbc template execution with jitter only for writes",
+			delay:         200,
+			jitter:        true,
+			expectedDelay: false,
+			operations:    "w",
+		},
+		{
+			name:          "should not delay jdbc template execution on unknown url",
+			delay:         200,
+			jitter:        true,
+			expectedDelay: false,
+			operations:    "*",
+			jdbcUrl:       "jdbc:gibtesnicht",
+		},
+		{
+			name:          "should delay jdbc template execution with jitter on jdbc:h2:mem:testdb",
+			delay:         200,
+			jitter:        true,
+			expectedDelay: true,
+			operations:    "*",
+			jdbcUrl:       "jdbc:h2:mem:testdb",
+		},
+	}
+
+	for _, tt := range tests {
+    if tt.jdbcUrl == "" {
+      tt.jdbcUrl = "*"
+    }
+    if tt.operations == "" {
+      tt.operations = "*"
+    }
+
+		config := struct {
+			Duration   int    `json:"duration"`
+			Delay      uint64 `json:"delay"`
+			Jitter     bool   `json:"delayJitter"`
+			JdbcUrl    string `json:"jdbcUrl"`
+			Operations string `json:"operations"`
+		}{
+			Duration:   10000,
+			Delay:      tt.delay,
+			Jitter:     tt.jitter,
+			JdbcUrl:    tt.jdbcUrl,
+			Operations: tt.operations,
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			springBootSample.AssertIsReachable(t, true)
+
+			//measure customer endpoint
+			unaffectedLatency, err := springBootSample.MeasureLatency(200)
+			require.NoError(t, err, "failed to measure customers endpoint")
+
+			action, err := e.RunAction(extjvm.TargetID+".spring-jdbctemplate-delay-attack", &action_kit_api.Target{
+				Name: "spring.application.name",
+				Attributes: map[string][]string{
+					"spring.application.name": {"spring-boot-sample"},
+					"process.pid":             {strconv.Itoa(int(pid))},
+				},
+			}, config, nil)
+			defer func() { _ = action.Cancel() }()
+			require.NoError(t, err)
+			if tt.expectedDelay {
+				springBootSample.AssertLatency(t, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*90/100, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*350/100)
+			} else {
+				springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond)
 			}
 			require.NoError(t, action.Cancel())
 		})
