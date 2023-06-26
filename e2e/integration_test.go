@@ -20,7 +20,15 @@ import (
 	"time"
 )
 
+var (
+  springBootSample *SpringBootSample
+   deleteSpringBootSample func()
+  pid int32
+)
+
 func TestWithMinikube(t *testing.T) {
+
+
 	extFactory := e2e.HelmExtensionFactory{
 		Name: "extension-jvm",
 		Port: 8087,
@@ -30,6 +38,15 @@ func TestWithMinikube(t *testing.T) {
 				"--set", "logging.level=INFO",
 			}
 		},
+    BeforeAllFunc: func(t *testing.T, m *e2e.Minikube, e *e2e.Extension) error {
+      springBootSample, pid, deleteSpringBootSample = initTest(t, m, e)
+      return nil
+    },
+
+    AfterAllFunc: func(t *testing.T, m *e2e.Minikube, e *e2e.Extension) error {
+      deleteSpringBootSample()
+      return nil
+    },
 	}
 
 	mOpts := e2e.DefaultMiniKubeOpts
@@ -83,11 +100,6 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
 	defer cancel()
 
-	springBootSample := deploySpringBootSample(t, m)
-	defer func() { _ = springBootSample.Delete() }()
-
-	go m.TailLog(ctx, springBootSample.Pod)
-
 	if os.Getenv("CI") == "true" {
 		fashionBestseller := FashionBestseller{Minikube: m}
 		err := fashionBestseller.Deploy("fashion-bestseller")
@@ -124,10 +136,7 @@ func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extensi
 	return target
 }
 
-func testMvcDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	springBootSample, pid, deleteSpringBootSample := initTest(t, m, e)
-	defer deleteSpringBootSample()
-
+func testMvcDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 	tests := []struct {
 		name          string
 		delay         uint64
@@ -193,10 +202,7 @@ func testMvcDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	}
 }
 
-func testMvcException(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	springBootSample, pid, deleteSpringBootSample := initTest(t, m, e)
-	defer deleteSpringBootSample()
-
+func testMvcException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 	tests := []struct {
 		name              string
 		erroneousCallRate int
@@ -246,9 +252,7 @@ func testMvcException(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	}
 }
 
-func testHttpClientDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	springBootSample, pid, deleteSpringBootSample := initTest(t, m, e)
-	defer deleteSpringBootSample()
+func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 
 	tests := []struct {
 		name          string
@@ -334,8 +338,7 @@ func testHttpClientDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	springBootSample, pid, deleteSpringBootSample := initTest(t, m, e)
-	defer deleteSpringBootSample()
+
 
 	tests := []struct {
 		name               string
@@ -429,9 +432,7 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	}
 }
 
-func testJavaMethodDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	springBootSample, pid, deleteSpringBootSample := initTest(t, m, e)
-	defer deleteSpringBootSample()
+func testJavaMethodDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 
 	tests := []struct {
 		name          string
@@ -499,9 +500,7 @@ func testJavaMethodDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	}
 }
 
-func testJavaMethodException(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	springBootSample, pid, deleteSpringBootSample := initTest(t, m, e)
-	defer deleteSpringBootSample()
+func testJavaMethodException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 
 	tests := []struct {
 		name              string
@@ -552,9 +551,7 @@ func testJavaMethodException(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	}
 }
 
-func testJDBCTemplateDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	springBootSample, pid, deleteSpringBootSample := initTest(t, m, e)
-	defer deleteSpringBootSample()
+func testJDBCTemplateDelay(t *testing.T,  _ *e2e.Minikube, e *e2e.Extension) {
 
 	tests := []struct {
 		name          string
@@ -660,9 +657,7 @@ func testJDBCTemplateDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	}
 }
 
-func testJDBCTemplateException(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	springBootSample, pid, deleteSpringBootSample := initTest(t, m, e)
-	defer deleteSpringBootSample()
+func testJDBCTemplateException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 
 	tests := []struct {
 		name              string
@@ -727,18 +722,18 @@ func testJDBCTemplateException(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 	}
 }
 
-func initTest(t *testing.T, m *e2e.Minikube, e *e2e.Extension) (SpringBootSample, int32, func()) {
+func initTest(t *testing.T, m *e2e.Minikube, e *e2e.Extension) (*SpringBootSample, int32, func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
 	defer cancel()
 
-	springBootSample := deploySpringBootSample(t, m)
-	springBootSample.AssertIsReachable(t, true)
+	sbsApp := deploySpringBootSample(t, m)
+  sbsApp.AssertIsReachable(t, true)
 
 	//go m.TailLog(ctx, springBootSample.Pod)
 
 	target := getSpringBootSampleTarget(t, ctx, e)
-	pid := extutil.ToInt32(target.Attributes["process.pid"][0])
-	return springBootSample, pid, func() { _ = springBootSample.Delete() }
+	p := extutil.ToInt32(target.Attributes["process.pid"][0])
+	return extutil.Ptr(sbsApp), p, func() { _ = sbsApp.Delete() }
 }
 
 func deploySpringBootSample(t *testing.T, m *e2e.Minikube) SpringBootSample {
