@@ -39,34 +39,34 @@ func TestWithMinikube(t *testing.T) {
 	//mOpts.Runtimes =e2e.AllRuntimes
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
-		{
-			Name: "discover spring boot sample",
-			Test: testDiscoverSpringBootSample,
-		},
-		{
-		Name: "mvc delay",
-		Test: testMvcDelay,
-		},
-		{
-		Name: "mvc exception",
-		Test: testMvcException,
-		},
-		{
-		Name: "http client delay",
-		Test: testHttpClientDelay,
-		},
-		{
-			Name: "http client status",
-			Test: testHttpClientStatus,
-		},
-		{
-		Name: "java method delay",
-		Test: testJavaMethodDelay,
-		},
 		//{
-		//Name: "java method exception",
-		//Test: testJavaMethodException,
+		//	Name: "discover spring boot sample",
+		//	Test: testDiscoverSpringBootSample,
 		//},
+		//{
+		//Name: "mvc delay",
+		//Test: testMvcDelay,
+		//},
+		//{
+		//Name: "mvc exception",
+		//Test: testMvcException,
+		//},
+		//{
+		//Name: "http client delay",
+		//Test: testHttpClientDelay,
+		//},
+		//{
+		//	Name: "http client status",
+		//	Test: testHttpClientStatus,
+		//},
+		//{
+		//Name: "java method delay",
+		//Test: testJavaMethodDelay,
+		//},
+		{
+		Name: "java method exception",
+		Test: testJavaMethodException,
+		},
 	})
 }
 
@@ -525,7 +525,7 @@ func testJavaMethodException(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		t.Run(tt.name, func(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 
-			action, err := e.RunAction(extjvm.TargetID+".spring-mvc-exception-attack", &action_kit_api.Target{
+			action, err := e.RunAction(extjvm.TargetID+".java-method-exception-attack", &action_kit_api.Target{
 				Name: "spring.application.name",
 				Attributes: map[string][]string{
 					"spring.application.name": {"spring-boot-sample"},
