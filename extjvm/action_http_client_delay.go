@@ -155,7 +155,7 @@ func (l *httpClientDelay) Prepare(_ context.Context, state *HttpClientDelayState
 		"delayJitter":  state.DelayJitter,
 		"hostAddress":  state.HostAddress,
 	}
-	return commonPrepareEnd(config, state.AttackState)
+	return commonPrepareEnd(config, state.AttackState, request)
 }
 
 // Start is called to start the action

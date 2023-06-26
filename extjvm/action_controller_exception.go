@@ -128,7 +128,7 @@ func (l *controllerException) Prepare(_ context.Context, state *ControllerExcept
 		"erroneousCallRate": state.ErroneousCallRate,
 		"methods":           state.HandlerMethods,
 	}
-	return commonPrepareEnd(config, state.AttackState)
+	return commonPrepareEnd(config, state.AttackState, request)
 }
 
 // Start is called to start the action

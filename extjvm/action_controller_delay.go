@@ -154,7 +154,7 @@ func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState
 		"delayJitter":  state.DelayJitter,
 		"methods":      state.HandlerMethods,
 	}
-	return commonPrepareEnd(config, state.AttackState)
+	return commonPrepareEnd(config, state.AttackState, request)
 }
 
 // Start is called to start the action

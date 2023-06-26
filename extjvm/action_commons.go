@@ -1,8 +1,8 @@
 package extjvm
 
 import (
-  "encoding/json"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"encoding/json"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
@@ -93,24 +93,31 @@ func commonStop(state *AttackState) (*action_kit_api.StopResult, error) {
 	return nil, nil
 }
 
+func commonPrepareEnd(config map[string]interface{}, state *AttackState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+	if request.ExecutionContext.AgentPid != nil && int(state.Pid) == *request.ExecutionContext.AgentPid {
+		return &action_kit_api.PrepareResult{
+			Error: extutil.Ptr(action_kit_api.ActionKitError{
+				Title:  "Can't attack the agent process",
+				Status: extutil.Ptr(action_kit_api.Errored),
+			}),
+		}, nil
+	}
+	configJson, err := json.Marshal(config)
+	if err != nil {
+		return &action_kit_api.PrepareResult{
+			Error: extutil.Ptr(action_kit_api.ActionKitError{
+				Title:  "Failed to marshal config",
+				Status: extutil.Ptr(action_kit_api.Errored),
+			}),
+		}, err
+	}
+	vm := GetTarget(state.Pid)
+	if vm == nil {
+		return nil, extension_kit.ToError("VM not found", nil)
+	}
+	callbackUrl, attackEndpointPort := Prepare(vm, string(configJson))
+	state.EndpointPort = attackEndpointPort
+	state.CallbackUrl = callbackUrl
 
-func commonPrepareEnd(config map[string]interface{}, state *AttackState) (*action_kit_api.PrepareResult, error) {
-  configJson, err := json.Marshal(config)
-  if err != nil {
-    return &action_kit_api.PrepareResult{
-      Error: extutil.Ptr(action_kit_api.ActionKitError{
-        Title:  "Failed to marshal config",
-        Status: extutil.Ptr(action_kit_api.Errored),
-      }),
-    }, err
-  }
-  vm := GetTarget(state.Pid)
-  if vm == nil {
-    return nil, extension_kit.ToError("VM not found", nil)
-  }
-  callbackUrl, attackEndpointPort := Prepare(vm, string(configJson))
-  state.EndpointPort = attackEndpointPort
-  state.CallbackUrl = callbackUrl
-
-  return nil, nil
+	return nil, nil
 }

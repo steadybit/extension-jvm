@@ -220,7 +220,7 @@ func (l *httpClientStatus) Prepare(_ context.Context, state *HttpClientStatusSta
     "urlPath":           state.UrlPath,
     "failureCauses":     state.FailureCauses,
   }
-  return commonPrepareEnd(config, state.AttackState)
+  return commonPrepareEnd(config, state.AttackState, request)
 }
 
 // Start is called to start the action
