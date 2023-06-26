@@ -30,8 +30,6 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
     private final String hostAddress;
     private final String urlPath;
     private final String[] failureCauses;
-    @Deprecated
-    private final int httpStatus;
     private final ElementMatcher<MethodDescription> executeMethod = named("execute").and(takesNoArguments()).and(not(isAbstract()));
     private final ElementMatcher<MethodDescription> connectMethod = named("connect").and(takesArguments(3)).and(not(isAbstract()));
 
@@ -42,7 +40,6 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
         this.urlPath = config.optString("urlPath", "*");
         this.httpMethods = this.getAllStringValues(config.optJSONArray("httpMethods"));
         this.failureCauses = this.getAllStringValues(config.optJSONArray("failureCauses"));
-        this.httpStatus = config.optInt("httpStatus", 500);
     }
 
     private String[] getAllStringValues(JSONArray array) {
@@ -123,7 +120,7 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
 
     private Integer determineFailureStatusCode() {
         if (this.failureCauses.length == 0) {
-            return this.httpStatus;
+            return 500;
         }
 
         ThreadLocalRandom threadLocalRandom = ThreadLocalRandom.current();
