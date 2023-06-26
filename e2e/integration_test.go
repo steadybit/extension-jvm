@@ -39,30 +39,30 @@ func TestWithMinikube(t *testing.T) {
 	//mOpts.Runtimes =e2e.AllRuntimes
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
-		//{
-		//	Name: "discover spring boot sample",
-		//	Test: testDiscoverSpringBootSample,
-		//},
-		//{
-		//Name: "mvc delay",
-		//Test: testMvcDelay,
-		//},
-		//{
-		//Name: "mvc exception",
-		//Test: testMvcException,
-		//},
-		//{
-		//Name: "http client delay",
-		//Test: testHttpClientDelay,
-		//},
-		//{
-		//	Name: "http client status",
-		//	Test: testHttpClientStatus,
-		//},
-		//{
-		//Name: "java method delay",
-		//Test: testJavaMethodDelay,
-		//},
+		{
+			Name: "discover spring boot sample",
+			Test: testDiscoverSpringBootSample,
+		},
+		{
+		Name: "mvc delay",
+		Test: testMvcDelay,
+		},
+		{
+		Name: "mvc exception",
+		Test: testMvcException,
+		},
+		{
+		Name: "http client delay",
+		Test: testHttpClientDelay,
+		},
+		{
+			Name: "http client status",
+			Test: testHttpClientStatus,
+		},
+		{
+		Name: "java method delay",
+		Test: testJavaMethodDelay,
+		},
 		{
 		Name: "java method exception",
 		Test: testJavaMethodException,
