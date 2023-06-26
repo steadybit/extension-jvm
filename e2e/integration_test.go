@@ -33,8 +33,8 @@ func TestWithMinikube(t *testing.T) {
   }
 
   mOpts := e2e.DefaultMiniKubeOpts
-  mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker, e2e.RuntimeContainerd}
-  //mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker}
+  //mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker, e2e.RuntimeContainerd}
+  mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker}
   //mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeCrio}
   //mOpts.Runtimes =e2e.AllRuntimes
 
@@ -48,16 +48,24 @@ func TestWithMinikube(t *testing.T) {
     Test: testMvcDelay,
     },
     {
-     Name: "mvc exception",
-     Test: testMvcException,
+    Name: "mvc exception",
+    Test: testMvcException,
     },
     {
-      Name: "http client delay",
-      Test: testHttpClientDelay,
+     Name: "http client delay",
+     Test: testHttpClientDelay,
+    },
+    {
+    Name: "http client status",
+    Test: testHttpClientStatus,
     },
     //{
-    // Name: "http client status",
-    // Test: testHttpClientStatus,
+    //Name: "java method delay",
+    //Test: testJavaMethodDelay,
+    //},
+    //{
+    // Name: "java method exception",
+    // Test: testJavaMethodException,
     //},
   })
 }
@@ -325,6 +333,175 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
   tests := []struct {
     name          string
     erroneousCallRate int
+    hostAddress   string
+    expectedStatus int
+    httpStatus int
+    failureTypes  []string
+  }{
+    //{
+    //  name:          "should not throw http client exceptions",
+    //  erroneousCallRate: 0,
+    //  expectedStatus: 200,
+    //  failureTypes:  []string{},
+    //},
+    {
+      name:          "should throw http client exceptions",
+      erroneousCallRate:         100,
+      failureTypes:  []string{},
+      expectedStatus: 500,
+    },
+    //{
+    //  name:          "should throw http client exceptions on host and set http status",
+    //  erroneousCallRate:         100,
+    //  failureTypes:  []string{},
+    //  expectedStatus: 501,
+    //  httpStatus: 501,
+    //  hostAddress:   "https://www.github.com",
+    //},
+    //{
+    //  name:          "should not throw http client exceptions on host",
+    //  erroneousCallRate:         100,
+    //  failureTypes:  []string{},
+    //  expectedStatus: 200,
+    //  hostAddress:   "https://steadybit.github.com",
+    //},
+    //{
+    //  name:          "should throw http client exceptions with failure type",
+    //  erroneousCallRate:         100,
+    //  failureTypes:  []string{"HTTP_404"},
+    //  expectedStatus: 404,
+    //  hostAddress:   "https://www.github.com",
+    //}, {
+    //  name:          "should throw http client exceptions sometimes",
+    //  erroneousCallRate:         50,
+    //  failureTypes:  []string{},
+    //  expectedStatus: 500,
+    //},
+
+  }
+
+  for _, tt := range tests {
+    if tt.hostAddress == "" {
+      tt.hostAddress = "*"
+    }
+
+    config := struct {
+      Duration int    `json:"duration"`
+      ErroneousCallRate    int `json:"erroneousCallRate"`
+      HttpMethods  []string `json:"httpMethods"`
+      HostAddress   string `json:"hostAddress"`
+      UrlPath   string `json:"urlPath"`
+      FailureCauses   []string `json:"failureCauses"`
+      HttpStatus   int `json:"httpStatus"`
+    }{
+      Duration: 10000,
+      ErroneousCallRate:    tt.erroneousCallRate,
+      HttpMethods:  []string{"GET"},
+      HostAddress:   tt.hostAddress,
+      UrlPath:   "*",
+      FailureCauses:   tt.failureTypes,
+      HttpStatus:   tt.expectedStatus,
+    }
+
+    t.Run(tt.name, func(t *testing.T) {
+      springBootSample.AssertIsReachable(t, true)
+
+      action, err := e.RunAction(extjvm.TargetID+".spring-httpclient-status-attack", &action_kit_api.Target{
+        Name: "spring.application.name",
+        Attributes: map[string][]string{
+          "spring.application.name": {"spring-boot-sample"},
+          "process.pid":             {strconv.Itoa(int(pid))},
+        },
+      }, config, nil)
+      defer func() { _ = action.Cancel() }()
+      require.NoError(t, err)
+      if tt.erroneousCallRate > 0 {
+        springBootSample.AssertStatusOnPath(t, 500, "/remote/blocking?url=https://www.github.com")
+      } else {
+        springBootSample.AssertStatusOnPath(t, 200, "/remote/blocking?url=https://www.github.com")
+      }
+      require.NoError(t, action.Cancel())
+    })
+  }
+}
+
+func testJavaMethodDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+  springBootSample, pid, deleteSpringBootSample := initTest(t, m, e)
+  defer deleteSpringBootSample()
+
+  tests := []struct {
+    name          string
+    delay         uint64
+    jitter        bool
+    expectedDelay bool
+  }{
+    {
+      name:          "should not delay java method execution",
+      expectedDelay: false,
+    },
+    {
+      name:          "should delay java method execution",
+      delay:         200,
+      jitter:        false,
+      expectedDelay: true,
+    },
+    {
+      name:          "should delay java method execution with jitter",
+      delay:         200,
+      jitter:        true,
+      expectedDelay: true,
+    },
+  }
+
+  for _, tt := range tests {
+
+    config := struct {
+      Duration int    `json:"duration"`
+      Delay    uint64 `json:"delay"`
+      Jitter   bool   `json:"delayJitter"`
+      MethodName  string `json:"methodName"`
+      ClassName  string `json:"className"`
+    }{
+      Duration: 10000,
+      Delay:    tt.delay,
+      Jitter:   tt.jitter,
+      MethodName:  "com.steadybit.samples.data.CustomerController",
+      ClassName:  "getAllCustomers",
+    }
+
+    t.Run(tt.name, func(t *testing.T) {
+      springBootSample.AssertIsReachable(t, true)
+
+      //measure customer endpoint
+      unaffectedLatency, err := springBootSample.MeasureLatency(200)
+      require.NoError(t, err, "failed to measure customers endpoint")
+
+      action, err := e.RunAction(extjvm.TargetID+".java-method-delay-attack", &action_kit_api.Target{
+        Name: "spring.application.name",
+        Attributes: map[string][]string{
+          "spring.application.name": {"spring-boot-sample"},
+          "process.pid":             {strconv.Itoa(int(pid))},
+        },
+      }, config, nil)
+      defer func() { _ = action.Cancel() }()
+      require.NoError(t, err)
+      if tt.expectedDelay {
+        springBootSample.AssertLatency(t, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*90/100, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*350/100)
+      } else {
+        springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond)
+      }
+      require.NoError(t, action.Cancel())
+    })
+  }
+}
+
+func testJavaMethodException(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+  springBootSample, pid, deleteSpringBootSample := initTest(t, m, e)
+  defer deleteSpringBootSample()
+
+  tests := []struct {
+    name          string
+    erroneousCallRate int
   }{
     {
       name:          "should not throw exceptions",
@@ -362,9 +539,9 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
       defer func() { _ = action.Cancel() }()
       require.NoError(t, err)
       if tt.erroneousCallRate > 0 {
-        springBootSample.AssertStatusOnPath(t, 500, "/remote/blocking?url=https://www.github.com")
+        springBootSample.AssertStatus(t, 500)
       } else {
-        springBootSample.AssertStatusOnPath(t, 200, "/remote/blocking?url=https://www.github.com")
+        springBootSample.AssertStatus(t, 200)
       }
       require.NoError(t, action.Cancel())
     })

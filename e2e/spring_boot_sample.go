@@ -204,7 +204,7 @@ func (n *SpringBootSample) ExpectedStatusOnPath(expectedStatus int, path string)
   }
   defer client.Close()
 
-  response, err := client.R().Get("/customers")
+  response, err := client.R().Get(path)
   if err != nil {
     return false, response.StatusCode(), err
   }
