@@ -153,7 +153,7 @@ func (l *jdbcTemplateException) Prepare(_ context.Context, state *JdbcTemplateEx
 		"erroneousCallRate": state.ErroneousCallRate,
 		"jdbc-url":          state.JdbcUrl,
 	}
-	return commonPrepareEnd(config, state.AttackState)
+	return commonPrepareEnd(config, state.AttackState, request)
 }
 
 

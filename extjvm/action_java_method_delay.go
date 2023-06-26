@@ -153,7 +153,7 @@ func (l *javaMethodDelay) Prepare(_ context.Context, state *JavaMethodDelayState
 		"delayJitter":  state.DelayJitter,
 		"methods":      []string{state.ClassName + "#" + state.MethodName},
 	}
-	return commonPrepareEnd(config, state.AttackState)
+	return commonPrepareEnd(config, state.AttackState, request)
 }
 
 // Start is called to start the action

@@ -180,7 +180,7 @@ func (l *jdbcTemplateDelay) Prepare(_ context.Context, state *JdbcTemplateDelayS
 		"operations":   state.Operations,
 		"jdbc-url":     state.JdbcUrl,
 	}
-	return commonPrepareEnd(config, state.AttackState)
+	return commonPrepareEnd(config, state.AttackState, request)
 }
 
 // Start is called to start the action

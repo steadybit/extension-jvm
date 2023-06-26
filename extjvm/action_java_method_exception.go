@@ -127,7 +127,8 @@ func (l *javaMethodException) Prepare(_ context.Context, state *JavaMethodExcept
 		"erroneousCallRate": state.ErroneousCallRate,
 		"methods":           []string{state.ClassName + "#" + state.MethodName},
 	}
-	return commonPrepareEnd(config, state.AttackState)
+
+	return commonPrepareEnd(config, state.AttackState, request)
 }
 
 // Start is called to start the action
