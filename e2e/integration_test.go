@@ -64,8 +64,8 @@ func TestWithMinikube(t *testing.T) {
 		//Test: testJavaMethodDelay,
 		//},
 		//{
-		// Name: "java method exception",
-		// Test: testJavaMethodException,
+		//Name: "java method exception",
+		//Test: testJavaMethodException,
 		//},
 	})
 }
@@ -410,7 +410,9 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			require.NoError(t, err)
 			if tt.erroneousCallRate > 0 {
 				springBootSample.AssertStatusOnPath(t, tt.expectedHttpStatus, "/remote/blocking?url=https://www.github.com")
-				e2e.AssertLogContains(t, m, springBootSample.Pod, strconv.Itoa(tt.expectedLogStatus)+" Injected by steadybit")
+        if tt.expectedLogStatus != 200 {
+				  e2e.AssertLogContains(t, m, springBootSample.Pod, strconv.Itoa(tt.expectedLogStatus)+" Injected by steadybit")
+        }
 			} else {
 				springBootSample.AssertStatusOnPath(t, tt.expectedHttpStatus, "/remote/blocking?url=https://www.github.com")
 			}
@@ -453,14 +455,14 @@ func testJavaMethodDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			Duration   int    `json:"duration"`
 			Delay      uint64 `json:"delay"`
 			Jitter     bool   `json:"delayJitter"`
-			MethodName string `json:"methodName"`
 			ClassName  string `json:"className"`
+			MethodName string `json:"methodName"`
 		}{
 			Duration:   10000,
 			Delay:      tt.delay,
 			Jitter:     tt.jitter,
-			MethodName: "com.steadybit.samples.data.CustomerController",
-			ClassName:  "getAllCustomers",
+			ClassName:  "com.steadybit.samples.data.CustomerController",
+			MethodName: "getAllCustomers",
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -511,13 +513,13 @@ func testJavaMethodException(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		config := struct {
 			Duration          int    `json:"duration"`
 			ErroneousCallRate int    `json:"erroneousCallRate"`
-			Pattern           string `json:"pattern"`
-			Method            string `json:"method"`
+      ClassName  string `json:"className"`
+      MethodName string `json:"methodName"`
 		}{
 			Duration:          10000,
 			ErroneousCallRate: tt.erroneousCallRate,
-			Pattern:           "/customers",
-			Method:            "GET",
+      ClassName:  "com.steadybit.samples.data.CustomerController",
+      MethodName: "getAllCustomers",
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
