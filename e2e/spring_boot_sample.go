@@ -159,10 +159,7 @@ func (n *SpringBootSample) MeasureLatency(expectedStatus int) (time.Duration, er
 	}
 	defer client.Close()
 
-  //now := time.Now()
 	response, err := client.R().Get("/customers")
-  response.Time()
-  //duration := time.Since(now)
 	if err != nil {
 		return 0, err
 	}
@@ -186,6 +183,41 @@ func (n *SpringBootSample) AssertLatency(t *testing.T, min time.Duration, max ti
       r.Failed = true
       measurements = append(measurements, latency)
       _, _ = fmt.Fprintf(r.Log, "package latency %v is not in expected range [%s, %s]", measurements, min, max)
+    }
+  })
+}
+
+
+func (n *SpringBootSample) ExpectedStatus(expectedStatus int) (bool, int, error) {
+  client, err := n.Minikube.NewRestClientForService(n.Service)
+  if err != nil {
+    return false, -1, err
+  }
+  defer client.Close()
+
+  response, err := client.R().Get("/customers")
+  if err != nil {
+    return false, response.StatusCode(), err
+  }
+  if response.StatusCode() != expectedStatus {
+    return false, response.StatusCode(), errors.New("unexpected status code")
+  }
+  return true, response.StatusCode(), nil
+}
+func (n *SpringBootSample) AssertStatus(t *testing.T, expectedHttpStatus int) {
+  t.Helper()
+
+  measurements := make([]int, 0, 5)
+  e2e.Retry(t, 8, 500*time.Millisecond, func(r *e2e.R) {
+    success, statusCode, err := n.ExpectedStatus(expectedHttpStatus)
+    if err != nil {
+      r.Failed = true
+      _, _ = fmt.Fprintf(r.Log, "failed to get http status: %s", err)
+    }
+    if success != true {
+      r.Failed = true
+      measurements = append(measurements, statusCode)
+      _, _ = fmt.Fprintf(r.Log, "http status %v is not expected [%d]", measurements, expectedHttpStatus)
     }
   })
 }
