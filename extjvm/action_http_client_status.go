@@ -10,7 +10,6 @@ import (
   "github.com/steadybit/action-kit/go/action_kit_sdk"
   "github.com/steadybit/extension-kit/extbuild"
   "github.com/steadybit/extension-kit/extutil"
-  "strconv"
   "time"
 )
 
@@ -22,7 +21,6 @@ type HttpClientStatusState struct {
   HostAddress       string
   UrlPath           string
   FailureCauses     []string
-  HttpStatus        string
   *AttackState
 }
 
@@ -182,14 +180,6 @@ func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
             Value: "HTTP_4XX",
           },
         }),
-      }, {
-        Name:         "httpStatus",
-        Label:        "HttpStatus",
-        Description:  extutil.Ptr("Which Http Status should be returned? Will be ignored when when failure cause is configured."),
-        Type:         "httpStatus",
-        DefaultValue: extutil.Ptr("500"),
-        Required:     extutil.Ptr(false),
-        Advanced:     extutil.Ptr(true),
       },
       erroneousCallRate,
     },
@@ -214,12 +204,6 @@ func (l *httpClientStatus) Prepare(_ context.Context, state *HttpClientStatusSta
   state.HostAddress = extutil.ToString(request.Config["hostAddress"])
   state.UrlPath = extutil.ToString(request.Config["urlPath"])
   state.FailureCauses = extutil.ToStringArray(request.Config["failureCauses"])
-  parsedHttpStatus := extutil.ToInt(request.Config["httpStatus"])
-  if parsedHttpStatus != 0 {
-    state.HttpStatus = strconv.Itoa(parsedHttpStatus)
-  } else {
-    state.HttpStatus = ""
-  }
 
 
   errResult = extractPid(request, state.AttackState)
@@ -235,7 +219,6 @@ func (l *httpClientStatus) Prepare(_ context.Context, state *HttpClientStatusSta
     "hostAddress":       state.HostAddress,
     "urlPath":           state.UrlPath,
     "failureCauses":     state.FailureCauses,
-    "httpStatus":        state.HttpStatus,
   }
   return commonPrepareEnd(config, state.AttackState)
 }

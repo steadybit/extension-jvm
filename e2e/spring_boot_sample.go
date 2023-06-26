@@ -4,16 +4,16 @@
 package e2e
 
 import (
-	"errors"
+  "errors"
   "fmt"
   "github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
-	"github.com/steadybit/extension-kit/extutil"
+  "github.com/steadybit/action-kit/go/action_kit_test/e2e"
+  "github.com/steadybit/extension-kit/extutil"
   "github.com/stretchr/testify/require"
   corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	acorev1 "k8s.io/client-go/applyconfigurations/core/v1"
-	ametav1 "k8s.io/client-go/applyconfigurations/meta/v1"
+  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+  acorev1 "k8s.io/client-go/applyconfigurations/core/v1"
+  ametav1 "k8s.io/client-go/applyconfigurations/meta/v1"
   "testing"
   "time"
 )
