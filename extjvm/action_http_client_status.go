@@ -10,6 +10,7 @@ import (
   "github.com/steadybit/action-kit/go/action_kit_sdk"
   "github.com/steadybit/extension-kit/extbuild"
   "github.com/steadybit/extension-kit/extutil"
+  "strconv"
   "time"
 )
 
@@ -21,7 +22,7 @@ type HttpClientStatusState struct {
   HostAddress       string
   UrlPath           string
   FailureCauses     []string
-  HttpStatus        int
+  HttpStatus        string
   *AttackState
 }
 
@@ -213,7 +214,13 @@ func (l *httpClientStatus) Prepare(_ context.Context, state *HttpClientStatusSta
   state.HostAddress = extutil.ToString(request.Config["hostAddress"])
   state.UrlPath = extutil.ToString(request.Config["urlPath"])
   state.FailureCauses = extutil.ToStringArray(request.Config["failureCauses"])
-  state.HttpStatus = extutil.ToInt(request.Config["httpStatus"])
+  parsedHttpStatus := extutil.ToInt(request.Config["httpStatus"])
+  if parsedHttpStatus != 0 {
+    state.HttpStatus = strconv.Itoa(parsedHttpStatus)
+  } else {
+    state.HttpStatus = ""
+  }
+
 
   errResult = extractPid(request, state.AttackState)
   if errResult != nil {
