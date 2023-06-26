@@ -59,10 +59,10 @@ func TestWithMinikube(t *testing.T) {
 			Name: "http client status",
 			Test: testHttpClientStatus,
 		},
-		//{
-		//Name: "java method delay",
-		//Test: testJavaMethodDelay,
-		//},
+		{
+		Name: "java method delay",
+		Test: testJavaMethodDelay,
+		},
 		//{
 		//Name: "java method exception",
 		//Test: testJavaMethodException,
