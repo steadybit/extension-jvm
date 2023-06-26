@@ -153,13 +153,16 @@ func (n *SpringBootSample) GetHttpStatusOfCustomersEndpoint() (int, error) {
 }
 
 func (n *SpringBootSample) MeasureLatency(expectedStatus int) (time.Duration, error) {
+  return n.MeasureLatencyOnPath(expectedStatus, "/customers")
+}
+func (n *SpringBootSample) MeasureLatencyOnPath(expectedStatus int, path string) (time.Duration, error) {
 	client, err := n.Minikube.NewRestClientForService(n.Service)
 	if err != nil {
 		return 0, err
 	}
 	defer client.Close()
 
-	response, err := client.R().Get("/customers")
+	response, err := client.R().Get(path)
 	if err != nil {
 		return 0, err
 	}
@@ -170,11 +173,14 @@ func (n *SpringBootSample) MeasureLatency(expectedStatus int) (time.Duration, er
 }
 
 func (n *SpringBootSample) AssertLatency(t *testing.T, min time.Duration, max time.Duration) {
+  n.AssertLatencyOnPath(t, min, max, "/customers")
+}
+func (n *SpringBootSample) AssertLatencyOnPath(t *testing.T, min time.Duration, max time.Duration, path string ) {
   t.Helper()
 
   measurements := make([]time.Duration, 0, 5)
   e2e.Retry(t, 8, 500*time.Millisecond, func(r *e2e.R) {
-    latency, err := n.MeasureLatency(200)
+    latency, err := n.MeasureLatencyOnPath(200, path)
     if err != nil {
       r.Failed = true
       _, _ = fmt.Fprintf(r.Log, "failed to measure package latency: %s", err)
@@ -189,6 +195,9 @@ func (n *SpringBootSample) AssertLatency(t *testing.T, min time.Duration, max ti
 
 
 func (n *SpringBootSample) ExpectedStatus(expectedStatus int) (bool, int, error) {
+  return n.ExpectedStatusOnPath(expectedStatus, "/customers")
+}
+func (n *SpringBootSample) ExpectedStatusOnPath(expectedStatus int, path string) (bool, int, error) {
   client, err := n.Minikube.NewRestClientForService(n.Service)
   if err != nil {
     return false, -1, err
@@ -205,16 +214,19 @@ func (n *SpringBootSample) ExpectedStatus(expectedStatus int) (bool, int, error)
   return true, response.StatusCode(), nil
 }
 func (n *SpringBootSample) AssertStatus(t *testing.T, expectedHttpStatus int) {
+  n.AssertStatusOnPath(t, expectedHttpStatus, "/customers")
+}
+func (n *SpringBootSample) AssertStatusOnPath(t *testing.T, expectedHttpStatus int, path string) {
   t.Helper()
 
   measurements := make([]int, 0, 5)
   e2e.Retry(t, 8, 500*time.Millisecond, func(r *e2e.R) {
-    success, statusCode, err := n.ExpectedStatus(expectedHttpStatus)
+    success, statusCode, err := n.ExpectedStatusOnPath(expectedHttpStatus, path)
     if err != nil {
       r.Failed = true
       _, _ = fmt.Fprintf(r.Log, "failed to get http status: %s", err)
     }
-    if success != true {
+    if !success {
       r.Failed = true
       measurements = append(measurements, statusCode)
       _, _ = fmt.Fprintf(r.Log, "http status %v is not expected [%d]", measurements, expectedHttpStatus)
