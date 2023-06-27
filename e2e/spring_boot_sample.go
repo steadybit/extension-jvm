@@ -173,9 +173,8 @@ func (n *SpringBootSample) MeasureLatencyOnPath(expectedStatus int, path string)
 }
 
 func (n *SpringBootSample) MeasureUnaffectedLatencyOnPath(expectedStatus int, path string) (time.Duration, error) {
-  count := 3
-  measurements := make([]time.Duration, count)
-  for i := 0; i < count; i++ {
+  measurements := make([]time.Duration, 3)
+  for i := 0; i < 3; i++ {
     latency, err := n.MeasureLatencyOnPath(expectedStatus, path)
     if err != nil {
       return 0, err
@@ -187,7 +186,7 @@ func (n *SpringBootSample) MeasureUnaffectedLatencyOnPath(expectedStatus int, pa
   for _, measurement := range measurements {
     sum += measurement
   }
-  return sum / count, nil
+  return sum / 3, nil
 }
 
 func (n *SpringBootSample) AssertLatency(t *testing.T, min time.Duration, max time.Duration, unaffectedLatency time.Duration) {
