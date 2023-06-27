@@ -1,17 +1,23 @@
+<img src="./logo.svg" height="130" align="right" alt="JVM logo">
+
 # Steadybit extension-jvm
 
-TODO describe what your extension is doing here from a user perspective.
+This [Steadybit](https://www.steadybit.com/) extension provides a jvm application discovery and the various actions for jvm applications targets.
 
-TODO optionally add your extension to the [Reliability Hub](https://hub.steadybit.com/) by creating
-a [pull request](https://github.com/steadybit/reliability-hub-db) and add a link to this README.
+Learn about the capabilities of this extension in our [Reliability Hub](https://hub.steadybit.com/extension/com.github.steadybit.extension_jvm).
 
 ## Configuration
 
-| Environment Variable                             | Meaning                    | Required | Default |
-|--------------------------------------------------|----------------------------|----------|---------|
-| `STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED`     | is jvm attachment enabled  | no       | true    |
-| `STEADYBIT_EXTENSION_JAVA_AGENT_ATTACHMENT_PORT` | java agent attachment port | no       | 8095    |
-| `STEADYBIT_EXTENSION_CONTAINER_ADDRESS`          | public ip of the extension | no       |         |
+| Environment Variable                             | Helm value                                             | Meaning                                                                                                                    | Required | Default |
+|--------------------------------------------------|--------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|----------|---------|
+| `STEADYBIT_EXTENSION_RUNTIME`                    | `container.runtime`                                    | The container runtime to user either `docker`, `containerd` or `cri-o`. Will be automatically configured if not specified. | yes      | (auto)  |
+| `STEADYBIT_EXTENSION_SOCKET`                     | `containerRuntimes.(docker/containerd/cri-o).socket`   | The socket used to connect to the container runtime. Will be automatically configured if not specified.                    | yes      | (auto)  |
+| `STEADYBIT_EXTENSION_CONTAINERD_NAMESPACE`       |                                                        | The containerd namespace to use.                                                                                           | yes      | k8s.io  |
+| `STEADYBIT_EXTENSION_RUNC_ROOT`                  | `containerRuntimes.(docker/containerd/cri-o).runcRoot` | The runc root to use.                                                                                                      | yes      | (auto)  |
+| `STEADYBIT_EXTENSION_RUNC_DEBUG`                 |                                                        | Activate debug mode for run.                                                                                               |          |         |
+| `STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED`     |                                                        | is jvm attachment enabled                                                                                                  | no       | true    |
+| `STEADYBIT_EXTENSION_JAVA_AGENT_ATTACHMENT_PORT` |                                                        | java agent attachment port                                                                                                 | no       | 8095    |
+| `STEADYBIT_EXTENSION_CONTAINER_ADDRESS`          |                                                        | public ip of the extension                                                                                                 | no       |         |
 
 The extension supports all environment variables provided by [steadybit/extension-kit](https://github.com/steadybit/extension-kit#environment-variables).
 
@@ -34,9 +40,14 @@ The capabilities needed by this extension are: (which are provided by the helm c
 ### Using Docker
 
 ```sh
-$ docker run \
+docker run \
   --rm \
-  -p 8080 \
+  -p 8087 \
+  --privileged \
+  --pid=host \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /run/docker/runtime-runc/moby:/run/docker/runtime-runc/moby\
+  -v /sys/fs/cgroup:/sys/fs/cgroup\
   --name steadybit-extension-jvm \
   ghcr.io/steadybit/extension-jvm:latest
 ```
@@ -52,6 +63,7 @@ $ helm upgrade steadybit-extension-jvm \
     --timeout 5m0s \
     --create-namespace \
     --namespace steadybit-extension \
+    --set container.runtime=docker \
     steadybit-extension-jvm/steadybit-extension-jvm
 ```
 
@@ -59,3 +71,18 @@ $ helm upgrade steadybit-extension-jvm \
 
 Make sure to register the extension at the steadybit platform. Please refer to
 the [documentation](https://docs.steadybit.com/integrate-with-steadybit/extensions/extension-installation) for more information.
+
+## Anatomy of the extension / Security
+
+We try to limit the needed access needed for the extension to the absolute minimum. So the extension itself can run as a non-root user on a read-only root file-system and will by default if deployed using the provided helm-chart.
+In order do execute certain actions the extension needs certain capabilities.
+
+### discovery / state attacks
+
+For discovery the extension needs access to the container runtime socket.
+
+### resource and network attacks
+
+The jvm attachment reuses the target container's linux namespace(s), control group(s) and user.
+This requires the following capabilities: SYS_ADMIN, SYS_RESOURCE, SYS_PTRACE, KILL, NET_ADMIN, DAC_OVERRIDE, SETUID, SETGID, AUDIT_WRITE.
+

@@ -59,7 +59,7 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
 
 	var ctx, cancel = context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
 	defer cancel()
-	log.Info().Msgf("Command: %s", attachCommand)
+	log.Trace().Msgf("Command: %s", attachCommand)
 	cmd := utils.RootCommandContext(ctx, attachCommand[0], attachCommand[1:]...)
 	var outb, errb bytes.Buffer
 	cmd.Stdout = &outb
