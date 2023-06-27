@@ -4,7 +4,6 @@
 
 package com.steadybit.javaagent;
 
-import com.steadybit.javaagent.handler.AppliedAutofixesCommandHandler;
 import com.steadybit.javaagent.handler.ClassLoadedCommandHandler;
 import com.steadybit.javaagent.handler.LoadAgentPluginCommandHandler;
 import com.steadybit.javaagent.handler.SetLoglevelCommandHandler;
@@ -37,8 +36,7 @@ public class JavaAgentSocketHandler {
     this.commandHandlers = Arrays.asList(
       new ClassLoadedCommandHandler(this.loadedClassesCache),
       new LoadAgentPluginCommandHandler(instrumentation, this.loadedClassesCache),
-      new SetLoglevelCommandHandler(),
-      new AppliedAutofixesCommandHandler()
+      new SetLoglevelCommandHandler()
     );
   }
 

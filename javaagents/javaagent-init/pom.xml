@@ -7,10 +7,10 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>attack-java-javaagent</artifactId>
-    <name>steadybit :: Agent Attack :: Java Agent Plugin</name>
+    <artifactId>javaagent-init</artifactId>
+    <name>steadybit :: Agent Core :: Java Agent Init</name>
     <parent>
-        <artifactId>agent-bundles-attack</artifactId>
+        <artifactId>extension-jvm-parent</artifactId>
         <groupId>com.steadybit</groupId>
         <relativePath>..</relativePath>
         <version>${revision}</version>
@@ -22,39 +22,16 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-        </dependency>
-        <!-- provided at runtime -->
-        <dependency>
-            <groupId>com.steadybit</groupId>
-            <artifactId>javaagent-main</artifactId>
-            <scope>provided</scope>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy-agent</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-jdbc</artifactId>
-            <scope>provided</scope>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-core</artifactId>
-            <scope>provided</scope>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
         </dependency>
         <!-- Test -->
         <dependency>
@@ -68,33 +45,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock-jre8-standalone</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy-agent</artifactId>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
+            <artifactId>mockito-inline</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -110,7 +67,10 @@
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
                         <manifestEntries>
-                            <Agent-Plugin-Class>com.steadybit.attacks.javaagent.AttackJavaAgentPlugin</Agent-Plugin-Class>
+                            <Main-Class>com.steadybit.javaagent.ExternalJavaagentAttachment</Main-Class>
+                            <Agent-Class>com.steadybit.javaagent.TrampolineAgent</Agent-Class>
+                            <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                            <Can-Retransform-Classes>true</Can-Retransform-Classes>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -125,13 +85,54 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration combine.self="override">
-                            <dependencyReducedPomLocation>${basedir}/.dependency-reduced-pom.xml</dependencyReducedPomLocation>
+                            <dependencyReducedPomLocation>.dependency-reduced-pom.xml</dependencyReducedPomLocation>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
+                                    <resource>MANIFEST.MF</resource>
+                                </transformer>
+                            </transformers>
                             <relocations>
                                 <relocation>
-                                    <pattern>org.json</pattern>
-                                    <shadedPattern>com.steadybit.shaded.org.json</shadedPattern>
+                                    <pattern>net.bytebuddy</pattern>
+                                    <shadedPattern>com.steadybit.shaded.net.bytebuddy</shadedPattern>
                                 </relocation>
+
                             </relocations>
+                            <filters>
+                                <filter>
+                                    <artifact>net.java.dev.jna:jna-platform</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/AL2.0</exclude>
+                                        <exclude>META-INF/LGPL2.1</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- workaround to use the shaded classes in other modules -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-shaded-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>target/${project.build.finalName}.jar</file>
+                                    <type>jar</type>
+                                    <classifier>optional</classifier>
+                                </artifact>
+                            </artifacts>
                         </configuration>
                     </execution>
                 </executions>
