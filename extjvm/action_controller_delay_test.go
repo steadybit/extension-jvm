@@ -1,14 +1,13 @@
 package extjvm
 
 import (
-	"context"
-	"github.com/google/uuid"
-	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/extension-jvm/extjvm/jvm"
+  "context"
+  "github.com/google/uuid"
+  "github.com/steadybit/action-kit/go/action_kit_api/v2"
   "github.com/steadybit/extension-kit/extutil"
-	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
+  "github.com/stretchr/testify/assert"
+  "testing"
+  "time"
 )
 
 func Test_controllerDelay_Prepare(t *testing.T) {
@@ -49,21 +48,7 @@ func Test_controllerDelay_Prepare(t *testing.T) {
 		},
 	}
 	action := NewControllerDelay()
-	SpringApplications.Store(42, SpringApplication{
-		Name: "customers",
-		Pid:  42,
-		MvcMappings: &[]SpringMvcMapping{
-			{
-        Methods:     []string{"GET"},
-        Patterns:    []string{"/customers"},
-        HandlerClass: "com.steadybit.demo.CustomerController",
-        HandlerName:  "customers",
-			},
-		},
-	})
-  addJvm(&jvm.JavaVm{
-    Pid: 42,
-  })
+	InitTestJVM()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//Given
