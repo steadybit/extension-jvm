@@ -42,6 +42,8 @@ func main() {
 	config.ParseConfiguration()
 	config.ValidateConfiguration()
 
+  action_kit_sdk.RegisterCoverageEndpoints()
+
 	// This call registers a handler for the extension's root path. This is the path initially accessed
 	// by the Steadybit agent to obtain the extension's capabilities.
 	exthttp.RegisterHttpHandler("/", exthttp.GetterAsHandler(getExtensionList))
