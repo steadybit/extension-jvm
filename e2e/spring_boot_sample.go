@@ -172,6 +172,24 @@ func (n *SpringBootSample) MeasureLatencyOnPath(expectedStatus int, path string)
 	return response.Time(), nil
 }
 
+func (n *SpringBootSample) MeasureUnaffectedLatencyOnPath(expectedStatus int, path string) (time.Duration, error) {
+  count := 3
+  measurements := make([]time.Duration, count)
+  for i := 0; i < count; i++ {
+    latency, err := n.MeasureLatencyOnPath(expectedStatus, path)
+    if err != nil {
+      return 0, err
+    }
+    measurements[i] = latency
+  }
+  // median of measurements
+  sum := 0 * time.Millisecond
+  for _, measurement := range measurements {
+    sum += measurement
+  }
+  return sum / count, nil
+}
+
 func (n *SpringBootSample) AssertLatency(t *testing.T, min time.Duration, max time.Duration, unaffectedLatency time.Duration) {
   n.AssertLatencyOnPath(t, min, max, "/customers", unaffectedLatency)
 }

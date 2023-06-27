@@ -316,7 +316,7 @@ func testHttpClientDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			springBootSample.AssertIsReachable(t, true)
 
 			//measure customer endpoint
-			unaffectedLatency, err := springBootSample.MeasureLatencyOnPath(200, "/remote/blocking?url=https://www.github.com")
+			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/remote/blocking?url=https://www.github.com")
 			require.NoError(t, err, "failed to measure customers endpoint")
 
 			action, err := e.RunAction(extjvm.TargetID+".spring-httpclient-delay-attack", &action_kit_api.Target{
