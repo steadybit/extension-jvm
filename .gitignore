@@ -2,6 +2,7 @@
 /coverage.out
 /go.docker.mod
 /e2e/e2e-coverage-docker.out
+/e2e/e2e-coverage-containerd.out
 
 
 # Compiled class file
