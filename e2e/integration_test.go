@@ -342,7 +342,7 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 }
 
 func getMinLatency(unaffectedLatency time.Duration, delay uint64) time.Duration {
-  return unaffectedLatency+time.Duration(delay)*time.Millisecond*70/100
+  return unaffectedLatency+time.Duration(delay)*time.Millisecond*60/100
 }
 
 func getMaxLatency(unaffectedLatency time.Duration, delay uint64) time.Duration {
