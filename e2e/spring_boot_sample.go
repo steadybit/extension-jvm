@@ -172,10 +172,10 @@ func (n *SpringBootSample) MeasureLatencyOnPath(expectedStatus int, path string)
 	return response.Time(), nil
 }
 
-func (n *SpringBootSample) AssertLatency(t *testing.T, min time.Duration, max time.Duration) {
-  n.AssertLatencyOnPath(t, min, max, "/customers")
+func (n *SpringBootSample) AssertLatency(t *testing.T, min time.Duration, max time.Duration, unaffectedLatency time.Duration) {
+  n.AssertLatencyOnPath(t, min, max, "/customers", unaffectedLatency)
 }
-func (n *SpringBootSample) AssertLatencyOnPath(t *testing.T, min time.Duration, max time.Duration, path string ) {
+func (n *SpringBootSample) AssertLatencyOnPath(t *testing.T, min time.Duration, max time.Duration, path string, unaffectedLatency time.Duration) {
   t.Helper()
 
   measurements := make([]time.Duration, 0, 5)
@@ -188,7 +188,7 @@ func (n *SpringBootSample) AssertLatencyOnPath(t *testing.T, min time.Duration, 
     if latency < min || latency > max {
       r.Failed = true
       measurements = append(measurements, latency)
-      _, _ = fmt.Fprintf(r.Log, "package latency %v is not in expected range [%s, %s]", measurements, min, max)
+      _, _ = fmt.Fprintf(r.Log, "package latency %v is not in expected range [%s, %s] with unaffectedLatency: %s", measurements, min, max, unaffectedLatency)
     }
   })
 }

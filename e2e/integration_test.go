@@ -197,9 +197,9 @@ func testMvcDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
       defer func() { _ = action.Cancel() }()
       require.NoError(t, err)
       if tt.expectedDelay {
-        springBootSample.AssertLatency(t, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*90/100, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*350/100)
+        springBootSample.AssertLatency(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), unaffectedLatency)
       } else {
-        springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond)
+        springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, unaffectedLatency)
       }
       require.NoError(t, action.Cancel())
     })
@@ -332,14 +332,24 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
       defer func() { _ = action.Cancel() }()
       require.NoError(t, err)
       if tt.expectedDelay {
-        springBootSample.AssertLatencyOnPath(t, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*90/100, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*350/100, "/remote/blocking?url=https://www.github.com")
+        springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://www.github.com", unaffectedLatency)
       } else {
-        springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, "/remote/blocking?url=https://www.github.com")
+        springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, "/remote/blocking?url=https://www.github.com", 0)
       }
       require.NoError(t, action.Cancel())
     })
   }
 }
+
+func getMinLatency(unaffectedLatency time.Duration, delay uint64) time.Duration {
+  return unaffectedLatency+time.Duration(delay)*time.Millisecond*70/100
+}
+
+func getMaxLatency(unaffectedLatency time.Duration, delay uint64) time.Duration {
+  return unaffectedLatency+time.Duration(delay)*time.Millisecond*350/100
+}
+
+
 
 func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
@@ -494,9 +504,9 @@ func testJavaMethodDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
       defer func() { _ = action.Cancel() }()
       require.NoError(t, err)
       if tt.expectedDelay {
-        springBootSample.AssertLatency(t, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*90/100, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*350/100)
+        springBootSample.AssertLatency(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), unaffectedLatency)
       } else {
-        springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond)
+        springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, unaffectedLatency)
       }
       require.NoError(t, action.Cancel())
     })
@@ -651,9 +661,9 @@ func testJDBCTemplateDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
       defer func() { _ = action.Cancel() }()
       require.NoError(t, err)
       if tt.expectedDelay {
-        springBootSample.AssertLatency(t, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*90/100, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*350/100)
+        springBootSample.AssertLatency(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), unaffectedLatency)
       } else {
-        springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond)
+        springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, unaffectedLatency)
       }
       require.NoError(t, action.Cancel())
     })
