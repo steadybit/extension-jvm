@@ -42,12 +42,12 @@ func Test_http_Client_Delay_Prepare(t *testing.T) {
 		},
 	}
 	action := NewHttpClientDelay()
-	InitTestJVM()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//Given
 			state := action.NewEmptyState()
 			request := tt.requestBody
+    	InitTestJVM()
 
 			//When
 			result, err := action.Prepare(context.Background(), &state, request)
