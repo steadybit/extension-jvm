@@ -94,7 +94,7 @@ func commonStop(state *AttackState) (*action_kit_api.StopResult, error) {
 }
 
 func commonPrepareEnd(config map[string]interface{}, state *AttackState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	if request.ExecutionContext.AgentPid != nil && int(state.Pid) == *request.ExecutionContext.AgentPid {
+	if request.ExecutionContext != nil && request.ExecutionContext.AgentPid != nil && int(state.Pid) == *request.ExecutionContext.AgentPid {
 		return &action_kit_api.PrepareResult{
 			Error: extutil.Ptr(action_kit_api.ActionKitError{
 				Title:  "Can't attack the agent process",
