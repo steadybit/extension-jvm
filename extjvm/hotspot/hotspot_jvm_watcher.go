@@ -81,7 +81,7 @@ func discoverHotspotJvm(work DiscoveryWork) {
 			discover(work.pid, work.retries)
 			return
 		}
-		success := newProcess(p)
+		success := newHotspotProcess(p)
 		if success {
 			addToDiscoveredHotspotPids(work.pid)
 		} else {
@@ -97,7 +97,7 @@ func addToDiscoveredHotspotPids(pid int32) {
 	hotspotPidsMutex.Unlock()
 }
 
-func newProcess(p *process.Process) bool {
+func newHotspotProcess(p *process.Process) bool {
 	log.Trace().Msgf("Discovered new java process: %+v", p)
 	success := true
 	for _, listener := range listeners {

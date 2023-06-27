@@ -112,7 +112,9 @@ func DataSourceDiscover(jvm *jvm.JavaVm) {
 			DataSourceApplications.Store(jvm.Pid, *dataSourceApplication)
 			log.Info().Msgf("DataSource discovered on PID %d: %+v", jvm.Pid, dataSourceApplication)
 		}
-	}
+	} else {
+    log.Trace().Msgf("Application on PID %d does not have DataSource plugin", jvm.Pid)
+  }
 }
 
 func createDataSourceApplication(vm *jvm.JavaVm) *DataSourceApplication {

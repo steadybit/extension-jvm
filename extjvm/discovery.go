@@ -43,7 +43,7 @@ func InitDiscovery() {
   //Init discover Spring Applications
   InitSpringDiscovery()
   // Start listening for JVM events
-  AddJVMListener(0)
+  AddJVMListener()
 
   // Start Datasource Discovery
   StartDataSourceDiscovery()

@@ -5,7 +5,7 @@ import (
   "os"
 )
 
-func AutoDetectContainerRuntime() (runtime types.Runtime) {
+func autoDetectContainerRuntime() (runtime types.Runtime) {
   for _, r := range types.AllRuntimes {
     if _, err := os.Stat(r.DefaultSocket()); err == nil {
       return r
@@ -16,6 +16,6 @@ func AutoDetectContainerRuntime() (runtime types.Runtime) {
 
 
 func GetRuncRoot() string {
-  runtime := AutoDetectContainerRuntime()
+  runtime := autoDetectContainerRuntime()
   return runtime.DefaultRuncRoot()
 }

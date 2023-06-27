@@ -9,7 +9,7 @@ import (
   "sync"
 )
 
-type AttackStatus struct {
+type Status struct {
 	Started    bool
 	Stopped    bool
 	Failure    string
@@ -38,7 +38,7 @@ func StartAttackEndpoint(pid int32, configJson string) int {
 	}
 	port := listener.Addr().(*net.TCPAddr).Port
 	log.Info().Msgf("Listening on port %d", port)
-  saveAttackStatus(strconv.Itoa(port), AttackStatus{
+  saveAttackStatus(strconv.Itoa(port), Status{
     Started:    false,
     Stopped:    false,
     Failure:    "",
@@ -97,15 +97,15 @@ func getPort(request *http.Request) (string, error) {
 	return port, err
 }
 
-func loadAttackStatus(port string) AttackStatus {
+func loadAttackStatus(port string) Status {
 	status, ok := attackStatus.Load(port)
 	if !ok {
-		return AttackStatus{}
+		return Status{}
 	}
-	return status.(AttackStatus)
+	return status.(Status)
 }
 
-func saveAttackStatus(port string, status AttackStatus) {
+func saveAttackStatus(port string, status Status) {
 	attackStatus.Store(port, status)
 }
 
@@ -147,14 +147,14 @@ func getConfig(writer http.ResponseWriter, request *http.Request) {
     log.Error().Msg("Failed to write config.")
     return
   }
-	log.Info().Msgf("Attack Config delivered for pid %d.", status.Pid)
+	log.Debug().Msgf("Attack Config delivered for pid %d.", status.Pid)
 }
 
-func GetAttackStatus(pid int32) AttackStatus {
-	var status AttackStatus
+func GetAttackStatus(pid int32) Status {
+	var status Status
 	attackStatus.Range(func(key, value interface{}) bool {
-		if value.(AttackStatus).Pid == pid {
-			status = value.(AttackStatus)
+		if value.(Status).Pid == pid {
+			status = value.(Status)
 			return false
 		}
 		return true

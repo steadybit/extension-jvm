@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-func GetJavaagentPath() string {
+func getJavaagentPath() string {
 	pathByEnv := os.Getenv("STEADYBIT_EXTENSION_JAVA_AGENT_PATH")
 	if pathByEnv != "" {
 		return pathByEnv
@@ -15,7 +15,7 @@ func GetJavaagentPath() string {
 }
 
 func GetJarPath(jarName string) string {
-	p := GetJavaagentPath()
+	p := getJavaagentPath()
 	abs, err := filepath.Abs(filepath.Join(p, jarName))
 	if err != nil {
 		log.Err(err).Msgf("Failed to get absolute path for %s", jarName)

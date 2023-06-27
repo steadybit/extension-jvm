@@ -176,7 +176,7 @@ func loadAgentPluginJob(job LoadPluginJvmWork) {
 
 func LoadAgentPlugin(jvm *jvm.JavaVm, plugin string, args string) (bool, error) {
 	if HasAgentPlugin(jvm, plugin) {
-		log.Info().Msgf("Plugin %s already loaded for JVM %+v", plugin, jvm)
+		log.Trace().Msgf("Plugin %s already loaded for JVM %+v", plugin, jvm)
 		return true, nil
 	}
 
@@ -204,7 +204,7 @@ func LoadAgentPlugin(jvm *jvm.JavaVm, plugin string, args string) (bool, error) 
 
 	loaded := sendCommandToAgent(jvm, "load-agent-plugin", fmt.Sprintf("%s,%s", pluginPath, args), time.Duration(30)*time.Second)
 	if loaded {
-		log.Info().Msgf("Plugin %s loaded for JVM %+v", plugin, jvm)
+		log.Info().Msgf("Plugin %s loaded for JVM %+s", plugin, jvm.MainClass)
 		plugin_tracking.Add(jvm.Pid, plugin)
 		return true, nil
 	}

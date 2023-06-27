@@ -147,7 +147,7 @@ func springDiscover(jvm *jvm.JavaVm) {
 		SpringApplications.Store(jvm.Pid, springApplication)
 		log.Trace().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", springApplication.Name, jvm.Pid, springApplication)
 	} else {
-		log.Info().Msgf("Spring Application on PID %d has not been discovered", jvm.Pid)
+		log.Trace().Msgf("Application on PID %d is not a Spring Application", jvm.Pid)
 	}
 }
 
@@ -162,8 +162,6 @@ func createSpringApplication(vm *jvm.JavaVm) SpringApplication {
 		HttpClientRequests: readHttpClientRequest(vm),
 	}
 	log.Info().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", app.Name, vm.Pid, app)
-	log.Trace().Msgf("MvcMappings: %+v", app.MvcMappings)
-	log.Trace().Msgf("HttpClientRequests: %+v", app.HttpClientRequests)
 	return app
 }
 
