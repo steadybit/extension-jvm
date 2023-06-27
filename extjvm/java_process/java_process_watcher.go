@@ -44,6 +44,10 @@ func Start() {
 		updatePids()
 	}, 5*time.Second)
 
+  if err == nil {
+    log.Info().Msg("Java Process Watcher Task has been scheduled successfully.")
+  }
+
   _, err = taskScheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
     // Clear ignored pids because they might be reused
 		ignoredPidsMutex.Lock()
@@ -52,7 +56,7 @@ func Start() {
 	}, 1*time.Hour)
 
 	if err == nil {
-		log.Info().Msg("Java Process Watcher Task has been scheduled successfully.")
+		log.Trace().Msg("Cleanup of used pids has been scheduled successfully.")
 	}
 
 	// create hotspot discovery worker pool
