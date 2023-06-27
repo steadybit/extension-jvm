@@ -116,6 +116,7 @@ func commonPrepareEnd(config map[string]interface{}, state *AttackState, request
 		return nil, extension_kit.ToError("VM not found", nil)
 	}
 	callbackUrl, attackEndpointPort := Prepare(vm, string(configJson))
+	state.ConfigJson = string(configJson)
 	state.EndpointPort = attackEndpointPort
 	state.CallbackUrl = callbackUrl
 
