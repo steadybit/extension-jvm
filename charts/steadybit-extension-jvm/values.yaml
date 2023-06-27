@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 container:
   # container.runtime -- The container runtime to use. Valid values are: docker, containerd, crio
-  runtime: cri-o
+  runtime: containerd
 
 image:
   # image.name -- The container image to use for the Steadybit scaffold extension.
