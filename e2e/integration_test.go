@@ -280,14 +280,14 @@ func testHttpClientDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			delay:         200,
 			jitter:        false,
 			expectedDelay: true,
-			hostAddress:   "https://www.github.com",
+			hostAddress:   "www.github.com",
 		},
 		{
 			name:          "should not delay http client traffic on host",
 			delay:         200,
 			jitter:        false,
 			expectedDelay: false,
-			hostAddress:   "https://steadybit.github.com",
+			hostAddress:   "steadybit.github.com",
 		},
 		{
 			name:          "should delay http client traffic with jitter",
