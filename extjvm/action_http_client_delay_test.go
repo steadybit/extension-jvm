@@ -1,30 +1,30 @@
 package extjvm
 
 import (
-	"context"
-	"github.com/google/uuid"
+  "context"
+  "github.com/google/uuid"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func Test_controlleException_Prepare(t *testing.T) {
+func Test_http_Client_Delay_Prepare(t *testing.T) {
 	tests := []struct {
 		name        string
 		requestBody action_kit_api.PrepareActionRequestBody
 		wantedError error
-		wantedState *ControllerExceptionState
+		wantedState *HttpClientDelayState
 	}{
 		{
 			name: "Should return config",
 			requestBody: action_kit_api.PrepareActionRequestBody{
 				Config: map[string]interface{}{
-					"action":            "prepare",
-					"pattern":           "/customers",
-					"method":            "GET",
-					"duration":          "10000",
-					"erroneousCallRate": 75,
+					"action":      "prepare",
+					"hostAddress":     "*",
+					"duration":       "10000",
+					"delay":       "500",
+					"delayJitter": "true",
 				},
 				ExecutionId: uuid.New(),
 				Target: extutil.Ptr(action_kit_api.Target{
@@ -34,16 +34,14 @@ func Test_controlleException_Prepare(t *testing.T) {
 				}),
 			},
 
-			wantedState: &ControllerExceptionState{
-				ControllerState: &ControllerState{
-					AttackState: &AttackState{
-						ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.JavaMethodExceptionInstrumentation\",\"duration\":10000,\"erroneousCallRate\":75,\"methods\":[\"com.steadybit.demo.CustomerController#customers\"]}",
-					},
+			wantedState: &HttpClientDelayState{
+				AttackState: &AttackState{
+					ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.SpringHttpClientDelayInstrumentation\",\"delay\":500,\"delayJitter\":true,\"duration\":10000,\"hostAddress\":\"*\"}",
 				},
 			},
 		},
 	}
-	action := NewControllerException()
+	action := NewHttpClientDelay()
 	InitTestJVM()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

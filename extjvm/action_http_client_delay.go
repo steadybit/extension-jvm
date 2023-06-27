@@ -125,7 +125,6 @@ func (l *httpClientDelay) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *httpClientDelay) Prepare(_ context.Context, state *HttpClientDelayState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-
 	errResult := extractDuration(request, state.AttackState)
 	if errResult != nil {
 		return errResult, nil
