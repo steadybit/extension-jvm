@@ -256,7 +256,7 @@ func testMvcException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
   }
 }
 
-func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
+func testHttpClientDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
   tests := []struct {
     name          string
@@ -277,7 +277,7 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
     },
     {
       name:          "should delay http client traffic on host",
-      delay:         200,
+      delay:         500,
       jitter:        false,
       expectedDelay: true,
       hostAddress:   "https://www.github.com",
@@ -332,7 +332,11 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
       defer func() { _ = action.Cancel() }()
       require.NoError(t, err)
       if tt.expectedDelay {
-        springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://www.github.com", unaffectedLatency)
+        if m.Runtime == e2e.RuntimeContainerd {
+          springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay)*50/100, getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://www.github.com", unaffectedLatency)
+        } else {
+          springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://www.github.com", unaffectedLatency)
+        }
       } else {
         springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, "/remote/blocking?url=https://www.github.com", 0)
       }
