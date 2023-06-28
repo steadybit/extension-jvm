@@ -89,7 +89,7 @@ func getDiscoveryDescription() discovery_kit_api.DiscoveryDescription {
 		Discover: discovery_kit_api.DescribingEndpointReferenceWithCallInterval{
 			Method:       "GET",
 			Path:         discoveryBasePath + "/discovered-targets",
-			CallInterval: extutil.Ptr("1m"),
+			CallInterval: extutil.Ptr(common.GetDiscoveryCallInterval()),
 		},
 	}
 }
