@@ -166,13 +166,13 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
         Src: discovery_kit_api.SourceOrDestination{
           Type: "container",
           Selector: map[string]string{
-            "k8s.container.id.stripped": "${dest.k8s.container.id.stripped}",
+            "k8s.container.id.stripped": "${dest.container.id.stripped}",
           },
         },
         Dest: discovery_kit_api.SourceOrDestination{
           Type: targetID,
           Selector: map[string]string{
-            "k8s.container.id.stripped": "${src.k8s.container.id.stripped}",
+            "container.id.stripped": "${src.k8s.container.id.stripped}",
           },
         },
         Attributes: []discovery_kit_api.Attribute{
@@ -186,11 +186,74 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
           },
           {
             Matcher: discovery_kit_api.StartsWith,
-            Name:    "k8s.",
+            Name:    "label.",
+          },
+        },
+      },
+      {
+        Src: discovery_kit_api.SourceOrDestination{
+          Type: "com.github.steadybit.extension_kubernetes.kubernetes-container",
+          Selector: map[string]string{
+            "k8s.container.id.stripped": "${dest.container.id.stripped}",
+          },
+        },
+        Dest: discovery_kit_api.SourceOrDestination{
+          Type: targetID,
+          Selector: map[string]string{
+            "container.id.stripped": "${src.k8s.container.id.stripped}",
+          },
+        },
+        Attributes: []discovery_kit_api.Attribute{
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "k8s.cluster-name",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "k8s.distribution",
+          }, {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "k8s.namespace",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "k8s.container.name",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "k8s.container.ready",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "k8s.container.image",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "k8s.service.name",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "k8s.service.namespace",
           },
           {
             Matcher: discovery_kit_api.StartsWith,
-            Name:    "label.",
+            Name:    "k8s.pod.label.",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "k8s.replicaset",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "k8s.daemonset",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "k8s.deployment",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "k8s.statefulset",
           },
         },
       },
@@ -271,7 +334,7 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 			Attributes: map[string][]string{
 				"application.type": {"java"},
 				"application.name": {getApplicationName(jvm, "")},
-				"k8s.container.id.stripped":     {jvm.ContainerId},
+				"container.id.stripped":     {jvm.ContainerId},
 				"process.pid":      {strconv.Itoa(int(jvm.Pid))},
         "application.hostname": {jvm.Hostname},
 			},
