@@ -9,18 +9,19 @@ import (
 	"testing"
 )
 
-func Test_http_Client_Delay_Prepare(t *testing.T) {
+func Test_Java_Method_Delay_Prepare(t *testing.T) {
 	tests := []struct {
 		name        string
 		requestBody action_kit_api.PrepareActionRequestBody
-		wantedState *HttpClientDelayState
+		wantedState *JavaMethodDelayState
 	}{
 		{
 			name: "Should return config",
 			requestBody: action_kit_api.PrepareActionRequestBody{
 				Config: map[string]interface{}{
 					"action":      "prepare",
-					"hostAddress": "*",
+					"className":   "com.steadybit.demo.CustomerController",
+					"methodName":  "GetCustomers",
 					"duration":    "10000",
 					"delay":       "500",
 					"delayJitter": "true",
@@ -33,14 +34,14 @@ func Test_http_Client_Delay_Prepare(t *testing.T) {
 				}),
 			},
 
-			wantedState: &HttpClientDelayState{
+			wantedState: &JavaMethodDelayState{
 				AttackState: &AttackState{
-					ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.SpringHttpClientDelayInstrumentation\",\"delay\":500,\"delayJitter\":true,\"duration\":10000,\"hostAddress\":\"*\"}",
+					ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation\",\"delay\":500,\"delayJitter\":true,\"duration\":10000,\"methods\":[\"com.steadybit.demo.CustomerController#GetCustomers\"]}",
 				},
 			},
 		},
 	}
-	action := NewHttpClientDelay()
+	action := NewJavaMethodDelay()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//Given

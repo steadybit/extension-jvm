@@ -9,23 +9,21 @@ import (
   "testing"
 )
 
-func Test_http_Client_Status_Prepare(t *testing.T) {
+func Test_JDBC_Template_Exception_Prepare(t *testing.T) {
   tests := []struct {
     name        string
     requestBody action_kit_api.PrepareActionRequestBody
-    wantedState *HttpClientStatusState
+    wantedState *JdbcTemplateExceptionState
   }{
     {
       name: "Should return config",
       requestBody: action_kit_api.PrepareActionRequestBody{
         Config: map[string]interface{}{
-          "action":      "prepare",
-          "erroneousCallRate":     75,
-          "duration":       "10000",
-          "httpMethods":       []interface{}{"GET"},
-          "hostAddress": "*",
-          "urlPath": "/test",
-          "failureCauses": []interface{}{"HTTP_502"},
+          "action":            "prepare",
+          "jdbcUrl":         "jdbc:mysql://localhost:3306/test",
+          "operations":        "r",
+          "duration":          "10000",
+          "erroneousCallRate": 75,
         },
         ExecutionId: uuid.New(),
         Target: extutil.Ptr(action_kit_api.Target{
@@ -35,20 +33,21 @@ func Test_http_Client_Status_Prepare(t *testing.T) {
         }),
       },
 
-      wantedState: &HttpClientStatusState{
+      wantedState: &JdbcTemplateExceptionState{
         AttackState: &AttackState{
-          ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.SpringHttpClientStatusInstrumentation\",\"duration\":10000,\"erroneousCallRate\":75,\"failureCauses\":[\"HTTP_502\"],\"hostAddress\":\"*\",\"httpMethods\":[\"GET\"],\"urlPath\":\"/test\"}",
+          ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.SpringJdbcTemplateExceptionInstrumentation\",\"duration\":10000,\"erroneousCallRate\":75,\"jdbc-url\":\"jdbc:mysql://localhost:3306/test\",\"operations\":\"r\"}",
         },
       },
     },
   }
-  action := NewHttpClientStatus()
+  action := NewJdbcTemplateException()
   for _, tt := range tests {
     t.Run(tt.name, func(t *testing.T) {
       //Given
       state := action.NewEmptyState()
       request := tt.requestBody
       InitTestJVM()
+
       //When
       action.Prepare(context.Background(), &state, request)
       //Then

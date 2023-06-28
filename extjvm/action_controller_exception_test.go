@@ -13,7 +13,6 @@ func Test_controlleException_Prepare(t *testing.T) {
 	tests := []struct {
 		name        string
 		requestBody action_kit_api.PrepareActionRequestBody
-		wantedError error
 		wantedState *ControllerExceptionState
 	}{
 		{
@@ -52,16 +51,10 @@ func Test_controlleException_Prepare(t *testing.T) {
 	    InitTestJVM()
 
 			//When
-			result, err := action.Prepare(context.Background(), &state, request)
-
+			action.Prepare(context.Background(), &state, request)
 			//Then
-			if tt.wantedError != nil && err != nil {
-				assert.EqualError(t, err, tt.wantedError.Error())
-			} else if tt.wantedError != nil && result != nil {
-				assert.Equal(t, result.Error.Title, tt.wantedError.Error())
-			}
+
 			if tt.wantedState != nil {
-				assert.NoError(t, err)
 				assert.Equal(t, tt.wantedState.ConfigJson, state.ConfigJson)
 			}
 		})

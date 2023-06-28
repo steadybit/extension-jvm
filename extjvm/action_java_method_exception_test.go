@@ -9,21 +9,21 @@ import (
 	"testing"
 )
 
-func Test_http_Client_Delay_Prepare(t *testing.T) {
+func Test_Java_Method_Exception_Prepare(t *testing.T) {
 	tests := []struct {
 		name        string
 		requestBody action_kit_api.PrepareActionRequestBody
-		wantedState *HttpClientDelayState
+		wantedState *JavaMethodExceptionState
 	}{
 		{
 			name: "Should return config",
 			requestBody: action_kit_api.PrepareActionRequestBody{
 				Config: map[string]interface{}{
-					"action":      "prepare",
-					"hostAddress": "*",
-					"duration":    "10000",
-					"delay":       "500",
-					"delayJitter": "true",
+					"action":            "prepare",
+					"className":         "com.steadybit.demo.CustomerController",
+					"methodName":        "GetCustomers",
+					"duration":          "10000",
+					"erroneousCallRate": 75,
 				},
 				ExecutionId: uuid.New(),
 				Target: extutil.Ptr(action_kit_api.Target{
@@ -33,14 +33,14 @@ func Test_http_Client_Delay_Prepare(t *testing.T) {
 				}),
 			},
 
-			wantedState: &HttpClientDelayState{
+			wantedState: &JavaMethodExceptionState{
 				AttackState: &AttackState{
-					ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.SpringHttpClientDelayInstrumentation\",\"delay\":500,\"delayJitter\":true,\"duration\":10000,\"hostAddress\":\"*\"}",
+					ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.JavaMethodExceptionInstrumentation\",\"duration\":10000,\"erroneousCallRate\":75,\"methods\":[\"com.steadybit.demo.CustomerController#GetCustomers\"]}",
 				},
 			},
 		},
 	}
-	action := NewHttpClientDelay()
+	action := NewJavaMethodException()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//Given
