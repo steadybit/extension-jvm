@@ -157,7 +157,7 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
             Name:    "aws-ec2.instance.name",
           },
           {
-            Matcher: discovery_kit_api.StartsWith,
+            Matcher: discovery_kit_api.Equals,
             Name:    "host.hostname",
           },
         },
@@ -181,8 +181,20 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
             Name:    "container.host",
           },
           {
-            Matcher: discovery_kit_api.StartsWith,
-            Name:    "container.",
+            Matcher: discovery_kit_api.Equals,
+            Name:    "container.name",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "container.id",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "container.image",
+          },
+          {
+            Matcher: discovery_kit_api.Equals,
+            Name:    "container.name",
           },
           {
             Matcher: discovery_kit_api.StartsWith,
