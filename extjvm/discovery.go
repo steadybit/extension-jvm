@@ -265,7 +265,7 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 	targets := make([]discovery_kit_api.Target, len(vms))
 	for i, jvm := range vms {
 		targets[i] = discovery_kit_api.Target{
-			Id:         fmt.Sprintf("%d/%s", jvm.Pid, getApplicationName(jvm, "?")),
+			Id:         fmt.Sprintf("%s/%d",jvm.Hostname, jvm.Pid),
 			TargetType: targetID,
 			Label:      getApplicationName(jvm, "?"),
 			Attributes: map[string][]string{
