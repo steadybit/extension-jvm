@@ -43,14 +43,14 @@ func (l *httpClientStatus) NewEmptyState() HttpClientStatusState {
 // Describe returns the action description for the platform with all required information.
 func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
   return action_kit_api.ActionDescription{
-    Id:          TargetID + ".spring-httpclient-status-attack",
+    Id:          TargetIDPrefix + ".spring-httpclient-status-attack",
     Label:       "Http Client Status",
     Description: "Returns the given status code for a RestTemplate or WebClient call. The original call is not executed.",
     Version:     extbuild.GetSemverVersionStringOrUnknown(),
     Icon:        extutil.Ptr(springHttpStatusIcon),
     TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
       // The target type this action is for
-      TargetType: targetIDOld + "(application.type=spring)",
+      TargetType: targetID + "(application.type=spring)",
       // You can provide a list of target templates to help the user select targets.
       // A template can be used to pre-fill a selection
       SelectionTemplates: extutil.Ptr(targetSelectionTemplates),

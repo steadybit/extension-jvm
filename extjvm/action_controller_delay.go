@@ -43,14 +43,14 @@ func (l *controllerDelay) NewEmptyState() ControllerDelayState {
 // Describe returns the action description for the platform with all required information.
 func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          TargetID + ".spring-mvc-delay-attack",
+		Id:          TargetIDPrefix + ".spring-mvc-delay-attack",
 		Label:       "Controller Delay",
 		Description: "Delay a Spring MVC controller http response by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(controllerDelayIcon),
 		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
 			// The target type this action is for
-			TargetType: targetIDOld + "(application.type=spring;spring.mvc-mapping)",
+			TargetType: targetID + "(application.type=spring;spring.mvc-mapping)",
 			// You can provide a list of target templates to help the user select targets.
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),

@@ -84,7 +84,7 @@ func GetDiscoveryList() discovery_kit_api.DiscoveryList {
 
 func getDiscoveryDescription() discovery_kit_api.DiscoveryDescription {
 	return discovery_kit_api.DiscoveryDescription{
-		Id:         targetIDOld,
+		Id:         targetID,
 		RestrictTo: extutil.Ptr(discovery_kit_api.LEADER),
 		Discover: discovery_kit_api.DescribingEndpointReferenceWithCallInterval{
 			Method:       "GET",
@@ -96,7 +96,7 @@ func getDiscoveryDescription() discovery_kit_api.DiscoveryDescription {
 
 func getTargetDescription() discovery_kit_api.TargetDescription {
 	return discovery_kit_api.TargetDescription{
-		Id:      targetIDOld,
+		Id:      targetID,
 		Version: extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:    extutil.Ptr(targetIcon),
 
@@ -131,7 +131,7 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
           },
         },
         Dest: discovery_kit_api.SourceOrDestination{
-          Type: targetIDOld,
+          Type: targetID,
           Selector: map[string]string{
             "application.hostname": "${src.host.hostname}",
           },
@@ -170,7 +170,7 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
           },
         },
         Dest: discovery_kit_api.SourceOrDestination{
-          Type: targetIDOld,
+          Type: targetID,
           Selector: map[string]string{
             "k8s.container.id.stripped": "${src.k8s.container.id.stripped}",
           },
@@ -266,7 +266,7 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 	for i, jvm := range vms {
 		targets[i] = discovery_kit_api.Target{
 			Id:         fmt.Sprintf("%d/%s", jvm.Pid, getApplicationName(jvm, "?")),
-			TargetType: targetIDOld,
+			TargetType: targetID,
 			Label:      getApplicationName(jvm, "?"),
 			Attributes: map[string][]string{
 				"application.type": {"java"},
