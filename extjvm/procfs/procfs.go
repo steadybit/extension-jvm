@@ -56,7 +56,7 @@ func findNamespacePid(hostPid int32) int32 {
 	nsPids := readNsPids(hostPid)
 	for i, pid := range nsPids {
 		if pid == hostPid {
-			if i < len(nsPids) {
+			if i < len(nsPids) - 1 {
 				return nsPids[i+1]
 			} else {
 				return pid
