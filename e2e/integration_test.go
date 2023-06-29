@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
+	"runtime"
 	"strconv"
 	"testing"
 	"time"
@@ -50,11 +51,15 @@ func TestWithMinikube(t *testing.T) {
 
 	mOpts := e2e.DefaultMiniKubeOpts
 	if os.Getenv("CI") == "true" {
-		mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker, e2e.RuntimeContainerd}
+		//mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker, e2e.RuntimeContainerd}
+		//mOpts.Runtimes = e2e.AllRuntimes
+		mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeCrio}
+		if runtime.GOOS == "linux" {
+			mOpts.Driver = "kvm2"
+		}
 	} else {
 		mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker}
 	}
-	//mOpts.Runtimes =e2e.AllRuntimes
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
 		{
