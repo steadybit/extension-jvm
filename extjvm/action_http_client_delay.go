@@ -150,7 +150,7 @@ func (l *httpClientDelay) Prepare(_ context.Context, state *HttpClientDelayState
 	var config = map[string]interface{}{
 		"attack-class": "com.steadybit.attacks.javaagent.instrumentation.SpringHttpClientDelayInstrumentation",
 		"duration":     int(state.Duration / time.Millisecond),
-    "delay":        int(state.Delay / time.Millisecond),
+		"delay":        int(state.Delay / time.Millisecond),
 		"delayJitter":  state.DelayJitter,
 		"hostAddress":  state.HostAddress,
 	}

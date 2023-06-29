@@ -5,17 +5,17 @@
 package main
 
 import (
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_sdk"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/steadybit/event-kit/go/event_kit_api"
-  "github.com/steadybit/extension-jvm/config"
-  "github.com/steadybit/extension-jvm/extjvm"
-  "github.com/steadybit/extension-jvm/extjvm/common"
-  "github.com/steadybit/extension-kit/extbuild"
-  "github.com/steadybit/extension-kit/exthealth"
-  "github.com/steadybit/extension-kit/exthttp"
-  "github.com/steadybit/extension-kit/extlogging"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/event-kit/go/event_kit_api"
+	"github.com/steadybit/extension-jvm/config"
+	"github.com/steadybit/extension-jvm/extjvm"
+	"github.com/steadybit/extension-jvm/extjvm/common"
+	"github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-kit/exthealth"
+	"github.com/steadybit/extension-kit/exthttp"
+	"github.com/steadybit/extension-kit/extlogging"
 )
 
 func main() {
@@ -42,7 +42,7 @@ func main() {
 	config.ParseConfiguration()
 	config.ValidateConfiguration()
 
-  action_kit_sdk.RegisterCoverageEndpoints()
+	action_kit_sdk.RegisterCoverageEndpoints()
 
 	// This call registers a handler for the extension's root path. This is the path initially accessed
 	// by the Steadybit agent to obtain the extension's capabilities.
@@ -64,12 +64,12 @@ func main() {
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
 
-  extjvm.InitDiscovery()
+	extjvm.InitDiscovery()
 
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)
 
-  common.PrintCaps()
+	common.PrintCaps()
 
 	exthttp.Listen(exthttp.ListenOpts{
 		// This is the default port under which your extension is accessible.

@@ -1,16 +1,16 @@
 package extjvm
 
 import (
-  "bufio"
-  "context"
-  "encoding/json"
-  "github.com/procyon-projects/chrono"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/extension-jvm/extjvm/common"
-  "github.com/steadybit/extension-jvm/extjvm/jvm"
-  "io"
-  "sync"
-  "time"
+	"bufio"
+	"context"
+	"encoding/json"
+	"github.com/procyon-projects/chrono"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/extjvm/common"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"io"
+	"sync"
+	"time"
 )
 
 var (
@@ -113,8 +113,8 @@ func DataSourceDiscover(jvm *jvm.JavaVm) {
 			log.Info().Msgf("DataSource discovered on PID %d: %+v", jvm.Pid, dataSourceApplication)
 		}
 	} else {
-    log.Trace().Msgf("Application on PID %d does not have DataSource plugin", jvm.Pid)
-  }
+		log.Trace().Msgf("Application on PID %d does not have DataSource plugin", jvm.Pid)
+	}
 }
 
 func createDataSourceApplication(vm *jvm.JavaVm) *DataSourceApplication {
@@ -133,11 +133,11 @@ func readDataSourceConnections(vm *jvm.JavaVm) *[]DataSourceConnection {
 
 		if rc == "OK" {
 			connections := make([]DataSourceConnection, 0)
-      err := json.NewDecoder(response).Decode(&connections)
+			err := json.NewDecoder(response).Decode(&connections)
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to read response from agent on PID %d", vm.Pid)
-        resultMessage, _ := bufio.NewReader(response).ReadString('\n')
-        log.Error().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
+				resultMessage, _ := bufio.NewReader(response).ReadString('\n')
+				log.Error().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
 				return make([]DataSourceConnection, 0)
 			}
 

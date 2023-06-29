@@ -29,11 +29,11 @@ func javaagent(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			status, err = handleInternal(r.RemoteAddr, string(body))
-      if err != nil {
-        log.Err(err).Msg("Failed to handle request.")
-        w.WriteHeader(400)
-        return
-      }
+			if err != nil {
+				log.Err(err).Msg("Failed to handle request.")
+				w.WriteHeader(400)
+				return
+			}
 		}
 		w.WriteHeader(int(status))
 	default:
@@ -46,7 +46,7 @@ func javaagent(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleInternal(remoteAddress string, body string) (uint16, error) {
-  log.Info().Msgf("Received request from %s with body %s", remoteAddress, body)
+	log.Info().Msgf("Received request from %s with body %s", remoteAddress, body)
 	compile := regexp.MustCompile("[\n\n\t]")
 	bodySanitized := compile.ReplaceAllString(body, "_")
 	bodySplitted := strings.SplitN(bodySanitized, "=", 2)
@@ -64,8 +64,8 @@ func handleInternal(remoteAddress string, body string) (uint16, error) {
 			host = addr[0].String()
 			port = extutil.ToInt(jvmRemoteSplitted[1])
 		} else {
-      splittedRemoteAddress := strings.Split(remoteAddress, ":")
-      host = splittedRemoteAddress[0]
+			splittedRemoteAddress := strings.Split(remoteAddress, ":")
+			host = splittedRemoteAddress[0]
 			port = extutil.ToInt(jvmRemote)
 		}
 		remote_jvm_connections.AddConnection(pid, host, port)

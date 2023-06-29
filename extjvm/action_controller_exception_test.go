@@ -48,7 +48,7 @@ func Test_controlleException_Prepare(t *testing.T) {
 			//Given
 			state := action.NewEmptyState()
 			request := tt.requestBody
-	    InitTestJVM()
+			InitTestJVM()
 
 			//When
 			action.Prepare(context.Background(), &state, request)

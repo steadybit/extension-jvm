@@ -1,7 +1,7 @@
 package attachment
 
 import (
-  "github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
 )
 
 type JvmAttachment interface {
@@ -13,10 +13,10 @@ type JvmAttachment interface {
 func GetAttachment(jvm *jvm.JavaVm) JvmAttachment {
 	if jvm.IsRunningInContainer() {
 		return ContainerJvmAttachment{
-      Jvm: jvm,
-    }
+			Jvm: jvm,
+		}
 	}
 	return HostJvmAttachment{
-    Jvm: jvm,
-  }
+		Jvm: jvm,
+	}
 }

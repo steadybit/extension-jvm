@@ -1,13 +1,13 @@
 package common
 
 import (
-  "os"
+	"os"
 )
 
 func GetDiscoveryCallInterval() string {
-  interval := os.Getenv("STEADYBIT_EXTENSION_DISCOVERY_CALL_INTERVAL")
-  if interval != "" {
-    return interval
-  }
-  return "1m"
+	interval := os.Getenv("STEADYBIT_EXTENSION_DISCOVERY_CALL_INTERVAL")
+	if interval != "" {
+		return interval
+	}
+	return "1m"
 }

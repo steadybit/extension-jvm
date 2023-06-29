@@ -5,20 +5,20 @@
 package extjvm
 
 import (
-  "fmt"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/steadybit/extension-jvm/extjvm/common"
-  "github.com/steadybit/extension-jvm/extjvm/controller"
-  "github.com/steadybit/extension-jvm/extjvm/hotspot"
-  "github.com/steadybit/extension-jvm/extjvm/java_process"
-  "github.com/steadybit/extension-jvm/extjvm/jvm"
-  "github.com/steadybit/extension-kit/extbuild"
-  "github.com/steadybit/extension-kit/exthttp"
-  "github.com/steadybit/extension-kit/extutil"
-  "net/http"
-  "strconv"
-  "strings"
+	"fmt"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/extension-jvm/extjvm/common"
+	"github.com/steadybit/extension-jvm/extjvm/controller"
+	"github.com/steadybit/extension-jvm/extjvm/hotspot"
+	"github.com/steadybit/extension-jvm/extjvm/java_process"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-kit/exthttp"
+	"github.com/steadybit/extension-kit/extutil"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 const discoveryBasePath = basePath + "/discovery"
@@ -32,31 +32,31 @@ func RegisterDiscoveryHandlers() {
 
 func InitDiscovery() {
 
-  // Shutdown Discovery on SIGTERM
-  InstallSignalHandler()
+	// Shutdown Discovery on SIGTERM
+	InstallSignalHandler()
 
-  //Start Java agent controller
-  controller.Start(common.GetOwnJVMAttachmentPort())
+	//Start Java agent controller
+	controller.Start(common.GetOwnJVMAttachmentPort())
 
-  //Init discover Datasources
-  InitDataSourceDiscovery()
-  //Init discover Spring Applications
-  InitSpringDiscovery()
-  // Start listening for JVM events
-  AddJVMListener()
+	//Init discover Datasources
+	InitDataSourceDiscovery()
+	//Init discover Spring Applications
+	InitSpringDiscovery()
+	// Start listening for JVM events
+	AddJVMListener()
 
-  // Start Datasource Discovery
-  StartDataSourceDiscovery()
-  // Start Spring Discovery
-  StartSpringDiscovery()
+	// Start Datasource Discovery
+	StartDataSourceDiscovery()
+	// Start Spring Discovery
+	StartSpringDiscovery()
 
-  //Start attaching to JVMs
-  StartAttachment()
+	//Start attaching to JVMs
+	StartAttachment()
 
-  // Start JVM Watcher
-  java_process.Start()
-  // Start Hotspot JVM Watcher
-  hotspot.Start()
+	// Start JVM Watcher
+	java_process.Start()
+	// Start Hotspot JVM Watcher
+	hotspot.Start()
 }
 
 func GetDiscoveryList() discovery_kit_api.DiscoveryList {
@@ -122,154 +122,154 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
 				},
 			},
 		},
-    EnrichmentRules: extutil.Ptr([]discovery_kit_api.TargetEnrichmentRule{
-      {
-        Src: discovery_kit_api.SourceOrDestination{
-          Type: "host",
-          Selector: map[string]string{
-            "host.hostname": "${dest.application.hostname}",
-          },
-        },
-        Dest: discovery_kit_api.SourceOrDestination{
-          Type: targetID,
-          Selector: map[string]string{
-            "application.hostname": "${src.host.hostname}",
-          },
-        },
-        Attributes: []discovery_kit_api.Attribute{
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "aws.account",
-          }, {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "aws.region",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "aws.zone",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "aws-ec2.instance.id",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "aws-ec2.instance.name",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "host.hostname",
-          },
-        },
-      },
-      {
-        Src: discovery_kit_api.SourceOrDestination{
-          Type: "container",
-          Selector: map[string]string{
-            "k8s.container.id.stripped": "${dest.container.id.stripped}",
-          },
-        },
-        Dest: discovery_kit_api.SourceOrDestination{
-          Type: targetID,
-          Selector: map[string]string{
-            "container.id.stripped": "${src.k8s.container.id.stripped}",
-          },
-        },
-        Attributes: []discovery_kit_api.Attribute{
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "container.host",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "container.name",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "container.id",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "container.image",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "container.name",
-          },
-          {
-            Matcher: discovery_kit_api.StartsWith,
-            Name:    "label.",
-          },
-        },
-      },
-      {
-        Src: discovery_kit_api.SourceOrDestination{
-          Type: "com.github.steadybit.extension_kubernetes.kubernetes-container",
-          Selector: map[string]string{
-            "k8s.container.id.stripped": "${dest.container.id.stripped}",
-          },
-        },
-        Dest: discovery_kit_api.SourceOrDestination{
-          Type: targetID,
-          Selector: map[string]string{
-            "container.id.stripped": "${src.k8s.container.id.stripped}",
-          },
-        },
-        Attributes: []discovery_kit_api.Attribute{
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "k8s.cluster-name",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "k8s.distribution",
-          }, {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "k8s.namespace",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "k8s.container.name",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "k8s.container.ready",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "k8s.container.image",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "k8s.service.name",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "k8s.service.namespace",
-          },
-          {
-            Matcher: discovery_kit_api.StartsWith,
-            Name:    "k8s.pod.label.",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "k8s.replicaset",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "k8s.daemonset",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "k8s.deployment",
-          },
-          {
-            Matcher: discovery_kit_api.Equals,
-            Name:    "k8s.statefulset",
-          },
-        },
-      },
-    }),
+		EnrichmentRules: extutil.Ptr([]discovery_kit_api.TargetEnrichmentRule{
+			{
+				Src: discovery_kit_api.SourceOrDestination{
+					Type: "host",
+					Selector: map[string]string{
+						"host.hostname": "${dest.application.hostname}",
+					},
+				},
+				Dest: discovery_kit_api.SourceOrDestination{
+					Type: targetID,
+					Selector: map[string]string{
+						"application.hostname": "${src.host.hostname}",
+					},
+				},
+				Attributes: []discovery_kit_api.Attribute{
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "aws.account",
+					}, {
+						Matcher: discovery_kit_api.Equals,
+						Name:    "aws.region",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "aws.zone",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "aws-ec2.instance.id",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "aws-ec2.instance.name",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "host.hostname",
+					},
+				},
+			},
+			{
+				Src: discovery_kit_api.SourceOrDestination{
+					Type: "container",
+					Selector: map[string]string{
+						"k8s.container.id.stripped": "${dest.container.id.stripped}",
+					},
+				},
+				Dest: discovery_kit_api.SourceOrDestination{
+					Type: targetID,
+					Selector: map[string]string{
+						"container.id.stripped": "${src.k8s.container.id.stripped}",
+					},
+				},
+				Attributes: []discovery_kit_api.Attribute{
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "container.host",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "container.name",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "container.id",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "container.image",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "container.name",
+					},
+					{
+						Matcher: discovery_kit_api.StartsWith,
+						Name:    "label.",
+					},
+				},
+			},
+			{
+				Src: discovery_kit_api.SourceOrDestination{
+					Type: "com.github.steadybit.extension_kubernetes.kubernetes-container",
+					Selector: map[string]string{
+						"k8s.container.id.stripped": "${dest.container.id.stripped}",
+					},
+				},
+				Dest: discovery_kit_api.SourceOrDestination{
+					Type: targetID,
+					Selector: map[string]string{
+						"container.id.stripped": "${src.k8s.container.id.stripped}",
+					},
+				},
+				Attributes: []discovery_kit_api.Attribute{
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "k8s.cluster-name",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "k8s.distribution",
+					}, {
+						Matcher: discovery_kit_api.Equals,
+						Name:    "k8s.namespace",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "k8s.container.name",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "k8s.container.ready",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "k8s.container.image",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "k8s.service.name",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "k8s.service.namespace",
+					},
+					{
+						Matcher: discovery_kit_api.StartsWith,
+						Name:    "k8s.pod.label.",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "k8s.replicaset",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "k8s.daemonset",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "k8s.deployment",
+					},
+					{
+						Matcher: discovery_kit_api.Equals,
+						Name:    "k8s.statefulset",
+					},
+				},
+			},
+		}),
 	}
 }
 
@@ -289,7 +289,7 @@ func getAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
 					One:   "Application Type",
 					Other: "Application Types",
 				},
-			},{
+			}, {
 				Attribute: "application.hostname",
 				Label: discovery_kit_api.PluralLabel{
 					One:   "Application Hostname",
@@ -340,15 +340,15 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 	targets := make([]discovery_kit_api.Target, len(vms))
 	for i, jvm := range vms {
 		targets[i] = discovery_kit_api.Target{
-			Id:         fmt.Sprintf("%s/%d",jvm.Hostname, jvm.Pid),
+			Id:         fmt.Sprintf("%s/%d", jvm.Hostname, jvm.Pid),
 			TargetType: targetID,
 			Label:      getApplicationName(jvm, "?"),
 			Attributes: map[string][]string{
-				"application.type": {"java"},
-				"application.name": {getApplicationName(jvm, "")},
-				"container.id.stripped":     {jvm.ContainerId},
-				"process.pid":      {strconv.Itoa(int(jvm.Pid))},
-        "application.hostname": {jvm.Hostname},
+				"application.type":      {"java"},
+				"application.name":      {getApplicationName(jvm, "")},
+				"container.id.stripped": {jvm.ContainerId},
+				"process.pid":           {strconv.Itoa(int(jvm.Pid))},
+				"application.hostname":  {jvm.Hostname},
 			},
 		}
 	}

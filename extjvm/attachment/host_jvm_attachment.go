@@ -4,7 +4,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
-  "strconv"
+	"strconv"
 )
 
 type HostJvmAttachment struct {

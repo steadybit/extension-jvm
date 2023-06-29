@@ -41,16 +41,16 @@ func (n *FashionBestseller) Deploy(podName string, opts ...func(c *acorev1.PodAp
 							ContainerPort: extutil.Ptr(int32(80)),
 						},
 					},
-          Env: []acorev1.EnvVarApplyConfiguration{
-            {
-              Name: extutil.Ptr("STEADYBIT_LOG_JAVAAGENT_STDOUT"),
-              Value: extutil.Ptr("true"),
-            },
-            {
-              Name: extutil.Ptr("STEADYBIT_LOG_LEVEL"),
-              Value: extutil.Ptr("TRACE"),
-            },
-          },
+					Env: []acorev1.EnvVarApplyConfiguration{
+						{
+							Name:  extutil.Ptr("STEADYBIT_LOG_JAVAAGENT_STDOUT"),
+							Value: extutil.Ptr("true"),
+						},
+						{
+							Name:  extutil.Ptr("STEADYBIT_LOG_LEVEL"),
+							Value: extutil.Ptr("TRACE"),
+						},
+					},
 				},
 			},
 		},

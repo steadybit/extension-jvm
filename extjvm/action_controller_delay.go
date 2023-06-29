@@ -34,10 +34,10 @@ func NewControllerDelay() action_kit_sdk.Action[ControllerDelayState] {
 
 func (l *controllerDelay) NewEmptyState() ControllerDelayState {
 	return ControllerDelayState{
-    ControllerState: &ControllerState{
-      AttackState: &AttackState{},
-    },
-  }
+		ControllerState: &ControllerState{
+			AttackState: &AttackState{},
+		},
+	}
 }
 
 // Describe returns the action description for the platform with all required information.

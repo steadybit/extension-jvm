@@ -1,10 +1,10 @@
 package plugin_tracking
 
 import (
-  "github.com/rs/zerolog/log"
-  "path/filepath"
-  "strconv"
-  "sync"
+	"github.com/rs/zerolog/log"
+	"path/filepath"
+	"strconv"
+	"sync"
 )
 
 var (
@@ -12,8 +12,8 @@ var (
 )
 
 func Add(pid int32, plugin string) {
-  key := strconv.Itoa(int(pid))
-  plugin = filepath.Base(plugin)
+	key := strconv.Itoa(int(pid))
+	plugin = filepath.Base(plugin)
 	value, ok := plugins.Load(key)
 	if !ok {
 		value = []string{}
@@ -23,8 +23,8 @@ func Add(pid int32, plugin string) {
 }
 
 func Remove(pid int32, plugin string) {
-  key := strconv.Itoa(int(pid))
-  plugin = filepath.Base(plugin)
+	key := strconv.Itoa(int(pid))
+	plugin = filepath.Base(plugin)
 	value, ok := plugins.Load(key)
 	if !ok {
 		return
@@ -34,16 +34,16 @@ func Remove(pid int32, plugin string) {
 }
 
 func RemoveAll(pid int32) {
-  key := strconv.Itoa(int(pid))
+	key := strconv.Itoa(int(pid))
 	plugins.Delete(key)
 }
 
 func Has(pid int32, plugin string) bool {
-  plugin = filepath.Base(plugin)
-  key := strconv.Itoa(int(pid))
+	plugin = filepath.Base(plugin)
+	key := strconv.Itoa(int(pid))
 	value, ok := plugins.Load(key)
 	if !ok {
-    log.Trace().Msgf("No plugins found for pid %d", pid)
+		log.Trace().Msgf("No plugins found for pid %d", pid)
 		return false
 	}
 	for _, v := range value.([]string) {
@@ -51,7 +51,7 @@ func Has(pid int32, plugin string) bool {
 			return true
 		}
 	}
-  log.Debug().Msgf("Plugin %s not found in %v", plugin, value)
+	log.Debug().Msgf("Plugin %s not found in %v", plugin, value)
 	return false
 }
 

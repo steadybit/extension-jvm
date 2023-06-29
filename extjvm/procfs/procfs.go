@@ -1,15 +1,15 @@
 package procfs
 
 import (
-  "github.com/rs/zerolog/log"
-  "github.com/shirou/gopsutil/process"
-  "github.com/steadybit/extension-jvm/extjvm/hotspot"
-  "github.com/steadybit/extension-kit/extutil"
-  "os"
-  "path/filepath"
-  "regexp"
-  "strconv"
-  "strings"
+	"github.com/rs/zerolog/log"
+	"github.com/shirou/gopsutil/process"
+	"github.com/steadybit/extension-jvm/extjvm/hotspot"
+	"github.com/steadybit/extension-kit/extutil"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 func GetContainerPid(hostPid int32) int32 {
@@ -56,7 +56,7 @@ func findNamespacePid(hostPid int32) int32 {
 	nsPids := readNsPids(hostPid)
 	for i, pid := range nsPids {
 		if pid == hostPid {
-			if i < len(nsPids) - 1 {
+			if i < len(nsPids)-1 {
 				return nsPids[i+1]
 			} else {
 				return pid
@@ -87,7 +87,7 @@ func readNsPids(hostPid int32) []int32 {
 }
 
 func GetProcessRoot(pid int32) string {
-  return filepath.Join("/proc", strconv.Itoa(int(pid)), "root")
+	return filepath.Join("/proc", strconv.Itoa(int(pid)), "root")
 }
 
 func GetContainerIdForProcess(process *process.Process) string {

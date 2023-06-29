@@ -5,12 +5,12 @@
 package extjvm
 
 import (
-  "context"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_sdk"
-  "github.com/steadybit/extension-kit/extbuild"
-  "github.com/steadybit/extension-kit/extutil"
-  "time"
+	"context"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-kit/extutil"
+	"time"
 )
 
 type jdbcTemplateException struct{}
@@ -155,7 +155,6 @@ func (l *jdbcTemplateException) Prepare(_ context.Context, state *JdbcTemplateEx
 	}
 	return commonPrepareEnd(config, state.AttackState, request)
 }
-
 
 // Start is called to start the action
 // You can mutate the state here.

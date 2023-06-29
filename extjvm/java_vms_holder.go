@@ -117,22 +117,22 @@ func removeStoppedJvms() {
 		p, err := process.NewProcess(vm.Pid)
 		if err != nil {
 			log.Trace().Err(err).Msg("Process not found")
-      removeJVM(key, vm)
+			removeJVM(key, vm)
 			return true
 		}
 		if !java_process.IsRunning(p) {
-      removeJVM(key, vm)
-    }
-    return true
-  })
+			removeJVM(key, vm)
+		}
+		return true
+	})
 }
 
 func removeJVM(key interface{}, vm jvm.JavaVm) {
-  jvms.Delete(key)
-  log.Debug().Msgf("Removing JVM %s", vm.ToDebugString())
-  for _, listener := range listeners {
-    listener.RemovedJvm(&vm)
-  }
+	jvms.Delete(key)
+	log.Debug().Msgf("Removing JVM %s", vm.ToDebugString())
+	for _, listener := range listeners {
+		listener.RemovedJvm(&vm)
+	}
 }
 func createJvm(p *process.Process) *jvm.JavaVm {
 	containerId := procfs.GetContainerIdForProcess(p)

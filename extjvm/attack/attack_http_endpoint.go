@@ -5,8 +5,8 @@ import (
 	"io"
 	"net"
 	"net/http"
-  "strconv"
-  "sync"
+	"strconv"
+	"sync"
 )
 
 type Status struct {
@@ -38,15 +38,15 @@ func StartAttackEndpoint(pid int32, configJson string) int {
 	}
 	port := listener.Addr().(*net.TCPAddr).Port
 	log.Info().Msgf("Listening on port %d", port)
-  saveAttackStatus(strconv.Itoa(port), Status{
-    Started:    false,
-    Stopped:    false,
-    Failure:    "",
-    Pid:        pid,
-    Port:       port,
-    Listener:   &listener,
-    ConfigJson: configJson,
-  })
+	saveAttackStatus(strconv.Itoa(port), Status{
+		Started:    false,
+		Stopped:    false,
+		Failure:    "",
+		Pid:        pid,
+		Port:       port,
+		Listener:   &listener,
+		ConfigJson: configJson,
+	})
 	go func() {
 		_ = http.Serve(listener, serverMuxProbes)
 	}()
@@ -67,11 +67,11 @@ func StopAttackEndpoint(pid int32) {
 func failed(writer http.ResponseWriter, request *http.Request) {
 	body := request.Body
 	defer func(body io.ReadCloser) {
-    err := body.Close()
-    if err != nil {
-      log.Error().Msg("Failed to close body.")
-    }
-  }(body)
+		err := body.Close()
+		if err != nil {
+			log.Error().Msg("Failed to close body.")
+		}
+	}(body)
 	bodyBytes, err := io.ReadAll(body)
 	if err != nil {
 		log.Err(err).Msg("Failed to read body.")
@@ -85,7 +85,7 @@ func failed(writer http.ResponseWriter, request *http.Request) {
 	status := loadAttackStatus(port)
 	status.Failure = bodyString
 	status.Stopped = true
-  saveAttackStatus(port, status)
+	saveAttackStatus(port, status)
 	log.Error().Msgf("Attack failed: %s for pid %d.", bodyString, status.Pid)
 	writer.WriteHeader(http.StatusOK)
 }
@@ -117,7 +117,7 @@ func stopped(_ http.ResponseWriter, request *http.Request) {
 	}
 	status := loadAttackStatus(port)
 	status.Stopped = true
-  saveAttackStatus(port, status)
+	saveAttackStatus(port, status)
 	log.Info().Msgf("Attack stopped for pid %d.", status.Pid)
 }
 
@@ -129,7 +129,7 @@ func started(_ http.ResponseWriter, request *http.Request) {
 	}
 	status := loadAttackStatus(port)
 	status.Started = true
-  saveAttackStatus(port, status)
+	saveAttackStatus(port, status)
 	log.Info().Msgf("Attack started for pid %d.", status.Pid)
 }
 
@@ -143,10 +143,10 @@ func getConfig(writer http.ResponseWriter, request *http.Request) {
 	configJson := status.ConfigJson
 	writer.Header().Set("Content-Type", "application/json")
 	_, err = writer.Write([]byte(configJson))
-  if err != nil {
-    log.Error().Msg("Failed to write config.")
-    return
-  }
+	if err != nil {
+		log.Error().Msg("Failed to write config.")
+		return
+	}
 	log.Debug().Msgf("Attack Config delivered for pid %d.", status.Pid)
 }
 

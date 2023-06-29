@@ -27,46 +27,46 @@ var (
 		Type:         action_kit_api.String,
 		Required:     extutil.Ptr(true),
 		DefaultValue: extutil.Ptr("*"),
-		Options: methodsOptions,
+		Options:      methodsOptions,
 	}
-  methodsOptions = extutil.Ptr([]action_kit_api.ParameterOption{
-    action_kit_api.ExplicitParameterOption{
-      Label: "Any",
-      Value: "*",
-    },
-    action_kit_api.ExplicitParameterOption{
-      Label: "GET",
-      Value: "GET",
-    },
-    action_kit_api.ExplicitParameterOption{
-      Label: "HEAD",
-      Value: "HEAD",
-    },
-    action_kit_api.ExplicitParameterOption{
-      Label: "OPTIONS",
-      Value: "OPTIONS",
-    },
-    action_kit_api.ExplicitParameterOption{
-      Label: "TRACE",
-      Value: "TRACE",
-    },
-    action_kit_api.ExplicitParameterOption{
-      Label: "POST",
-      Value: "POST",
-    },
-    action_kit_api.ExplicitParameterOption{
-      Label: "PUT",
-      Value: "PUT",
-    },
-    action_kit_api.ExplicitParameterOption{
-      Label: "PATCH",
-      Value: "PATCH",
-    },
-    action_kit_api.ExplicitParameterOption{
-      Label: "DELETE",
-      Value: "DELETE",
-    },
-  })
+	methodsOptions = extutil.Ptr([]action_kit_api.ParameterOption{
+		action_kit_api.ExplicitParameterOption{
+			Label: "Any",
+			Value: "*",
+		},
+		action_kit_api.ExplicitParameterOption{
+			Label: "GET",
+			Value: "GET",
+		},
+		action_kit_api.ExplicitParameterOption{
+			Label: "HEAD",
+			Value: "HEAD",
+		},
+		action_kit_api.ExplicitParameterOption{
+			Label: "OPTIONS",
+			Value: "OPTIONS",
+		},
+		action_kit_api.ExplicitParameterOption{
+			Label: "TRACE",
+			Value: "TRACE",
+		},
+		action_kit_api.ExplicitParameterOption{
+			Label: "POST",
+			Value: "POST",
+		},
+		action_kit_api.ExplicitParameterOption{
+			Label: "PUT",
+			Value: "PUT",
+		},
+		action_kit_api.ExplicitParameterOption{
+			Label: "PATCH",
+			Value: "PATCH",
+		},
+		action_kit_api.ExplicitParameterOption{
+			Label: "DELETE",
+			Value: "DELETE",
+		},
+	})
 )
 
 type ControllerState struct {

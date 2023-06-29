@@ -1,13 +1,13 @@
 package extjvm
 
 import (
-  "context"
-  "github.com/google/uuid"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/extension-kit/extutil"
-  "github.com/stretchr/testify/assert"
-  "testing"
-  "time"
+	"context"
+	"github.com/google/uuid"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/extension-kit/extutil"
+	"github.com/stretchr/testify/assert"
+	"testing"
+	"time"
 )
 
 func Test_controllerDelay_Prepare(t *testing.T) {
@@ -53,7 +53,7 @@ func Test_controllerDelay_Prepare(t *testing.T) {
 			//Given
 			state := action.NewEmptyState()
 			request := tt.requestBody
-	    InitTestJVM()
+			InitTestJVM()
 
 			//When
 			action.Prepare(context.Background(), &state, request)
