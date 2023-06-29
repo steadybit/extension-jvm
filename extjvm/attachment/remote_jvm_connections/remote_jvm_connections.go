@@ -77,7 +77,7 @@ func RemoveConnection(pid int32) {
 
 func ClearConnections() {
   connections = sync.Map{}
-  log.Trace().Msg("All JVM connections removed")
+  log.Debug().Msg("All JVM connections removed")
 }
 
 func Size() int {

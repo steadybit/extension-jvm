@@ -15,17 +15,17 @@ import (
 func GetContainerPid(hostPid int32) int32 {
 	pid := findNamespacePid(hostPid)
 	if pid > 0 {
-		log.Trace().Msgf("Found Host PID %d is %d in container via proc/status", hostPid, pid)
+		log.Debug().Msgf("Found Host PID %d is %d in container via proc/status", hostPid, pid)
 		return pid
 	}
 
 	containerPids := hotspot.GetJvmPidsForPath(hostPid, GetProcessRoot(hostPid))
 	if len(containerPids) > 0 {
-		log.Trace().Msgf("Potential container PIDs found for JVM %d: %+v", hostPid, containerPids)
+		log.Debug().Msgf("Potential container PIDs found for JVM %d: %+v", hostPid, containerPids)
 		for _, containerPid := range containerPids {
 			pid := readPidFromSchedulerDebug(containerPid)
 			if pid > 0 {
-				log.Trace().Msgf("Found Host PID %d is %d in container via proc/sched", hostPid, pid)
+				log.Debug().Msgf("Found Host PID %d is %d in container via proc/sched", hostPid, pid)
 				return pid
 			}
 		}

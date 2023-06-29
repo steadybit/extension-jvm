@@ -55,17 +55,16 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
 		attachCommand = addUserIdAndGroupId(jvm, attachCommand)
 	}
 
-	log.Trace().Msgf("Executing attach command on host: %s", attachCommand)
+	log.Debug().Msgf("Executing attach command on host: %s", attachCommand)
 
 	var ctx, cancel = context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
 	defer cancel()
-	log.Trace().Msgf("Command: %s", attachCommand)
 	cmd := utils.RootCommandContext(ctx, attachCommand[0], attachCommand[1:]...)
 	var outb, errb bytes.Buffer
 	cmd.Stdout = &outb
 	cmd.Stderr = &errb
 	err = cmd.Run()
-	log.Trace().Msgf("Attach command output: %s", outb.String())
+	log.Debug().Msgf("Attach command output: %s", outb.String())
 	if errb.String() != "" {
 		log.Error().Msgf("Attach command error: %s", errb.String())
 	}

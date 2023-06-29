@@ -141,11 +141,11 @@ func readDataSourceConnections(vm *jvm.JavaVm) *[]DataSourceConnection {
 				return make([]DataSourceConnection, 0)
 			}
 
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned: %+v", "DataSource-connections", "", vm.Pid, connections)
+			log.Debug().Msgf("Command '%s:%s' to agent on PID %d returned: %+v", "DataSource-connections", "", vm.Pid, connections)
 			return connections
 		} else {
 			resultMessage, _ := bufio.NewReader(response).ReadString('\n')
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
+			log.Debug().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
 			return make([]DataSourceConnection, 0)
 		}
 

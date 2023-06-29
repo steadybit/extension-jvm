@@ -54,7 +54,7 @@ public class JavaAgentSocket extends Thread {
   @Override
   public void run() {
     try {
-      init();
+      this.init();
       if (this.announce()) {
         this.listen();
       }
@@ -147,7 +147,7 @@ public class JavaAgentSocket extends Thread {
   }
 
   private Integer registerAgent() {
-    log.debug(String.format("Registering  javaagent on %s with %s", this.registerUrl, this.remoteAddress));
+    log.debug(String.format("Registering javaagent on %s with %s", this.registerUrl, this.remoteAddress));
 
     OutputStream outputStream = null;
     try {
@@ -164,7 +164,7 @@ public class JavaAgentSocket extends Thread {
       outputStream.write(content);
       return connection.getResponseCode();
     } catch (IOException e) {
-      log.error(String.format("Javaagent could not be registered on %s: %s", this.registerUrl, e.getMessage()));
+      log.error(String.format("Javaagent could not be registered on %s: %s", this.registerUrl, e.getMessage()), e);
     } finally {
       if (outputStream != null) {
         try {

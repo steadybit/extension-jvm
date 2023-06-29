@@ -9,6 +9,11 @@ func (vm JavaVm) ToDebugString() string {
     vm.Pid, vm.DiscoveredVia, vm.CommandLine, vm.MainClass, vm.ClassPath, vm.ContainerId, vm.InContainerPid, vm.VmVersion, vm.VmVendor, vm.VmName, vm.VmArgs, vm.UserId, vm.GroupId, vm.Path)
 }
 
+func (vm JavaVm) ToInfoString() string {
+  return fmt.Sprintf("JavaVm{pid=%d, discoveredVia=%s, mainClass=%s,  containerId=%s}",
+    vm.Pid, vm.DiscoveredVia,  vm.MainClass,  vm.ContainerId)
+}
+
 func (vm JavaVm) IsRunningInContainer() bool {
   return vm.ContainerId != ""
 }

@@ -24,7 +24,7 @@ func Prepare(jvm *jvm.JavaVm, configJson string) (string, int) {
 	// The callback URL is used to send the attack results back to the agent.
 	host := attachment.GetAttachment(jvm).GetAgentHost()
 	callbackUrl := fmt.Sprintf("http://%s:%d", host, attackEndpointPort)
-	log.Trace().Msgf("Callback URL: %s", callbackUrl)
+	log.Debug().Msgf("Callback URL: %s", callbackUrl)
 	return callbackUrl, attackEndpointPort
 }
 func Start(jvm *jvm.JavaVm, callbackUrl string) error {

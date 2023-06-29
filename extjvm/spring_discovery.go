@@ -172,7 +172,7 @@ func readHttpClientRequest(vm *jvm.JavaVm) *[]HttpRequest {
 			err := json.NewDecoder(response).Decode(&requests)
 			if err != nil {
 				resultMessage, _ := bufio.NewReader(response).ReadString('\n')
-				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-httpclient-requests", "", vm.Pid, resultMessage)
+				log.Debug().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-httpclient-requests", "", vm.Pid, resultMessage)
 				return make([]HttpRequest, 0)
 			}
 			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned: %+v", "spring-httpclient-requests", "", vm.Pid, requests)

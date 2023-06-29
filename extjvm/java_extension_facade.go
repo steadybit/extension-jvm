@@ -106,11 +106,11 @@ func loadPluginWorker(loadPluginJobs chan LoadPluginJvmWork) {
 }
 
 func doAttach(job AttachJvmWork) {
-	jvm := job.jvm
-	ok, err := attachInternal(jvm)
+	vm := job.jvm
+	ok, err := attachInternal(vm)
 	if err != nil {
-		if java_process.IsRunningProcess(jvm.Pid) {
-			log.Warn().Msgf("Error attaching to JVM %+v: %s", jvm, err)
+		if java_process.IsRunningProcess(vm.Pid) {
+			log.Warn().Msgf("Error attaching to JVM %+v: %s", vm, err)
 			go func() {
 				time.Sleep(10 * time.Second)
 				// do retry
@@ -118,27 +118,27 @@ func doAttach(job AttachJvmWork) {
 			}()
 
 		} else {
-			log.Trace().Msgf("Jvm stopped, attach failed. JVM %+v: %s", jvm, err)
+			log.Trace().Msgf("Jvm stopped, attach failed. JVM %+v: %s", vm, err)
 		}
 		return
 	}
 	if ok {
-		log.Info().Msgf("Successful attachment to JVM  %+v", jvm)
+		log.Info().Msgf("Successful attachment to JVM  %+v", vm)
 
 		loglevel := getJvmExtensionLogLevel()
-		log.Trace().Msgf("Propagating Loglevel %s to Javaagent in JVM %+v", loglevel, jvm)
-		if !setLogLevel(jvm, loglevel) {
+		log.Trace().Msgf("Propagating Loglevel %s to Javaagent in JVM %+v", loglevel, vm)
+		if !setLogLevel(vm, loglevel) {
 			//If setting the loglevel fails, the connection has some issue - do retry
 			attach(job.jvm, job.retries)
 		} else {
-			log.Info().Msgf("Successfully set loglevel %s for JVM %+v", loglevel, jvm)
+			log.Info().Msgf("Successfully set loglevel %s for JVM %+v", loglevel, vm)
 		}
 		for _, plugin := range autoloadPlugins {
-			loadAutoLoadPlugin(jvm, plugin.MarkerClass, plugin.Plugin)
+			loadAutoLoadPlugin(vm, plugin.MarkerClass, plugin.Plugin)
 		}
-		informListeners(jvm)
+		informListeners(vm)
 	} else {
-		log.Debug().Msgf("Attach to JVM skipped. Excluding %+v", jvm)
+		log.Debug().Msgf("Attach to JVM skipped. Excluding %+v", vm)
 	}
 
 }
@@ -204,7 +204,7 @@ func LoadAgentPlugin(jvm *jvm.JavaVm, plugin string, args string) (bool, error) 
 
 	loaded := sendCommandToAgent(jvm, "load-agent-plugin", fmt.Sprintf("%s,%s", pluginPath, args), time.Duration(30)*time.Second)
 	if loaded {
-		log.Info().Msgf("Plugin %s loaded for JVM %+s", plugin, jvm.MainClass)
+		log.Info().Msgf("Plugin %s loaded for JVM %+s", plugin, jvm.ToInfoString())
 		plugin_tracking.Add(jvm.Pid, plugin)
 		return true, nil
 	}
@@ -214,7 +214,7 @@ func LoadAgentPlugin(jvm *jvm.JavaVm, plugin string, args string) (bool, error) 
 
 func unloadAutoLoadPlugin(jvm *jvm.JavaVm, markerClass string, plugin string) {
 	if HasClassLoaded(jvm, markerClass) {
-		log.Trace().Msgf("Unloading plugin %s for JVM %+v", plugin, jvm)
+		log.Debug().Msgf("Unloading plugin %s for JVM %+v", plugin, jvm)
 		_, err := UnloadAgentPlugin(jvm, plugin)
 		if err != nil {
 			log.Warn().Msgf("Unloading plugin %s for JVM %+v failed: %s", plugin, jvm, err)
@@ -261,16 +261,16 @@ func SendCommandToAgent(jvm *jvm.JavaVm, command string, args string) bool {
 }
 
 func sendCommandToAgent(jvm *jvm.JavaVm, command string, args string, timeout time.Duration) bool {
-	log.Trace().Msgf("Sending command %s:%s to agent on PID %d", command, args, jvm.Pid)
+	log.Debug().Msgf("Sending command %s:%s to agent on PID %d", command, args, jvm.Pid)
 	success := sendCommandToAgentViaSocket(jvm, command, args, timeout, func(rc string, response io.Reader) bool {
 		resultMessage, err := GetCleanSocketCommandResult(response)
-		log.Trace().Msgf("Result from command %s:%s agent on PID %d: %s", command, args, jvm.Pid, resultMessage)
+		log.Debug().Msgf("Result from command %s:%s agent on PID %d: %s", command, args, jvm.Pid, resultMessage)
 		if err != nil {
 			log.Error().Msgf("Error reading result from command %s:%s agent on PID %d: %s", command, args, jvm.Pid, err)
 			return false
 		}
 		if resultMessage != "" && rc == "OK" {
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned %s", command, args, jvm.Pid, resultMessage)
+			log.Debug().Msgf("Command '%s:%s' to agent on PID %d returned %s", command, args, jvm.Pid, resultMessage)
 			return extutil.ToBool(resultMessage)
 		} else {
 			log.Warn().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", command, args, jvm.Pid, resultMessage)
@@ -330,7 +330,7 @@ func sendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args st
 		log.Error().Msgf("Error setting read deadline for connection to JVM %d: %s", pid, err)
 		return nil
 	}
-	log.Trace().Msgf("Sending command '%s:%s' to agent on PID %d", command, args, pid)
+	log.Debug().Msgf("Sending command '%s:%s' to agent on PID %d", command, args, pid)
 	//_, err = conn.Write([]byte(command + ":" + args + "\n"))
 	// Commands must end with newline
 	_, err = fmt.Fprintf(conn, "%s:%s\n", command, args)
@@ -353,7 +353,7 @@ func sendCommandToAgentViaSocket[T any](jvm *jvm.JavaVm, command string, args st
 	} else {
 		rc = "UNKNOWN"
 	}
-	log.Trace().Msgf("Return code from JVM %s for command %s:%s on pid %d", rc, command, args, pid)
+	log.Debug().Msgf("Return code from JVM %s for command %s:%s on pid %d", rc, command, args, pid)
 	return extutil.Ptr(handler(rc, utfbom.SkipOnly(conn)))
 }
 

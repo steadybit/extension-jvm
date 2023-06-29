@@ -25,10 +25,10 @@ type DiscoveryWork struct {
 var (
 	discoveredPidsMutex sync.Mutex
 	discoveredPids      []int32
-  ignoredPidsMutex sync.Mutex
-	ignoredPids      []int32
-	listeners      []Listener
-	RunningStates = []string{"R", "W", "S"} // Running, Waiting, Sleeping
+	ignoredPidsMutex    sync.Mutex
+	ignoredPids         []int32
+	listeners           []Listener
+	RunningStates       = []string{"R", "W", "S"} // Running, Waiting, Sleeping
 
 	discoveryJobs = make(chan DiscoveryWork)
 )
@@ -44,15 +44,15 @@ func Start() {
 		updatePids()
 	}, 5*time.Second)
 
-  if err == nil {
-    log.Info().Msg("Java Process Watcher Task has been scheduled successfully.")
-  }
+	if err == nil {
+		log.Info().Msg("Java Process Watcher Task has been scheduled successfully.")
+	}
 
-  _, err = taskScheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
-    // Clear ignored pids because they might be reused
+	_, err = taskScheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
+		// Clear ignored pids because they might be reused
 		ignoredPidsMutex.Lock()
-    ignoredPids = []int32{}
-    ignoredPidsMutex.Unlock()
+		ignoredPids = []int32{}
+		ignoredPidsMutex.Unlock()
 	}, 1*time.Hour)
 
 	if err == nil {
@@ -71,8 +71,8 @@ func discoveryWorker(discoveryJobs chan DiscoveryWork) {
 		if job.retries > 0 {
 			discoverProcessJVM(job)
 		} else {
-			log.Trace().Msgf("Process discovery retries for %d exceeded.", job.p.Pid)
-      addPidToIgnoredPids(job)
+			log.Debug().Msgf("Process discovery retries for %d exceeded.", job.p.Pid)
+			addPidToIgnoredPids(job)
 		}
 	}
 }
@@ -91,9 +91,9 @@ func updatePids() {
 		return
 	}
 	for _, p := range processes {
-    if utils.Contains(ignoredPids, p.Pid) {
-      continue
-    }
+		if utils.Contains(ignoredPids, p.Pid) {
+			continue
+		}
 		discover(p, initialRetries)
 	}
 }
@@ -101,40 +101,40 @@ func updatePids() {
 func discoverProcessJVM(job DiscoveryWork) {
 	if !utils.Contains(discoveredPids, job.p.Pid) {
 		if IsRunning(job.p) {
-      success := notifyListenersForNewProcess(job.p)
-      if success {
-        addPidToDiscoveredPids(job)
-      } else {
-        //retry
-        discover(job.p, job.retries)
-      }
-    }
-  }
+			success := notifyListenersForNewProcess(job.p)
+			if success {
+				addPidToDiscoveredPids(job)
+			} else {
+				//retry
+				discover(job.p, job.retries)
+			}
+		}
+	}
 }
 
 func addPidToDiscoveredPids(job DiscoveryWork) {
-  discoveredPidsMutex.Lock()
-  discoveredPids = append(discoveredPids, job.p.Pid)
-  discoveredPidsMutex.Unlock()
+	discoveredPidsMutex.Lock()
+	discoveredPids = append(discoveredPids, job.p.Pid)
+	discoveredPidsMutex.Unlock()
 }
 
 func addPidToIgnoredPids(job DiscoveryWork) {
-  ignoredPidsMutex.Lock()
-  ignoredPids = append(ignoredPids, job.p.Pid)
-  ignoredPidsMutex.Unlock()
+	ignoredPidsMutex.Lock()
+	ignoredPids = append(ignoredPids, job.p.Pid)
+	ignoredPidsMutex.Unlock()
 }
 
 func notifyListenersForNewProcess(p *process.Process) bool {
-  success := true
+	success := true
 	if isJava(p) {
 		for _, listener := range listeners {
 			currentResult := listener.NewJavaProcess(p)
-      if !currentResult {
-        success = false
-      }
+			if !currentResult {
+				success = false
+			}
 		}
 	}
-  return success
+	return success
 }
 
 func AddListener(listener Listener) {
@@ -175,7 +175,7 @@ func GetProcessPath(p *process.Process) (string, error) {
 	if err != nil {
 		exe, err := p.Exe()
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to get process exe")
+			log.Debug().Err(err).Msg("Failed to get process exe, maybe it's not running anymore")
 			return "", err
 		}
 		output = []byte(exe)

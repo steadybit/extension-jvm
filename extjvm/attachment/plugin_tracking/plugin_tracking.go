@@ -51,7 +51,7 @@ func Has(pid int32, plugin string) bool {
 			return true
 		}
 	}
-  log.Info().Msgf("Plugin %s not found in %v", plugin, value)
+  log.Debug().Msgf("Plugin %s not found in %v", plugin, value)
 	return false
 }
 
