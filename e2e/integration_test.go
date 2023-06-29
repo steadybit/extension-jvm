@@ -51,9 +51,7 @@ func TestWithMinikube(t *testing.T) {
 
 	mOpts := e2e.DefaultMiniKubeOpts
 	if os.Getenv("CI") == "true" {
-		//mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker, e2e.RuntimeContainerd}
-		//mOpts.Runtimes = e2e.AllRuntimes
-		mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeCrio}
+		mOpts.Runtimes = e2e.AllRuntimes
 		if runtime.GOOS == "linux" {
 			mOpts.Driver = "kvm2"
 		}
