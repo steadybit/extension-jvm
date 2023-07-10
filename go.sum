@@ -115,8 +115,8 @@ github.com/shirou/gopsutil v3.21.11+incompatible h1:+1+c1VGhc88SSonWP6foOcLhvnKl
 github.com/shirou/gopsutil v3.21.11+incompatible/go.mod h1:5b4v6he4MtMOwMlS0TUMTu2PcXUg8+E1lC7eC3UO/RA=
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
 github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
-github.com/steadybit/action-kit/go/action_kit_api/v2 v2.6.2 h1:+SpoB3rGSPmcOGcgntEnmuIubW6WmL/+H0lUiEeVX6I=
-github.com/steadybit/action-kit/go/action_kit_api/v2 v2.6.2/go.mod h1:ZF094T/qu+po7BBm7peXedds6Fr5/cfioBNCUqCV07Y=
+github.com/steadybit/action-kit/go/action_kit_api/v2 v2.6.3 h1:kTv3HF7BYJbB94JpuHLG/d6TKGTDm0XjUes1N5BQxSI=
+github.com/steadybit/action-kit/go/action_kit_api/v2 v2.6.3/go.mod h1:ZF094T/qu+po7BBm7peXedds6Fr5/cfioBNCUqCV07Y=
 github.com/steadybit/action-kit/go/action_kit_sdk v1.1.4 h1:3N3STdye1D7/1P/DgK6auCKL10fyFzL+lmdOzzRxJDI=
 github.com/steadybit/action-kit/go/action_kit_sdk v1.1.4/go.mod h1:fRKc0RTkFljjzGA20kfinw0f1hDScWVpJM7KONmdl50=
 github.com/steadybit/action-kit/go/action_kit_test v1.0.6 h1:TPQf8qHNsvi/cZwFX2cKORVu+rjtVSLnqxtHGJbu/YE=
