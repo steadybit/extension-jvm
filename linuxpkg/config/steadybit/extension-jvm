@@ -1,0 +1,4 @@
+STEADYBIT_LOG_LEVEL=info
+STEADYBIT_LOG_FORMAT=text
+STEADYBIT_EXTENSION_UNIX_SOCKET=/run/steadybit/extension-jvm.sock
+STEADYBIT_EXTENSION_JAVA_AGENT_PATH=/opt/steadybit/extension-jvm/javaagent
