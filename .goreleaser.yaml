@@ -82,6 +82,6 @@ nfpms:
       rpm:
         dependencies:
           - /usr/bin/ps
-          - /usr/bin/runc
+          - runc
           - /usr/sbin/capsh
 
