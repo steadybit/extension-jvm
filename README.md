@@ -37,6 +37,21 @@ The capabilities needed by this extension are: (which are provided by the helm c
 
 ## Installation
 
+### Using Helm in Kubernetes
+
+```sh
+$ helm repo add steadybit-extension-jvm https://steadybit.github.io/extension-jvm
+$ helm repo update
+$ helm upgrade steadybit-extension-jvm \
+    --install \
+    --wait \
+    --timeout 5m0s \
+    --create-namespace \
+    --namespace steadybit-extension \
+    --set container.runtime=docker \
+    steadybit-extension-jvm/steadybit-extension-jvm
+```
+
 ### Using Docker
 
 ```sh
@@ -52,20 +67,10 @@ docker run \
   ghcr.io/steadybit/extension-jvm:latest
 ```
 
-### Using Helm in Kubernetes
+### Linux Package
 
-```sh
-$ helm repo add steadybit-extension-jvm https://steadybit.github.io/extension-jvm
-$ helm repo update
-$ helm upgrade steadybit-extension-jvm \
-    --install \
-    --wait \
-    --timeout 5m0s \
-    --create-namespace \
-    --namespace steadybit-extension \
-    --set container.runtime=docker \
-    steadybit-extension-jvm/steadybit-extension-jvm
-```
+Please use our [outpost-linux.sh script](https://docs.steadybit.com/install-and-configure/install-outpost-agent-preview/install-on-linux-hosts) to install the extension on your Linux machine.
+The script will download the latest version of the extension and install it using the package manager.
 
 ## Register the extension
 
