@@ -1,9 +1,9 @@
 /extension
 /coverage.out
-/go.docker.mod
 /e2e/e2e-coverage-docker.out
-/e2e/e2e-coverage-containerd.out
-
+/e2e/e2e-coverage-datadog.out
+/gpg.key
+/dist
 
 # Compiled class file
 *.class

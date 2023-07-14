@@ -24,7 +24,7 @@ tidy:
 audit:
 	go vet ./...
 	go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-U1000,-ST1003 ./...
-	go test -race -vet=off -timeout 30m -coverprofile=coverage.out ./...
+	go test -race -vet=off -coverprofile=coverage.out -timeout 30m -failfast ./...
 	go mod verify
 
 ## charttesting: Run Helm chart unit tests
@@ -47,8 +47,7 @@ chartlint:
 ## build: build the extension
 .PHONY: build
 build:
-	go mod verify
-	go build -o=./extension
+	goreleaser build --clean --snapshot --single-target -o extension
 
 ## run: run the extension
 .PHONY: run
@@ -59,7 +58,7 @@ run: tidy build
 .PHONY: container
 container:
 	mvn clean package -DskipTests -f ./javaagents/pom.xml
-	docker buildx build --build-arg ADDITIONAL_BUILD_PARAMS="-cover" -t extension-jvm:latest --output=type=docker .
+	docker buildx build --build-arg BUILD_WITH_COVERAGE="true" -t extension-jvm:latest --output=type=docker .
 
 ## java: build the java packages
 .PHONY: java
