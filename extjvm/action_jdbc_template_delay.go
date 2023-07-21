@@ -55,7 +55,7 @@ func (l *jdbcTemplateDelay) Describe() action_kit_api.ActionDescription {
 			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
 		}),
 		// Category for the targets to appear in
-		Category: extutil.Ptr("JVM Application Attacks"),
+		Category: extutil.Ptr(category),
 
 		// To clarify the purpose of the action, you can set a kind.
 		//   Attack: Will cause harm to targets

@@ -104,7 +104,7 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
 		Label: discovery_kit_api.PluralLabel{One: "JVM application", Other: "JVM applications"},
 
 		// Category for the targets to appear in
-		Category: extutil.Ptr("JVM Application"),
+		Category: extutil.Ptr(category),
 
 		// Specify attributes shown in table columns and to be used for sorting
 		Table: discovery_kit_api.Table{
@@ -338,17 +338,17 @@ func getAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
 func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 	vms := GetJVMs()
 	targets := make([]discovery_kit_api.Target, len(vms))
-	for i, jvm := range vms {
+	for i, vm := range vms {
 		targets[i] = discovery_kit_api.Target{
-			Id:         fmt.Sprintf("%s/%d", jvm.Hostname, jvm.Pid),
+			Id:         fmt.Sprintf("%s/%d", vm.Hostname, vm.Pid),
 			TargetType: targetID,
-			Label:      getApplicationName(jvm, "?"),
+			Label:      getApplicationName(vm, "?"),
 			Attributes: map[string][]string{
 				"application.type":      {"java"},
-				"application.name":      {getApplicationName(jvm, "")},
-				"container.id.stripped": {jvm.ContainerId},
-				"process.pid":           {strconv.Itoa(int(jvm.Pid))},
-				"application.hostname":  {jvm.Hostname},
+				"application.name":      {getApplicationName(vm, "")},
+				"container.id.stripped": {vm.ContainerId},
+				"process.pid":           {strconv.Itoa(int(vm.Pid))},
+				"application.hostname":  {vm.Hostname},
 			},
 		}
 	}
