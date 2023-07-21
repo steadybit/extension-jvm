@@ -104,7 +104,7 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
 		Label: discovery_kit_api.PluralLabel{One: "JVM application", Other: "JVM applications"},
 
 		// Category for the targets to appear in
-		Category: extutil.Ptr("JVM Application Attacks"),
+		Category: extutil.Ptr("JVM Application"),
 
 		// Specify attributes shown in table columns and to be used for sorting
 		Table: discovery_kit_api.Table{
