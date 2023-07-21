@@ -1,9 +1,31 @@
 templates:
   - daemonset.yaml
 tests:
-  - it: manifest should match snapshot without TLS
+  - it: manifest should match snapshot using docker
+    set:
+      container:
+        runtime: docker
     asserts:
       - matchSnapshot: { }
+  - it: manifest should match snapshot using containerd
+    set:
+      container:
+        runtime: containerd
+    asserts:
+      - matchSnapshot: { }
+  - it: manifest should match snapshot using crio
+    set:
+      container:
+        runtime: cri-o
+    asserts:
+      - matchSnapshot: { }
+  - it: manifest should fail without runtime
+    set:
+      container:
+        runtime: null
+    asserts:
+      - failedTemplate:
+          errorMessage: "<nil> (must be one of containerd, cri-o, docker)"
   - it: manifest should match snapshot with TLS
     set:
       tls:
@@ -35,5 +57,12 @@ tests:
           name: env-configmap
         - secretRef:
           name: env-secrets
+    asserts:
+      - matchSnapshot: {}
+  - it: manifest should match snapshot with different containerPorts
+    set:
+      containerPorts:
+        http: 9090
+        health: 9091
     asserts:
       - matchSnapshot: {}

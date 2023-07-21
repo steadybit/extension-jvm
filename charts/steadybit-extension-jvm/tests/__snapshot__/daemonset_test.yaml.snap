@@ -1,3 +1,285 @@
+manifest should match snapshot using containerd:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels: null
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
+            steadybit.com/extension-auto-discovery: "{ \"extensions\": [\n  {\n    \"port\": 8087,\n    \"types\": [\"ACTION\",\"DISCOVERY\"],\n    \"tls\": {\n      \n    }\n  }\n] }\n"
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8087"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8083"
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+              image: ghcr.io/steadybit/extension-jvm:latest
+              imagePullPolicy: Always
+              livenessProbe:
+                httpGet:
+                  path: /health/liveness
+                  port: 8083
+              name: steadybit-extension-jvm
+              ports:
+                - containerPort: 8087
+                  name: http
+                - containerPort: 8083
+                  name: health
+              readinessProbe:
+                httpGet:
+                  path: /health/readiness
+                  port: 8083
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                runAsGroup: 10000
+                runAsNonRoot: true
+                runAsUser: 10000
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: runtime-socket
+                - mountPath: /run/containerd/runc/k8s.io
+                  name: runtime-runc-root
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: runtime-socket
+            - hostPath:
+                path: /run/containerd/runc/k8s.io
+                type: Directory
+              name: runtime-runc-root
+manifest should match snapshot using crio:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels: null
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
+            steadybit.com/extension-auto-discovery: "{ \"extensions\": [\n  {\n    \"port\": 8087,\n    \"types\": [\"ACTION\",\"DISCOVERY\"],\n    \"tls\": {\n      \n    }\n  }\n] }\n"
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8087"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8083"
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+              image: ghcr.io/steadybit/extension-jvm:latest
+              imagePullPolicy: Always
+              livenessProbe:
+                httpGet:
+                  path: /health/liveness
+                  port: 8083
+              name: steadybit-extension-jvm
+              ports:
+                - containerPort: 8087
+                  name: http
+                - containerPort: 8083
+                  name: health
+              readinessProbe:
+                httpGet:
+                  path: /health/readiness
+                  port: 8083
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                runAsGroup: 10000
+                runAsNonRoot: true
+                runAsUser: 10000
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /var/run/crio/crio.sock
+                  name: runtime-socket
+                - mountPath: /run/runc
+                  name: runtime-runc-root
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /var/run/crio/crio.sock
+                type: Socket
+              name: runtime-socket
+            - hostPath:
+                path: /run/runc
+                type: Directory
+              name: runtime-runc-root
+manifest should match snapshot using docker:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels: null
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
+            steadybit.com/extension-auto-discovery: "{ \"extensions\": [\n  {\n    \"port\": 8087,\n    \"types\": [\"ACTION\",\"DISCOVERY\"],\n    \"tls\": {\n      \n    }\n  }\n] }\n"
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8087"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8083"
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+              image: ghcr.io/steadybit/extension-jvm:latest
+              imagePullPolicy: Always
+              livenessProbe:
+                httpGet:
+                  path: /health/liveness
+                  port: 8083
+              name: steadybit-extension-jvm
+              ports:
+                - containerPort: 8087
+                  name: http
+                - containerPort: 8083
+                  name: health
+              readinessProbe:
+                httpGet:
+                  path: /health/readiness
+                  port: 8083
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                runAsGroup: 10000
+                runAsNonRoot: true
+                runAsUser: 10000
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /var/run/docker.sock
+                  name: runtime-socket
+                - mountPath: /run/docker/runtime-runc/moby
+                  name: runtime-runc-root
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /var/run/docker.sock
+                type: Socket
+              name: runtime-socket
+            - hostPath:
+                path: /run/docker/runtime-runc/moby
+                type: Directory
+              name: runtime-runc-root
 manifest should match snapshot with TLS:
   1: |
     apiVersion: apps/v1
@@ -15,7 +297,7 @@ manifest should match snapshot with TLS:
         metadata:
           annotations:
             container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
-            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": 8087,\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n        \"server\": {\n          \"extraCertsFile\": \"server-cert/tls.crt\"\n        }\n        \n      }\n    }\n  ]\n}\n"
+            steadybit.com/extension-auto-discovery: "{ \"extensions\": [\n  {\n    \"port\": 8087,\n    \"types\": [\"ACTION\",\"DISCOVERY\"],\n    \"tls\": {\n      \"server\": {\n        \"extraCertsFile\": \"server-cert/tls.crt\"\n      }\n      \n    }\n  }\n] }\n"
           labels:
             app: steadybit-extension-jvm
             app.kubernetes.io/name: steadybit-extension-jvm
@@ -23,6 +305,10 @@ manifest should match snapshot with TLS:
         spec:
           containers:
             - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8087"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8083"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -38,6 +324,11 @@ manifest should match snapshot with TLS:
                   path: /health/liveness
                   port: 8083
               name: steadybit-extension-jvm
+              ports:
+                - containerPort: 8087
+                  name: http
+                - containerPort: 8083
+                  name: health
               readinessProbe:
                 httpGet:
                   path: /health/readiness
@@ -94,6 +385,100 @@ manifest should match snapshot with TLS:
               secret:
                 optional: false
                 secretName: server-cert
+manifest should match snapshot with different containerPorts:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels: null
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
+            steadybit.com/extension-auto-discovery: "{ \"extensions\": [\n  {\n    \"port\": 9090,\n    \"types\": [\"ACTION\",\"DISCOVERY\"],\n    \"tls\": {\n      \n    }\n  }\n] }\n"
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "9090"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "9091"
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+              image: ghcr.io/steadybit/extension-jvm:latest
+              imagePullPolicy: Always
+              livenessProbe:
+                httpGet:
+                  path: /health/liveness
+                  port: 9091
+              name: steadybit-extension-jvm
+              ports:
+                - containerPort: 9090
+                  name: http
+                - containerPort: 9091
+                  name: health
+              readinessProbe:
+                httpGet:
+                  path: /health/readiness
+                  port: 9091
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                runAsGroup: 10000
+                runAsNonRoot: true
+                runAsUser: 10000
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: runtime-socket
+                - mountPath: /run/containerd/runc/k8s.io
+                  name: runtime-runc-root
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: runtime-socket
+            - hostPath:
+                path: /run/containerd/runc/k8s.io
+                type: Directory
+              name: runtime-runc-root
 manifest should match snapshot with extra env vars:
   1: |
     apiVersion: apps/v1
@@ -111,7 +496,7 @@ manifest should match snapshot with extra env vars:
         metadata:
           annotations:
             container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
-            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": 8087,\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n        \n      }\n    }\n  ]\n}\n"
+            steadybit.com/extension-auto-discovery: "{ \"extensions\": [\n  {\n    \"port\": 8087,\n    \"types\": [\"ACTION\",\"DISCOVERY\"],\n    \"tls\": {\n      \n    }\n  }\n] }\n"
           labels:
             app: steadybit-extension-jvm
             app.kubernetes.io/name: steadybit-extension-jvm
@@ -119,6 +504,10 @@ manifest should match snapshot with extra env vars:
         spec:
           containers:
             - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8087"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8083"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -137,6 +526,11 @@ manifest should match snapshot with extra env vars:
                   path: /health/liveness
                   port: 8083
               name: steadybit-extension-jvm
+              ports:
+                - containerPort: 8087
+                  name: http
+                - containerPort: 8083
+                  name: health
               readinessProbe:
                 httpGet:
                   path: /health/readiness
@@ -204,23 +598,21 @@ manifest should match snapshot with mutual TLS:
           annotations:
             container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
             steadybit.com/extension-auto-discovery: |
-              {
-                "extensions": [
-                  {
-                    "port": 8087,
-                    "types": ["ACTION","DISCOVERY"],
-                    "tls": {
-                      "server": {
-                        "extraCertsFile": "server-cert/tls.crt"
-                      },
-                      "client": {
-                        "certChainFile": "client-cert-a/tls.crt",
-                        "certKeyFile": "client-cert-a/tls.key"
-                      }
+              { "extensions": [
+                {
+                  "port": 8087,
+                  "types": ["ACTION","DISCOVERY"],
+                  "tls": {
+                    "server": {
+                      "extraCertsFile": "server-cert/tls.crt"
+                    },
+                    "client": {
+                      "certChainFile": "client-cert-a/tls.crt",
+                      "certKeyFile": "client-cert-a/tls.key"
                     }
                   }
-                ]
-              }
+                }
+              ] }
           labels:
             app: steadybit-extension-jvm
             app.kubernetes.io/name: steadybit-extension-jvm
@@ -228,6 +620,10 @@ manifest should match snapshot with mutual TLS:
         spec:
           containers:
             - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8087"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8083"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -245,6 +641,11 @@ manifest should match snapshot with mutual TLS:
                   path: /health/liveness
                   port: 8083
               name: steadybit-extension-jvm
+              ports:
+                - containerPort: 8087
+                  name: http
+                - containerPort: 8083
+                  name: health
               readinessProbe:
                 httpGet:
                   path: /health/readiness
@@ -308,88 +709,3 @@ manifest should match snapshot with mutual TLS:
               secret:
                 optional: false
                 secretName: server-cert
-manifest should match snapshot without TLS:
-  1: |
-    apiVersion: apps/v1
-    kind: DaemonSet
-    metadata:
-      labels: null
-      name: RELEASE-NAME-steadybit-extension-jvm
-      namespace: NAMESPACE
-    spec:
-      selector:
-        matchLabels:
-          app: steadybit-extension-jvm
-          app.kubernetes.io/name: steadybit-extension-jvm
-      template:
-        metadata:
-          annotations:
-            container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
-            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": 8087,\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n        \n      }\n    }\n  ]\n}\n"
-          labels:
-            app: steadybit-extension-jvm
-            app.kubernetes.io/name: steadybit-extension-jvm
-            steadybit.com/extension: "true"
-        spec:
-          containers:
-            - env:
-                - name: STEADYBIT_LOG_LEVEL
-                  value: INFO
-                - name: STEADYBIT_LOG_FORMAT
-                  value: text
-              image: ghcr.io/steadybit/extension-jvm:latest
-              imagePullPolicy: Always
-              livenessProbe:
-                httpGet:
-                  path: /health/liveness
-                  port: 8083
-              name: steadybit-extension-jvm
-              readinessProbe:
-                httpGet:
-                  path: /health/readiness
-                  port: 8083
-              securityContext:
-                capabilities:
-                  add:
-                    - SYS_ADMIN
-                    - SYS_RESOURCE
-                    - SYS_PTRACE
-                    - KILL
-                    - NET_ADMIN
-                    - DAC_OVERRIDE
-                    - SETUID
-                    - SETGID
-                    - AUDIT_WRITE
-                readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
-                seccompProfile:
-                  type: Unconfined
-              volumeMounts:
-                - mountPath: /tmp
-                  name: tmp-dir
-                - mountPath: /sys/fs/cgroup
-                  name: cgroup-root
-                - mountPath: /run/containerd/containerd.sock
-                  name: runtime-socket
-                - mountPath: /run/containerd/runc/k8s.io
-                  name: runtime-runc-root
-          dnsPolicy: ClusterFirstWithHostNet
-          hostNetwork: true
-          hostPID: true
-          volumes:
-            - emptyDir: {}
-              name: tmp-dir
-            - hostPath:
-                path: /sys/fs/cgroup
-                type: Directory
-              name: cgroup-root
-            - hostPath:
-                path: /run/containerd/containerd.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
-                path: /run/containerd/runc/k8s.io
-                type: Directory
-              name: runtime-runc-root
