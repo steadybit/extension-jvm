@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/procyon-projects/chrono v1.1.2
-	github.com/rs/zerolog v1.29.1
+	github.com/rs/zerolog v1.30.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.6.3
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.4
