@@ -17,8 +17,8 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/xin053/hsperfdata v0.2.3
 	golang.org/x/sys v0.10.0
-	k8s.io/api v0.27.3
-	k8s.io/apimachinery v0.27.3
+	k8s.io/api v0.27.4
+	k8s.io/apimachinery v0.27.4
 	k8s.io/client-go v0.27.3
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.69
 )
