@@ -4,7 +4,7 @@
 
 This [Steadybit](https://www.steadybit.com/) extension provides a jvm application discovery and the various actions for jvm applications targets.
 
-Learn about the capabilities of this extension in our [Reliability Hub](https://hub.steadybit.com/extension/com.github.steadybit.extension_jvm).
+Learn about the capabilities of this extension in our [Reliability Hub](https://hub.steadybit.com/extension/com.steadybit.extension_jvm).
 
 ## Configuration
 
