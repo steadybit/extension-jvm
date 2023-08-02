@@ -110,20 +110,20 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 	}
 
 	target := getSpringBootSampleTarget(t, ctx, e)
-	assert.Equal(t, target.TargetType, "application")
+	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.application")
 
 	if os.Getenv("CI") == "true" {
-		targetFashion, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
+		targetFashion, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.application", func(target discovery_kit_api.Target) bool {
 			log.Debug().Msgf("targetApplications: %+v", target.Attributes)
 			return e2e.HasAttribute(target, "application.name", "fashion-bestseller")
 		})
 		require.NoError(t, err)
-		assert.Equal(t, targetFashion.TargetType, "application")
+		assert.Equal(t, targetFashion.TargetType, "com.steadybit.extension_jvm.application")
 	}
 }
 
 func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extension) discovery_kit_api.Target {
-	target, err := e2e.PollForTarget(ctx, e, "application", func(target discovery_kit_api.Target) bool {
+	target, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.application", func(target discovery_kit_api.Target) bool {
 		//log.Debug().Msgf("targetApplications: %+v", target.Attributes)
 		return e2e.HasAttribute(target, "application.name", "/app") &&
 			e2e.HasAttribute(target, "application.type", "spring-boot") &&
