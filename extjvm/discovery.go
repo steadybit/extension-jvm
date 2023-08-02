@@ -204,7 +204,7 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
 			},
 			{
 				Src: discovery_kit_api.SourceOrDestination{
-					Type: "com.github.steadybit.extension_kubernetes.kubernetes-container",
+					Type: "com.steadybit.extension_kubernetes.kubernetes-container",
 					Selector: map[string]string{
 						"k8s.container.id.stripped": "${dest.container.id.stripped}",
 					},

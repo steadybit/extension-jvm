@@ -41,7 +41,7 @@ func (l *jdbcTemplateException) NewEmptyState() JdbcTemplateExceptionState {
 // Describe returns the action description for the platform with all required information.
 func (l *jdbcTemplateException) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          TargetIDPrefix + ".spring-jdbctemplate-exception-attack",
+		Id:          ActionIDPrefix + ".spring-jdbctemplate-exception-attack",
 		Label:       "JDBC Template Exception",
 		Description: "Throws an exception in a Spring JDBC Template.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),

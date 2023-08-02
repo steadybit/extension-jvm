@@ -43,7 +43,7 @@ func (l *controllerDelay) NewEmptyState() ControllerDelayState {
 // Describe returns the action description for the platform with all required information.
 func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          TargetIDPrefix + ".spring-mvc-delay-attack",
+		Id:          ActionIDPrefix + ".spring-mvc-delay-attack",
 		Label:       "Controller Delay",
 		Description: "Delay a Spring MVC controller http response by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),

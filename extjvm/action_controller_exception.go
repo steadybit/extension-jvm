@@ -42,7 +42,7 @@ func (l *controllerException) NewEmptyState() ControllerExceptionState {
 // Describe returns the action description for the platform with all required information.
 func (l *controllerException) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          TargetIDPrefix + ".spring-mvc-exception-attack",
+		Id:          ActionIDPrefix + ".spring-mvc-exception-attack",
 		Label:       "Controller Exception",
 		Description: "Throw an exception in an Spring MVC controller method",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),

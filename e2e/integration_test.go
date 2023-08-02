@@ -183,7 +183,7 @@ func testMvcDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			unaffectedLatency, err := springBootSample.MeasureLatency(200)
 			require.NoError(t, err, "failed to measure customers endpoint")
 
-			action, err := e.RunAction(extjvm.TargetIDPrefix+".spring-mvc-delay-attack", &action_kit_api.Target{
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-mvc-delay-attack", &action_kit_api.Target{
 				Name: "spring.application.name",
 				Attributes: map[string][]string{
 					"spring.application.name": {"spring-boot-sample"},
@@ -233,7 +233,7 @@ func testMvcException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 		t.Run(tt.name, func(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 
-			action, err := e.RunAction(extjvm.TargetIDPrefix+".spring-mvc-exception-attack", &action_kit_api.Target{
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-mvc-exception-attack", &action_kit_api.Target{
 				Name: "spring.application.name",
 				Attributes: map[string][]string{
 					"spring.application.name": {"spring-boot-sample"},
@@ -318,7 +318,7 @@ func testHttpClientDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/remote/blocking?url=https://www.github.com")
 			require.NoError(t, err, "failed to measure customers endpoint")
 
-			action, err := e.RunAction(extjvm.TargetIDPrefix+".spring-httpclient-delay-attack", &action_kit_api.Target{
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-httpclient-delay-attack", &action_kit_api.Target{
 				Name: "spring.application.name",
 				Attributes: map[string][]string{
 					"spring.application.name": {"spring-boot-sample"},
@@ -417,7 +417,7 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		t.Run(tt.name, func(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 
-			action, err := e.RunAction(extjvm.TargetIDPrefix+".spring-httpclient-status-attack", &action_kit_api.Target{
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-httpclient-status-attack", &action_kit_api.Target{
 				Name: "spring.application.name",
 				Attributes: map[string][]string{
 					"spring.application.name": {"spring-boot-sample"},
@@ -488,7 +488,7 @@ func testJavaMethodDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			unaffectedLatency, err := springBootSample.MeasureLatency(200)
 			require.NoError(t, err, "failed to measure customers endpoint")
 
-			action, err := e.RunAction(extjvm.TargetIDPrefix+".java-method-delay-attack", &action_kit_api.Target{
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".java-method-delay-attack", &action_kit_api.Target{
 				Name: "spring.application.name",
 				Attributes: map[string][]string{
 					"spring.application.name": {"spring-boot-sample"},
@@ -539,7 +539,7 @@ func testJavaMethodException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 		t.Run(tt.name, func(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 
-			action, err := e.RunAction(extjvm.TargetIDPrefix+".java-method-exception-attack", &action_kit_api.Target{
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".java-method-exception-attack", &action_kit_api.Target{
 				Name: "spring.application.name",
 				Attributes: map[string][]string{
 					"spring.application.name": {"spring-boot-sample"},
@@ -645,7 +645,7 @@ func testJDBCTemplateDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			unaffectedLatency, err := springBootSample.MeasureLatency(200)
 			require.NoError(t, err, "failed to measure customers endpoint")
 
-			action, err := e.RunAction(extjvm.TargetIDPrefix+".spring-jdbctemplate-delay-attack", &action_kit_api.Target{
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-jdbctemplate-delay-attack", &action_kit_api.Target{
 				Name: "spring.application.name",
 				Attributes: map[string][]string{
 					"spring.application.name": {"spring-boot-sample"},
@@ -710,7 +710,7 @@ func testJDBCTemplateException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) 
 		t.Run(tt.name, func(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 
-			action, err := e.RunAction(extjvm.TargetIDPrefix+".java-method-exception-attack", &action_kit_api.Target{
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".java-method-exception-attack", &action_kit_api.Target{
 				Name: "spring.application.name",
 				Attributes: map[string][]string{
 					"spring.application.name": {"spring-boot-sample"},
