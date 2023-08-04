@@ -125,7 +125,7 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
 		EnrichmentRules: extutil.Ptr([]discovery_kit_api.TargetEnrichmentRule{
 			{
 				Src: discovery_kit_api.SourceOrDestination{
-					Type: "host",
+					Type: "com.steadybit.extension_host.host",
 					Selector: map[string]string{
 						"host.hostname": "${dest.application.hostname}",
 					},
@@ -164,7 +164,7 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
 			},
 			{
 				Src: discovery_kit_api.SourceOrDestination{
-					Type: "container",
+					Type: "com.steadybit.extension_container.container",
 					Selector: map[string]string{
 						"k8s.container.id.stripped": "${dest.container.id.stripped}",
 					},
