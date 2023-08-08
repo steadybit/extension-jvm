@@ -17,7 +17,7 @@ env:
 jobs:
   build_jars:
     name: Build Jars
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 #    runs-on:
 #      labels: steadybit_runner_ubuntu_latest_8cores_32GB
     steps:
