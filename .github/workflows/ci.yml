@@ -17,8 +17,8 @@ env:
 jobs:
   audit:
     name: Audit
-    runs-on:
-      labels: steadybit_runner_ubuntu_latest_8cores_32GB
+    runs-on: ubuntu-latest
+#      labels: steadybit_runner_ubuntu_latest_8cores_32GB
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
