@@ -17,9 +17,9 @@ env:
 jobs:
   build_jars:
     name: Build Jars
-#    runs-on: macos-latest
-    runs-on:
-      labels: steadybit_runner_ubuntu_latest_8cores_32GB
+    runs-on: windows-latest
+#    runs-on:
+#      labels: steadybit_runner_ubuntu_latest_8cores_32GB
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
