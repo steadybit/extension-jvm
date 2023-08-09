@@ -95,7 +95,7 @@ manifest should match snapshot using containerd:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
               name: runtime-runc-root
-manifest should match snapshot using crio:
+manifest should match snapshot using crio using podAnnotations and Labels:
   1: |
     apiVersion: apps/v1
     kind: DaemonSet
@@ -113,11 +113,13 @@ manifest should match snapshot using crio:
         metadata:
           annotations:
             container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm: unconfined
+            some-annotation: some-annotation-value
             steadybit.com/extension-auto-discovery: |
               {"extensions":[{"port":8087,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
           labels:
             app: steadybit-extension-jvm
             app.kubernetes.io/name: steadybit-extension-jvm
+            some-label: some-label-value
             steadybit.com/discovery-enabled: "false"
             steadybit.com/extension: "true"
         spec:
