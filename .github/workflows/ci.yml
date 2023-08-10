@@ -54,7 +54,7 @@ jobs:
       - build_jars
     runs-on:
       labels: steadybit_runner_ubuntu_latest_8cores_32GB
-      timeout-minutes: 60
+    timeout-minutes: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
