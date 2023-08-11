@@ -29,7 +29,13 @@ public class JavaAgent {
    * Stops the previous agent (if supplied) and starts the main thread of this agent.
    */
   public static void init(String agentArguments, Instrumentation instrumentation, ClassLoader previousAgent) throws Exception {
-    injectClassesIntoBootstrapLoader(instrumentation);
+    String inject = getValueFromArgument(agentArguments, "disableBootstrapLoaderInjection");
+    if ("true".equals(inject)) {
+      log.info("Injection of steadybit classes into bootstrap loader disabled.");
+    } else {
+      injectClassesIntoBootstrapLoader(instrumentation);
+    }
+
     String pid = getValueFromArgument(agentArguments, "pid");
     String host = getValueFromArgument(agentArguments, "host");
     String port = getValueFromArgument(agentArguments, "port");

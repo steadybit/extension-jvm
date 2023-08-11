@@ -38,7 +38,7 @@ class JavaAgentTest {
         //Start HttpEndpoint with RegisterJavaagentHandler
 
         //When
-        JavaAgent.init("pid=6,host=127.0.0.1,port=" + wireMock.port(), ByteBuddyAgent.install(), null);
+        JavaAgent.init("disableBootstrapLoaderInjection=true,pid=6,host=127.0.0.1,port=" + wireMock.port(), ByteBuddyAgent.install(), null);
         //Then
         await().untilAsserted(
                 () -> wireMock.verify(putRequestedFor(urlMatching("/javaagent")))
