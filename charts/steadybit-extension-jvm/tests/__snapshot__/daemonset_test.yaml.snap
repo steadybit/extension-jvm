@@ -1,4 +1,4 @@
-manifest should match snapshot using containerd:
+manifest should match snapshot using containerd and resources:
   1: |
     apiVersion: apps/v1
     kind: DaemonSet
@@ -50,6 +50,13 @@ manifest should match snapshot using containerd:
                 httpGet:
                   path: /health/readiness
                   port: 8083
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -149,6 +156,13 @@ manifest should match snapshot using crio using podAnnotations and Labels:
                 httpGet:
                   path: /health/readiness
                   port: 8083
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -246,6 +260,13 @@ manifest should match snapshot using docker:
                 httpGet:
                   path: /health/readiness
                   port: 8083
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -347,6 +368,13 @@ manifest should match snapshot with TLS:
                 httpGet:
                   path: /health/readiness
                   port: 8083
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -451,6 +479,13 @@ manifest should match snapshot with different containerPorts:
                 httpGet:
                   path: /health/readiness
                   port: 9091
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -555,6 +590,13 @@ manifest should match snapshot with extra env vars:
                 httpGet:
                   path: /health/readiness
                   port: 8083
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -653,6 +695,13 @@ manifest should match snapshot with extra labels:
                 httpGet:
                   path: /health/readiness
                   port: 8083
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -756,6 +805,13 @@ manifest should match snapshot with mutual TLS:
                 httpGet:
                   path: /health/readiness
                   port: 8083
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -873,6 +929,13 @@ manifest should match snapshot with mutual TLS using containerPaths:
                 httpGet:
                   path: /health/readiness
                   port: 8083
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
