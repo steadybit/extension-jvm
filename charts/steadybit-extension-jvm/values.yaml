@@ -63,6 +63,12 @@ updateStrategy:
     # updateStrategy.rollingUpdate.maxSurge -- The maximum number of DaemonSet pods that can be unavailable during the update.
     maxUnavailable: 1
 
+serviceAccount:
+  # serviceAccount.create -- Specifies whether a ServiceAccount should be created.
+  create: true
+  # serviceAccount.name -- The name of the ServiceAccount to use.
+  name: steadybit-extension-jvm
+
 # extra labels to apply to the Kubernetes resources
 extraLabels: {}
 

@@ -104,6 +104,7 @@ spec:
             type: Directory
             {{- include "containerRuntime.volumes" . | nindent 8 }}
             {{- include "extensionlib.deployment.volumes" (list .) | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
           {{- with .Values.nodeSelector }}
       nodeSelector:
           {{- toYaml . | nindent 8 }}
