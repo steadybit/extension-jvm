@@ -56,6 +56,13 @@ resources:
     # resources.limits.cpu -- The limit of cpu share to be used during its interval
     cpu: "200m"
 
+updateStrategy:
+  # updateStrategy.type -- Specifies the strategy used to replace old Pods by new ones.
+  type: RollingUpdate
+  rollingUpdate:
+    # updateStrategy.rollingUpdate.maxSurge -- The maximum number of DaemonSet pods that can be unavailable during the update.
+    maxUnavailable: 1
+
 # extra labels to apply to the Kubernetes resources
 extraLabels: {}
 

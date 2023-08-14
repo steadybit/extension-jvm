@@ -13,6 +13,12 @@ spec:
     matchLabels:
       app.kubernetes.io/name: {{ include "extensionlib.names.name" . }}
       app: {{ include "extensionlib.names.name" . }}
+  updateStrategy:
+    # updateStrategy.type -- Specifies the strategy used to replace old Pods by new ones.
+    type: RollingUpdate
+    rollingUpdate:
+      # updateStrategy.rollingUpdate.maxSurge -- The maximum number of DaemonSet pods that can be unavailable during the update.
+      maxUnavailable: 1
   template:
     metadata:
       labels:
