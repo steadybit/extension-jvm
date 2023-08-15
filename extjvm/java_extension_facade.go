@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/dimchansky/utfbom"
 	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/config"
 	"github.com/steadybit/extension-jvm/extjvm/attachment"
 	"github.com/steadybit/extension-jvm/extjvm/attachment/plugin_tracking"
 	"github.com/steadybit/extension-jvm/extjvm/attachment/remote_jvm_connections"
@@ -79,8 +80,8 @@ func StartAttachment() {
 
 func AddAttachedListener(attachedListener AttachedListener) {
 	attachedListeners = append(attachedListeners, attachedListener)
-	for _, jvm := range GetJVMs() {
-		attachedListener.JvmAttachedSuccessfully(&jvm)
+	for _, discoveredJvm := range GetJVMs() {
+		attachedListener.JvmAttachedSuccessfully(&discoveredJvm)
 	}
 }
 
@@ -392,7 +393,7 @@ func attachInternal(jvm *jvm.JavaVm) (bool, error) {
 		return false, err
 	}
 
-	attached := attachment.GetAttachment(jvm).Attach(JavaagentMainJar, JavaagentInitJar, int(common.GetOwnJVMAttachmentPort()))
+	attached := attachment.GetAttachment(jvm).Attach(JavaagentMainJar, JavaagentInitJar, int(config.Config.JavaAgentAttachmentPort))
 	if !attached {
 		return false, errors.New("could not attach to JVM")
 	}

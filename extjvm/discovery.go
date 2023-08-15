@@ -9,7 +9,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/extension-jvm/config"
-	"github.com/steadybit/extension-jvm/extjvm/common"
 	"github.com/steadybit/extension-jvm/extjvm/controller"
 	"github.com/steadybit/extension-jvm/extjvm/hotspot"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
@@ -37,7 +36,7 @@ func InitDiscovery() {
 	InstallSignalHandler()
 
 	//Start Java agent controller
-	controller.Start(common.GetOwnJVMAttachmentPort())
+	controller.Start(config.Config.JavaAgentAttachmentPort)
 
 	//Init discover Datasources
 	InitDataSourceDiscovery()
