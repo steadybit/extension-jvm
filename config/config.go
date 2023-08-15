@@ -13,6 +13,7 @@ import (
 // through environment variables. Learn more through the documentation of the envconfig package.
 // https://github.com/kelseyhightower/envconfig
 type Specification struct {
+	DiscoveryCallInterval string `json:"discoveryCallInterval" split_words:"true" required:"false" default:"1m"`
 }
 
 var (

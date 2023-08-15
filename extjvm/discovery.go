@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/extension-jvm/config"
 	"github.com/steadybit/extension-jvm/extjvm/common"
 	"github.com/steadybit/extension-jvm/extjvm/controller"
 	"github.com/steadybit/extension-jvm/extjvm/hotspot"
@@ -89,7 +90,7 @@ func getDiscoveryDescription() discovery_kit_api.DiscoveryDescription {
 		Discover: discovery_kit_api.DescribingEndpointReferenceWithCallInterval{
 			Method:       "GET",
 			Path:         discoveryBasePath + "/discovered-targets",
-			CallInterval: extutil.Ptr(common.GetDiscoveryCallInterval()),
+			CallInterval: extutil.Ptr(config.Config.DiscoveryCallInterval),
 		},
 	}
 }
