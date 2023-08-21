@@ -23,7 +23,6 @@ require (
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.69
 )
 
-//replace github.com/steadybit/action-kit/go/action_kit_test v1.0.0 => /Users/atze/Workspaces/steadybit/repos/action-kit/go/action_kit_test
 
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
