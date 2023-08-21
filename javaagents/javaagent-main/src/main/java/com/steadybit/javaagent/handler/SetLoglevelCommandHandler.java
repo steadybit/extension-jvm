@@ -24,7 +24,7 @@ public class SetLoglevelCommandHandler implements CommandHandler {
 
     @Override
     public void handle(String command, String argument, OutputStream os) {
-        RemoteAgentLogger.setLevel(LogLevel.valueOf(argument));
+        RemoteAgentLogger.setLevel(LogLevel.fromString(argument));
         log.debug(String.format("Set loglevel to %s.", argument));
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8), true);
         writer.write(RC_OK);

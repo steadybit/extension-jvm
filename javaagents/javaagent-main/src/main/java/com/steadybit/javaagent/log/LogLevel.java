@@ -15,6 +15,23 @@ public enum LogLevel {
     }
 
     public int getLevel() {
-        return this.level;
+        return level;
+    }
+
+    public static LogLevel fromString(String level) {
+        switch (level.toUpperCase()) {
+            case "ERROR":
+                return ERROR;
+            case "WARN":
+                return WARN;
+            case "INFO":
+                return INFO;
+            case "DEBUG":
+                return DEBUG;
+            case "TRACE":
+                return TRACE;
+            default:
+                return INFO;
+        }
     }
 }

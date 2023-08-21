@@ -28,7 +28,7 @@ public class RemoteAgentLogger implements Logger {
 
     static {
         String logLevelString = System.getProperty("STEADYBIT_LOG_LEVEL", System.getenv("STEADYBIT_LOG_LEVEL"));
-        RemoteAgentLogger.logLevel = logLevelString != null ? LogLevel.valueOf(logLevelString) : LogLevel.INFO;
+        RemoteAgentLogger.logLevel = logLevelString != null ? LogLevel.fromString(logLevelString) : LogLevel.INFO;
         String logToSystemOutEnabledString = System.getProperty("STEADYBIT_LOG_JAVAAGENT_STDOUT", System.getenv("STEADYBIT_LOG_JAVAAGENT_STDOUT"));
         RemoteAgentLogger.logToSystemOut = Boolean.parseBoolean(logToSystemOutEnabledString);
     }
@@ -79,7 +79,7 @@ public class RemoteAgentLogger implements Logger {
         try {
             RemoteAgentLogger.remoteLogUrl = new URL("http://" + agentHost + ":" + agentPort + "/" + "log");
         } catch (MalformedURLException e) {
-            System.err.print(String.format("Could not set up remote log url: %s", e.getMessage()));
+            System.err.printf("Could not set up remote log url: %s", e.getMessage());
         }
     }
 
