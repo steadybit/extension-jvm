@@ -2,10 +2,22 @@
 
 package common
 
-import "github.com/rs/zerolog/log"
-import "kernel.org/pub/linux/libs/security/libcap/cap"
+import (
+	"github.com/rs/zerolog/log"
+	"os"
+	"os/exec"
+	"strconv"
+)
 
 func PrintCaps() {
-	proc := cap.GetProc()
-	log.Info().Msgf("Capabilities: %s", proc.String())
+	if !log.Debug().Enabled() {
+		return
+	}
+
+	out, err := exec.Command("getpcaps", strconv.Itoa(os.Getpid())).CombinedOutput()
+	if err != nil {
+		log.Debug().Err(err).Msgf("failed to get own capabilities")
+	} else {
+		log.Debug().Msgf("capabilities: %s", string(out))
+	}
 }
