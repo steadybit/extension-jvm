@@ -4,15 +4,15 @@ go 1.20
 
 require (
 	github.com/dimchansky/utfbom v1.1.1
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/procyon-projects/chrono v1.1.2
 	github.com/rs/zerolog v1.30.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.7.1
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.5
-	github.com/steadybit/action-kit/go/action_kit_test v1.0.9
-	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
+	github.com/steadybit/action-kit/go/action_kit_test v1.0.15
+	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.4.1
 	github.com/steadybit/extension-kit v1.8.7
 	github.com/stretchr/testify v1.8.4
 	github.com/xin053/hsperfdata v0.2.3
@@ -21,7 +21,6 @@ require (
 	k8s.io/apimachinery v0.29.0-alpha.0
 	k8s.io/client-go v0.29.0-alpha.0
 )
-
 
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
