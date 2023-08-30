@@ -1,6 +1,10 @@
 # Changelog
 
 
+## v1.0.6
+
+- fix application name discovery
+
 ## v1.0.5
 
 - update dependencies
