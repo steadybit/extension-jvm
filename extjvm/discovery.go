@@ -13,7 +13,8 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm/hotspot"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
-	"github.com/steadybit/extension-kit/extbuild"
+  "github.com/steadybit/extension-jvm/extjvm/utils"
+  "github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
 	"net/http"
@@ -375,7 +376,7 @@ func enhanceTargetsWithSpringAttributes(targets []discovery_kit_api.Target) {
 	for _, app := range springApplications {
 		target := findTargetByPid(targets, app.Pid)
 		if target != nil {
-			target.Attributes["application.name"] = append(target.Attributes["application.name"], app.Name)
+			target.Attributes["application.name"] = utils.AppendIfMissing(target.Attributes["application.name"], app.Name)
 			target.Attributes["spring.application.name"] = []string{app.Name}
 			target.Attributes["application.type"] = append(target.Attributes["application.type"], "spring")
 			if app.SpringBoot {
@@ -434,5 +435,8 @@ func getApplicationName(jvm jvm.JavaVm, defaultIfEmpty string) string {
 	if name == "" {
 		name = defaultIfEmpty
 	}
+  if strings.HasPrefix(name, "/") {
+    name = name[1:]
+  }
 	return name
 }

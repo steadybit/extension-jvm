@@ -22,7 +22,6 @@ require (
 	k8s.io/client-go v0.29.0-alpha.0
 )
 
-
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/bytedance/sonic v1.10.0 // indirect
