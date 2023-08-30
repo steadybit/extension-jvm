@@ -13,8 +13,8 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm/hotspot"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
-  "github.com/steadybit/extension-jvm/extjvm/utils"
-  "github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
+	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
 	"net/http"
@@ -435,8 +435,6 @@ func getApplicationName(jvm jvm.JavaVm, defaultIfEmpty string) string {
 	if name == "" {
 		name = defaultIfEmpty
 	}
-  if strings.HasPrefix(name, "/") {
-    name = name[1:]
-  }
+	name = strings.TrimPrefix(name, "/")
 	return name
 }
