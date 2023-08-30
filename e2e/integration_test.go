@@ -125,7 +125,7 @@ func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extension) discovery_kit_api.Target {
 	target, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.application", func(target discovery_kit_api.Target) bool {
 		//log.Debug().Msgf("targetApplications: %+v", target.Attributes)
-		return e2e.HasAttribute(target, "application.name", "/app") &&
+		return e2e.HasAttribute(target, "application.name", "app") &&
 			e2e.HasAttribute(target, "application.type", "spring-boot") &&
 			e2e.HasAttribute(target, "spring.application.name", "spring-boot-sample") &&
 			e2e.HasAttribute(target, "spring.http-client", "true") &&
