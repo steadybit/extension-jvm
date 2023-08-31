@@ -88,7 +88,7 @@ func AddAttachedListener(attachedListener AttachedListener) {
 func attachWorker(attachJobs chan AttachJvmWork) {
 	for job := range attachJobs {
 		job.retries--
-		if job.retries > 0 {
+		if job.retries + 1  > 0 {
 			doAttach(job)
 		} else {
 			log.Warn().Msgf("Attach retries for %s exceeded.", job.jvm.ToDebugString())
@@ -113,7 +113,7 @@ func doAttach(job AttachJvmWork) {
 		if java_process.IsRunningProcess(vm.Pid) {
 			log.Warn().Msgf("Error attaching to JVM %+v: %s", vm, err)
 			go func() {
-				time.Sleep(10 * time.Second)
+				time.Sleep(time.Duration(120/(job.retries*2)) * time.Second)
 				// do retry
 				attach(job.jvm, job.retries)
 			}()
@@ -167,7 +167,7 @@ func loadAgentPluginJob(job LoadPluginJvmWork) {
 	if err != nil || !success {
 		log.Error().Msgf("Error loading plugin %s for JVM %+v: %s", job.plugin, job.jvm, err)
 		go func() {
-			time.Sleep(10 * time.Second)
+			time.Sleep(time.Duration(120/(job.retries*2)) * time.Second)
 			// do retry
 			scheduleLoadAgentPlugin(job.jvm, job.plugin, job.args, job.retries)
 		}()

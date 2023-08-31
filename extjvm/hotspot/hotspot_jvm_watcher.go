@@ -28,7 +28,7 @@ var (
 )
 
 const (
-	initialRetries = 3
+	initialRetries = 5
 )
 
 func Start() {
@@ -51,7 +51,7 @@ func Start() {
 func discoveryWorker(hotspotDiscoveryJobs chan DiscoveryWork) {
 	for job := range hotspotDiscoveryJobs {
 		job.retries--
-		if job.retries > 0 {
+		if job.retries + 1 > 0 {
 			discoverHotspotJvm(job)
 		} else {
 			log.Warn().Msgf("Hotspot discovery retries for %d exceeded.", job.pid)
@@ -60,9 +60,6 @@ func discoveryWorker(hotspotDiscoveryJobs chan DiscoveryWork) {
 }
 
 func discover(pid int32, retries int) {
-	if retries != initialRetries {
-		time.Sleep(1 * time.Second)
-	}
 	hotspotDiscoveryJobs <- DiscoveryWork{pid: pid, retries: retries}
 }
 func updatePids() {
@@ -86,7 +83,10 @@ func discoverHotspotJvm(work DiscoveryWork) {
 			addToDiscoveredHotspotPids(work.pid)
 		} else {
 			//retry
-			discover(work.pid, work.retries)
+      go func() {
+        time.Sleep(time.Duration(initialRetries * 2/ work.retries  )* time.Second)
+        discover(work.pid, work.retries)
+      }()
 		}
 	}
 }

@@ -34,7 +34,7 @@ var (
 )
 
 const (
-	initialRetries = 3
+	initialRetries = 5
 )
 
 func Start() {
@@ -68,7 +68,7 @@ func Start() {
 func discoveryWorker(discoveryJobs chan DiscoveryWork) {
 	for job := range discoveryJobs {
 		job.retries--
-		if job.retries > 0 {
+		if job.retries+1 > 0 {
 			discoverProcessJVM(job)
 		} else {
 			log.Debug().Msgf("Process discovery retries for %d exceeded.", job.p.Pid)
@@ -78,9 +78,6 @@ func discoveryWorker(discoveryJobs chan DiscoveryWork) {
 }
 
 func discover(p *process.Process, retries int) {
-	if retries != initialRetries {
-		time.Sleep(1 * time.Second)
-	}
 	discoveryJobs <- DiscoveryWork{p: p, retries: retries}
 }
 
@@ -106,7 +103,10 @@ func discoverProcessJVM(job DiscoveryWork) {
 				addPidToDiscoveredPids(job)
 			} else {
 				//retry
-				discover(job.p, job.retries)
+				go func() {
+					time.Sleep(time.Duration(initialRetries*2/job.retries) * time.Second)
+					discover(job.p, job.retries)
+				}()
 			}
 		}
 	}
@@ -163,7 +163,11 @@ func RemoveListener(listener Listener) {
 func isJava(p *process.Process) bool {
 	path, err := GetProcessPath(p)
 	if err != nil {
-		return false
+		time.Sleep(1 * time.Second)
+		path, err = GetProcessPath(p)
+		if err != nil {
+			return false
+		}
 	}
 	return strings.HasSuffix(strings.TrimSpace(path), "java")
 }

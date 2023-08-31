@@ -64,7 +64,7 @@ func InitDataSourceDiscovery() {
 func discoveryDataSourceWorker(discoveryJobs chan DiscoveryDataSourceWork) {
 	for job := range discoveryJobs {
 		job.retries--
-		if job.retries > 0 {
+		if job.retries + 1 > 0 {
 			DataSourceDiscover(job)
 		} else {
 			log.Warn().Msgf("Datasource discovery retries for %s exceeded.", job.jvm.ToDebugString())

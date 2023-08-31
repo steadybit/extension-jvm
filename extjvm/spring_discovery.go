@@ -100,7 +100,7 @@ func InitSpringDiscovery() {
 func discoverySpringWorker(discoveryJobs chan DiscoverySpringWork) {
 	for job := range discoveryJobs {
 		job.retries--
-		if job.retries > 0 {
+		if job.retries + 1 > 0 {
 			springDiscover(job)
 		} else {
 			log.Warn().Msgf("Spring discovery retries for %s exceeded.", job.jvm.ToDebugString())
