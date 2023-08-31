@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	DataSourcePlugin       = common.GetJarPath("discovery-java-javaagent.jar")
-	DataSourceMarkerClass  = "javax.sql.DataSource"
-	DataSourceApplications = sync.Map{} // map[Pid int32]DataSourceApplication
+	DataSourcePlugin        = common.GetJarPath("discovery-java-javaagent.jar")
+	DataSourceMarkerClass   = "javax.sql.DataSource"
+	DataSourceApplications  = sync.Map{} // map[Pid int32]DataSourceApplication
+	discoveryDataSourceJobs = make(chan DiscoveryDataSourceWork)
 )
 
 type DataSourceConnection struct {
@@ -28,6 +29,11 @@ type DataSourceConnection struct {
 type DataSourceApplication struct {
 	Pid                   int32
 	DataSourceConnections []DataSourceConnection
+}
+
+type DiscoveryDataSourceWork struct {
+	jvm     *jvm.JavaVm
+	retries int
 }
 
 type DataSourceDiscovery struct{}
@@ -47,8 +53,23 @@ func GetDataSourceApplications() []DataSourceApplication {
 
 func InitDataSourceDiscovery() {
 	log.Info().Msg("Init DataSource Plugin")
+	// create attach worker pool
+	for w := 1; w <= 4; w++ {
+		go discoveryDataSourceWorker(discoveryDataSourceJobs)
+	}
 	AddAutoloadAgentPlugin(DataSourcePlugin, DataSourceMarkerClass)
 	AddAttachedListener(DataSourceDiscovery{})
+}
+
+func discoveryDataSourceWorker(discoveryJobs chan DiscoveryDataSourceWork) {
+	for job := range discoveryJobs {
+		job.retries--
+		if job.retries > 0 {
+			DataSourceDiscover(job)
+		} else {
+			log.Warn().Msgf("Datasource discovery retries for %s exceeded.", job.jvm.ToDebugString())
+		}
+	}
 }
 
 func DeactivateDataSourceDiscovery() {
@@ -97,24 +118,47 @@ func scheduleDataSourceDiscovery(interval time.Duration) (chrono.ScheduledTask, 
 	return taskScheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
 		jvMs := GetJVMs()
 		for _, vm := range jvMs {
-			DataSourceDiscover(&vm)
+      dataSourceDiscoverInternal(&vm)
 		}
 	}, interval)
 }
 
 func (s DataSourceDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
-	DataSourceDiscover(jvm)
+	doDataSourceDiscover(jvm, 5)
 }
-func DataSourceDiscover(jvm *jvm.JavaVm) {
+
+func doDataSourceDiscover(jvm *jvm.JavaVm, retries int) {
+	discoveryDataSourceJobs <- DiscoveryDataSourceWork{
+		jvm:     jvm,
+		retries: retries,
+	}
+}
+
+func DataSourceDiscover(work DiscoveryDataSourceWork) {
+	jvm := work.jvm
 	if hasDataSourcePlugin(jvm) {
-		dataSourceApplication := createDataSourceApplication(jvm)
-		if dataSourceApplication != nil {
-			DataSourceApplications.Store(jvm.Pid, *dataSourceApplication)
-			log.Info().Msgf("DataSource discovered on PID %d: %+v", jvm.Pid, dataSourceApplication)
+    dataSourceDiscoverInternal(jvm)
+	} else if HasClassLoaded(jvm, DataSourceMarkerClass) {
+		// something is wrong here... need to retry
+		if work.retries == 1 {
+			log.Error().Msgf("Application on PID %d is a DataSource but does not have the Datasource Plugin attached.", jvm.Pid)
 		}
+		go func() {
+			time.Sleep(time.Duration(120/(work.retries*2)) * time.Second)
+			// do retry
+			doDataSourceDiscover(jvm, work.retries)
+		}()
 	} else {
 		log.Trace().Msgf("Application on PID %d does not have DataSource plugin", jvm.Pid)
 	}
+}
+
+func dataSourceDiscoverInternal(jvm *jvm.JavaVm) {
+  dataSourceApplication := createDataSourceApplication(jvm)
+  if dataSourceApplication != nil {
+    DataSourceApplications.Store(jvm.Pid, *dataSourceApplication)
+    log.Info().Msgf("DataSource discovered on PID %d: %+v", jvm.Pid, dataSourceApplication)
+  }
 }
 
 func createDataSourceApplication(vm *jvm.JavaVm) *DataSourceApplication {

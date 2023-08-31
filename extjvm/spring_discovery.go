@@ -25,6 +25,8 @@ var (
 	SpringWebclientBuilderBeanClass    = "org.springframework.web.reactive.function.client.WebClient$Builder"
 
 	SpringApplications = sync.Map{} // map[Pid int32]SpringApplication
+
+	discoverySpringJobs = make(chan DiscoverySpringWork)
 )
 
 type SpringMvcMapping struct {
@@ -55,6 +57,11 @@ type SpringApplication struct {
 	HttpClientRequests *[]HttpRequest
 }
 
+type DiscoverySpringWork struct {
+	jvm     *jvm.JavaVm
+	retries int
+}
+
 type SpringDiscovery struct{}
 
 func (s SpringDiscovery) AttachedProcessStopped(jvm *jvm.JavaVm) {
@@ -82,8 +89,23 @@ func FindSpringApplication(pid int32) *SpringApplication {
 
 func InitSpringDiscovery() {
 	log.Info().Msg("Init Spring Plugin")
+	// create discovery worker pool
+	for w := 1; w <= 4; w++ {
+		go discoverySpringWorker(discoverySpringJobs)
+	}
 	AddAutoloadAgentPlugin(SpringPlugin, SpringMarkerClass)
 	AddAttachedListener(SpringDiscovery{})
+}
+
+func discoverySpringWorker(discoveryJobs chan DiscoverySpringWork) {
+	for job := range discoveryJobs {
+		job.retries--
+		if job.retries > 0 {
+			springDiscover(job)
+		} else {
+			log.Warn().Msgf("Spring discovery retries for %s exceeded.", job.jvm.ToDebugString())
+		}
+	}
 }
 
 func StartSpringDiscovery() {
@@ -132,23 +154,47 @@ func scheduleSpringDiscovery(interval time.Duration) (chrono.ScheduledTask, erro
 	return taskScheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
 		jvMs := GetJVMs()
 		for _, vm := range jvMs {
-			springDiscover(&vm)
+      springDiscoverInternal(&vm)
 		}
 	}, interval)
 }
 
 func (s SpringDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
-	springDiscover(jvm)
+	doSpringDiscover(jvm, 5)
 }
-func springDiscover(jvm *jvm.JavaVm) {
+
+func doSpringDiscover(jvm *jvm.JavaVm, retries int) {
+	discoverySpringJobs <- DiscoverySpringWork{
+		jvm:     jvm,
+		retries: retries,
+	}
+}
+
+func springDiscover(work DiscoverySpringWork) {
+	jvm := work.jvm
 	log.Trace().Msgf("Discovering Spring Application on PID %d", jvm.Pid)
 	if hasSpringPlugin(jvm) {
-		springApplication := createSpringApplication(jvm)
-		SpringApplications.Store(jvm.Pid, springApplication)
-		log.Trace().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", springApplication.Name, jvm.Pid, springApplication)
+    springDiscoverInternal(jvm)
+	} else if HasClassLoaded(jvm, SpringMarkerClass) {
+		if work.retries == 1 {
+			log.Error().Msgf("Application on PID %d is a Spring Application but does not have the Spring Plugin attached.", jvm.Pid)
+		}
+		go func() {
+			time.Sleep(time.Duration(120/(work.retries*2)) * time.Second)
+			// do retry
+			doSpringDiscover(jvm, work.retries)
+		}()
 	} else {
 		log.Trace().Msgf("Application on PID %d is not a Spring Application", jvm.Pid)
 	}
+}
+
+func springDiscoverInternal (jvm *jvm.JavaVm){
+  if hasSpringPlugin(jvm) {
+    springApplication := createSpringApplication(jvm)
+    SpringApplications.Store(jvm.Pid, springApplication)
+    log.Trace().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", springApplication.Name, jvm.Pid, springApplication)
+  }
 }
 
 func createSpringApplication(vm *jvm.JavaVm) SpringApplication {
