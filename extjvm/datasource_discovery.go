@@ -144,7 +144,7 @@ func DataSourceDiscover(work DiscoveryDataSourceWork) {
 			log.Error().Msgf("Application on PID %d is a DataSource but does not have the Datasource Plugin attached.", jvm.Pid)
 		}
 		go func() {
-			time.Sleep(time.Duration(120/(work.retries*2)) * time.Second)
+			time.Sleep(time.Duration(60/work.retries) * time.Second)
 			// do retry
 			doDataSourceDiscover(jvm, work.retries)
 		}()

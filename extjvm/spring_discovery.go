@@ -180,7 +180,7 @@ func springDiscover(work DiscoverySpringWork) {
 			log.Error().Msgf("Application on PID %d is a Spring Application but does not have the Spring Plugin attached.", jvm.Pid)
 		}
 		go func() {
-			time.Sleep(time.Duration(120/(work.retries*2)) * time.Second)
+			time.Sleep(time.Duration(60/work.retries) * time.Second)
 			// do retry
 			doSpringDiscover(jvm, work.retries)
 		}()

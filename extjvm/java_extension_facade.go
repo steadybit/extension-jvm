@@ -113,7 +113,7 @@ func doAttach(job AttachJvmWork) {
 		if java_process.IsRunningProcess(vm.Pid) {
 			log.Warn().Msgf("Error attaching to JVM %+v: %s", vm, err)
 			go func() {
-				time.Sleep(time.Duration(120/(job.retries*2)) * time.Second)
+				time.Sleep(time.Duration(60/job.retries) * time.Second)
 				// do retry
 				attach(job.jvm, job.retries)
 			}()
@@ -167,7 +167,7 @@ func loadAgentPluginJob(job LoadPluginJvmWork) {
 	if err != nil || !success {
 		log.Error().Msgf("Error loading plugin %s for JVM %+v: %s", job.plugin, job.jvm, err)
 		go func() {
-			time.Sleep(time.Duration(120/(job.retries*2)) * time.Second)
+			time.Sleep(time.Duration(60/job.retries) * time.Second)
 			// do retry
 			scheduleLoadAgentPlugin(job.jvm, job.plugin, job.args, job.retries)
 		}()
