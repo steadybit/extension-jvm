@@ -29,6 +29,10 @@ func RegisterDiscoveryHandlers() {
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/target-description", exthttp.GetterAsHandler(getTargetDescription))
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/attribute-descriptions", exthttp.GetterAsHandler(getAttributeDescriptions))
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/discovered-targets", getDiscoveredTargets)
+	exthttp.RegisterHttpHandler(discoveryBasePath+"/rules/host-to-jvm", exthttp.GetterAsHandler(getHostToJvmEnrichmentRule))
+	exthttp.RegisterHttpHandler(discoveryBasePath+"/rules/container-to-jvm", exthttp.GetterAsHandler(getContainerToJvmEnrichmentRule))
+	exthttp.RegisterHttpHandler(discoveryBasePath+"/rules/k8s-container-to-jvm", exthttp.GetterAsHandler(getKubernetesContainerToJvmEnrichmentRule))
+
 }
 
 func InitDiscovery() {
@@ -123,154 +127,148 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
 				},
 			},
 		},
-		EnrichmentRules: extutil.Ptr([]discovery_kit_api.TargetEnrichmentRule{
+	}
+}
+
+func getKubernetesContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
+	return discovery_kit_api.TargetEnrichmentRule{
+		Id:      "com.steadybit.extension_jvm.k8s-container-to-jvm",
+		Version: extbuild.GetSemverVersionStringOrUnknown(),
+		Src: discovery_kit_api.SourceOrDestination{
+			Type: "com.steadybit.extension_kubernetes.kubernetes-container",
+			Selector: map[string]string{
+				"k8s.container.id.stripped": "${dest.container.id.stripped}",
+			},
+		},
+		Dest: discovery_kit_api.SourceOrDestination{
+			Type: targetID,
+			Selector: map[string]string{
+				"container.id.stripped": "${src.k8s.container.id.stripped}",
+			},
+		},
+		Attributes: []discovery_kit_api.Attribute{
 			{
-				Src: discovery_kit_api.SourceOrDestination{
-					Type: "com.steadybit.extension_host.host",
-					Selector: map[string]string{
-						"host.hostname": "${dest.application.hostname}",
-					},
-				},
-				Dest: discovery_kit_api.SourceOrDestination{
-					Type: targetID,
-					Selector: map[string]string{
-						"application.hostname": "${src.host.hostname}",
-					},
-				},
-				Attributes: []discovery_kit_api.Attribute{
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "aws.account",
-					}, {
-						Matcher: discovery_kit_api.Equals,
-						Name:    "aws.region",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "aws.zone",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "aws-ec2.instance.id",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "aws-ec2.instance.name",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "host.hostname",
-					},
-				},
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.cluster-name",
 			},
 			{
-				Src: discovery_kit_api.SourceOrDestination{
-					Type: "com.steadybit.extension_container.container",
-					Selector: map[string]string{
-						"k8s.container.id.stripped": "${dest.container.id.stripped}",
-					},
-				},
-				Dest: discovery_kit_api.SourceOrDestination{
-					Type: targetID,
-					Selector: map[string]string{
-						"container.id.stripped": "${src.k8s.container.id.stripped}",
-					},
-				},
-				Attributes: []discovery_kit_api.Attribute{
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "container.host",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "container.name",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "container.id",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "container.image",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "container.name",
-					},
-					{
-						Matcher: discovery_kit_api.StartsWith,
-						Name:    "label.",
-					},
-				},
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.distribution",
+			}, {
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.namespace",
 			},
 			{
-				Src: discovery_kit_api.SourceOrDestination{
-					Type: "com.steadybit.extension_kubernetes.kubernetes-container",
-					Selector: map[string]string{
-						"k8s.container.id.stripped": "${dest.container.id.stripped}",
-					},
-				},
-				Dest: discovery_kit_api.SourceOrDestination{
-					Type: targetID,
-					Selector: map[string]string{
-						"container.id.stripped": "${src.k8s.container.id.stripped}",
-					},
-				},
-				Attributes: []discovery_kit_api.Attribute{
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "k8s.cluster-name",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "k8s.distribution",
-					}, {
-						Matcher: discovery_kit_api.Equals,
-						Name:    "k8s.namespace",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "k8s.container.name",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "k8s.container.ready",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "k8s.container.image",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "k8s.service.name",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "k8s.service.namespace",
-					},
-					{
-						Matcher: discovery_kit_api.StartsWith,
-						Name:    "k8s.pod.label.",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "k8s.replicaset",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "k8s.daemonset",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "k8s.deployment",
-					},
-					{
-						Matcher: discovery_kit_api.Equals,
-						Name:    "k8s.statefulset",
-					},
-				},
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.container.name",
 			},
-		}),
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.container.ready",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.container.image",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.service.name",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.service.namespace",
+			},
+			{
+				Matcher: discovery_kit_api.StartsWith,
+				Name:    "k8s.pod.label.",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.replicaset",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.daemonset",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.deployment",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.statefulset",
+			},
+		},
+	}
+}
+
+func getContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
+	return discovery_kit_api.TargetEnrichmentRule{
+		Id:      "com.steadybit.extension_jvm.container-to-jvm",
+		Version: extbuild.GetSemverVersionStringOrUnknown(),
+		Src: discovery_kit_api.SourceOrDestination{
+			Type: "com.steadybit.extension_container.container",
+			Selector: map[string]string{
+				"k8s.container.id.stripped": "${dest.container.id.stripped}",
+			},
+		},
+		Dest: discovery_kit_api.SourceOrDestination{
+			Type: targetID,
+			Selector: map[string]string{
+				"container.id.stripped": "${src.k8s.container.id.stripped}",
+			},
+		},
+		Attributes: []discovery_kit_api.Attribute{
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "container.host",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "container.name",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "container.id",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "container.image",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "container.name",
+			},
+			{
+				Matcher: discovery_kit_api.StartsWith,
+				Name:    "label.",
+			},
+		},
+	}
+}
+
+func getHostToJvmEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
+	return discovery_kit_api.TargetEnrichmentRule{
+		Id:      "com.steadybit.extension_jvm.host-to-jvm",
+		Version: extbuild.GetSemverVersionStringOrUnknown(),
+		Src: discovery_kit_api.SourceOrDestination{
+			Type: "com.steadybit.extension_host.host",
+			Selector: map[string]string{
+				"host.hostname": "${dest.application.hostname}",
+			},
+		},
+		Dest: discovery_kit_api.SourceOrDestination{
+			Type: targetID,
+			Selector: map[string]string{
+				"application.hostname": "${src.host.hostname}",
+			},
+		},
+		Attributes: []discovery_kit_api.Attribute{
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "host.hostname",
+			},
+		},
 	}
 }
 
@@ -356,7 +354,7 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 	// enhance with spring infos
 	enhanceTargetsWithSpringAttributes(targets)
 	enhanceTargetsWithDataSourceAttributes(targets)
-	exthttp.WriteBody(w, discovery_kit_api.DiscoveredTargets{Targets: targets})
+	exthttp.WriteBody(w, discovery_kit_api.DiscoveryData{Targets: &targets})
 }
 
 func enhanceTargetsWithDataSourceAttributes(targets []discovery_kit_api.Target) {
