@@ -10,8 +10,8 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_test/validate"
 	"github.com/steadybit/extension-jvm/extjvm"
-	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -22,13 +22,10 @@ import (
 )
 
 var (
-	springBootSample       *SpringBootSample
-	deleteSpringBootSample func()
-	pid                    int32
+	springBootSample *SpringBootSample
 )
 
 func TestWithMinikube(t *testing.T) {
-
 	extFactory := e2e.HelmExtensionFactory{
 		Name: "extension-jvm",
 		Port: 8087,
@@ -38,27 +35,28 @@ func TestWithMinikube(t *testing.T) {
 				"--set", "logging.level=INFO",
 			}
 		},
-		BeforeAllFunc: func(t *testing.T, m *e2e.Minikube, e *e2e.Extension) error {
-			springBootSample, pid, deleteSpringBootSample = initTest(t, m, e)
-			return nil
-		},
-
-		AfterAllFunc: func(t *testing.T, m *e2e.Minikube, e *e2e.Extension) error {
-			deleteSpringBootSample()
-			return nil
-		},
 	}
 
-	mOpts := e2e.DefaultMiniKubeOpts
-	mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker, e2e.RuntimeContainerd}
+	mOpts := e2e.DefaultMinikubeOpts().
+		WithRuntimes(e2e.RuntimeDocker, e2e.RuntimeContainerd).
+		AfterStart(func(m *e2e.Minikube) error {
+			springBootSample = deploySpringBootSample(t, m)
+			springBootSample.AssertIsReachable(t, true)
+			return nil
+		})
+
 	if runtime.GOOS == "linux" {
-		mOpts.Driver = "kvm2"
+		mOpts = mOpts.WithDriver("kvm2")
 	}
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
 		{
+			Name: "validate discovery",
+			Test: validateDiscovery,
+		},
+		{
 			Name: "discover spring boot sample",
-			Test: testDiscoverSpringBootSample,
+			Test: testDiscovery,
 		},
 		{
 			Name: "mvc delay",
@@ -95,7 +93,11 @@ func TestWithMinikube(t *testing.T) {
 	})
 }
 
-func testDiscoverSpringBootSample(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+func validateDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+	assert.NoError(t, validate.ValidateEndpointReferences("/", e.Client))
+}
+
+func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	log.Info().Msg("Starting testDiscoverSpringBootSample")
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
 	defer cancel()
@@ -183,13 +185,7 @@ func testMvcDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			unaffectedLatency, err := springBootSample.MeasureLatency(200)
 			require.NoError(t, err, "failed to measure customers endpoint")
 
-			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-mvc-delay-attack", &action_kit_api.Target{
-				Name: "spring.application.name",
-				Attributes: map[string][]string{
-					"spring.application.name": {"spring-boot-sample"},
-					"process.pid":             {strconv.Itoa(int(pid))},
-				},
-			}, config, nil)
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-mvc-delay-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.expectedDelay {
@@ -233,13 +229,7 @@ func testMvcException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 		t.Run(tt.name, func(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 
-			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-mvc-exception-attack", &action_kit_api.Target{
-				Name: "spring.application.name",
-				Attributes: map[string][]string{
-					"spring.application.name": {"spring-boot-sample"},
-					"process.pid":             {strconv.Itoa(int(pid))},
-				},
-			}, config, nil)
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-mvc-exception-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.erroneousCallRate > 0 {
@@ -252,8 +242,7 @@ func testMvcException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 	}
 }
 
-func testHttpClientDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-
+func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 	tests := []struct {
 		name          string
 		delay         uint64
@@ -318,13 +307,7 @@ func testHttpClientDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/remote/blocking?url=https://www.github.com")
 			require.NoError(t, err, "failed to measure customers endpoint")
 
-			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-httpclient-delay-attack", &action_kit_api.Target{
-				Name: "spring.application.name",
-				Attributes: map[string][]string{
-					"spring.application.name": {"spring-boot-sample"},
-					"process.pid":             {strconv.Itoa(int(pid))},
-				},
-			}, config, nil)
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-httpclient-delay-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.expectedDelay {
@@ -417,13 +400,7 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		t.Run(tt.name, func(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 
-			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-httpclient-status-attack", &action_kit_api.Target{
-				Name: "spring.application.name",
-				Attributes: map[string][]string{
-					"spring.application.name": {"spring-boot-sample"},
-					"process.pid":             {strconv.Itoa(int(pid))},
-				},
-			}, config, nil)
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-httpclient-status-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.erroneousCallRate > 0 {
@@ -488,13 +465,7 @@ func testJavaMethodDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			unaffectedLatency, err := springBootSample.MeasureLatency(200)
 			require.NoError(t, err, "failed to measure customers endpoint")
 
-			action, err := e.RunAction(extjvm.ActionIDPrefix+".java-method-delay-attack", &action_kit_api.Target{
-				Name: "spring.application.name",
-				Attributes: map[string][]string{
-					"spring.application.name": {"spring-boot-sample"},
-					"process.pid":             {strconv.Itoa(int(pid))},
-				},
-			}, config, nil)
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".java-method-delay-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.expectedDelay {
@@ -539,13 +510,7 @@ func testJavaMethodException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 		t.Run(tt.name, func(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 
-			action, err := e.RunAction(extjvm.ActionIDPrefix+".java-method-exception-attack", &action_kit_api.Target{
-				Name: "spring.application.name",
-				Attributes: map[string][]string{
-					"spring.application.name": {"spring-boot-sample"},
-					"process.pid":             {strconv.Itoa(int(pid))},
-				},
-			}, config, nil)
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".java-method-exception-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.erroneousCallRate > 0 {
@@ -645,13 +610,7 @@ func testJDBCTemplateDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			unaffectedLatency, err := springBootSample.MeasureLatency(200)
 			require.NoError(t, err, "failed to measure customers endpoint")
 
-			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-jdbctemplate-delay-attack", &action_kit_api.Target{
-				Name: "spring.application.name",
-				Attributes: map[string][]string{
-					"spring.application.name": {"spring-boot-sample"},
-					"process.pid":             {strconv.Itoa(int(pid))},
-				},
-			}, config, nil)
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-jdbctemplate-delay-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.expectedDelay {
@@ -710,13 +669,7 @@ func testJDBCTemplateException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) 
 		t.Run(tt.name, func(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 
-			action, err := e.RunAction(extjvm.ActionIDPrefix+".java-method-exception-attack", &action_kit_api.Target{
-				Name: "spring.application.name",
-				Attributes: map[string][]string{
-					"spring.application.name": {"spring-boot-sample"},
-					"process.pid":             {strconv.Itoa(int(pid))},
-				},
-			}, config, nil)
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".java-method-exception-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.erroneousCallRate > 0 {
@@ -729,23 +682,26 @@ func testJDBCTemplateException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) 
 	}
 }
 
-func initTest(t *testing.T, m *e2e.Minikube, e *e2e.Extension) (*SpringBootSample, int32, func()) {
+func getTarget(t *testing.T, e *e2e.Extension) *action_kit_api.Target {
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 
-	sbsApp := deploySpringBootSample(t, m)
-	sbsApp.AssertIsReachable(t, true)
+	discovered := getSpringBootSampleTarget(t, ctx, e)
 
-	//go m.TailLog(ctx, springBootSample.Pod)
+	target := action_kit_api.Target{
+		Name:       "spring.application.name",
+		Attributes: map[string][]string{},
+	}
 
-	target := getSpringBootSampleTarget(t, ctx, e)
-	p := extutil.ToInt32(target.Attributes["process.pid"][0])
-	return extutil.Ptr(sbsApp), p, func() { _ = sbsApp.Delete() }
+	for key, value := range discovered.Attributes {
+		target.Attributes[key] = value
+	}
+	return &target
 }
 
-func deploySpringBootSample(t *testing.T, m *e2e.Minikube) SpringBootSample {
+func deploySpringBootSample(t *testing.T, m *e2e.Minikube) *SpringBootSample {
 	springBootSample := SpringBootSample{Minikube: m}
 	err := springBootSample.Deploy("spring-boot-sample")
 	require.NoError(t, err, "failed to create pod")
-	return springBootSample
+	return &springBootSample
 }
