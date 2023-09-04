@@ -40,6 +40,11 @@ const (
 func Start() {
 	taskScheduler := chrono.NewDefaultTaskScheduler()
 
+	// create discovery worker pool
+	for w := 1; w <= 4; w++ {
+		go discoveryWorker(discoveryJobs)
+	}
+
 	_, err := taskScheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
 		updatePids()
 	}, 5*time.Second)
@@ -58,17 +63,12 @@ func Start() {
 	if err == nil {
 		log.Trace().Msg("Cleanup of used pids has been scheduled successfully.")
 	}
-
-	// create hotspot discovery worker pool
-	for w := 1; w <= 4; w++ {
-		go discoveryWorker(discoveryJobs)
-	}
 }
 
 func discoveryWorker(discoveryJobs chan DiscoveryWork) {
 	for job := range discoveryJobs {
 		job.retries--
-		if job.retries+1 > 0 {
+		if job.retries > 0 {
 			discoverProcessJVM(job)
 		} else {
 			log.Debug().Msgf("Process discovery retries for %d exceeded.", job.p.Pid)

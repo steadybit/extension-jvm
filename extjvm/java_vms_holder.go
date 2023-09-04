@@ -69,6 +69,7 @@ func (j *JavaVMS) NewJavaProcess(p *process.Process) bool {
 	if !ok && java_process.IsRunning(p) {
 		vm := createJvm(p)
 		if vm != nil {
+			log.Info().Msgf("Discovered JVM %s via process with pid %s", vm.VmName, string(p.Pid))
 			addJvm(vm)
 			return true
 		}
@@ -82,6 +83,7 @@ func (j *JavaVMS) NewHotspotProcess(p *process.Process) bool {
 	if !ok && java_process.IsRunning(p) {
 		vm := createJvm(p)
 		if vm != nil {
+			log.Info().Msgf("Discovered JVM %s via hotspot with pid %s", vm.VmName, string(p.Pid))
 			addJvm(vm)
 			return true
 		}

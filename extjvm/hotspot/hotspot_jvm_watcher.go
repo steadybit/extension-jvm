@@ -34,6 +34,11 @@ const (
 func Start() {
 	taskScheduler := chrono.NewDefaultTaskScheduler()
 
+	// create hotspot discovery worker pool
+	for w := 1; w <= 4; w++ {
+		go discoveryWorker(hotspotDiscoveryJobs)
+	}
+
 	_, err := taskScheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
 		updatePids()
 	}, 5*time.Second)
@@ -42,10 +47,6 @@ func Start() {
 		log.Info().Msg("Hotspot JVM Watcher Task has been scheduled successfully.")
 	}
 
-	// create hotspot discovery worker pool
-	for w := 1; w <= 4; w++ {
-		go discoveryWorker(hotspotDiscoveryJobs)
-	}
 }
 
 func discoveryWorker(hotspotDiscoveryJobs chan DiscoveryWork) {
