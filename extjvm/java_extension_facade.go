@@ -88,7 +88,7 @@ func AddAttachedListener(attachedListener AttachedListener) {
 func attachWorker(attachJobs chan AttachJvmWork) {
 	for job := range attachJobs {
 		job.retries--
-		if job.retries + 1  > 0 {
+		if job.retries > 0 {
 			doAttach(job)
 		} else {
 			log.Warn().Msgf("Attach retries for %s exceeded.", job.jvm.ToDebugString())
@@ -113,7 +113,11 @@ func doAttach(job AttachJvmWork) {
 		if java_process.IsRunningProcess(vm.Pid) {
 			log.Warn().Msgf("Error attaching to JVM %+v: %s", vm, err)
 			go func() {
-				time.Sleep(time.Duration(60/job.retries) * time.Second)
+				timeToSleep := 1
+				if job.retries > 0 {
+					timeToSleep = 60 / job.retries
+				}
+				time.Sleep(time.Duration(timeToSleep) * time.Second)
 				// do retry
 				attach(job.jvm, job.retries)
 			}()
