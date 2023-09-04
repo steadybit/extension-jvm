@@ -53,7 +53,7 @@ func InitDiscovery() {
 	// Start Datasource Discovery
 	StartDataSourceDiscovery()
 	// Start Spring Discovery
-	StartSpringDiscovery()
+	//StartSpringDiscovery()
 
 	//Start attaching to JVMs
 	StartAttachment()
