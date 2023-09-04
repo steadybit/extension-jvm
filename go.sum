@@ -78,7 +78,7 @@ github.com/go-playground/validator/v10 v10.15.3/go.mod h1:9iXMNT7sEkjXb0I+enO7QX
 github.com/go-resty/resty/v2 v2.7.0 h1:me+K9p3uhSmXtrBZ4k9jcEAfJmuC8IivWHwaLZwPrFY=
 github.com/go-resty/resty/v2 v2.7.0/go.mod h1:9PWDzw47qPphMRFfhsyk0NnSgvluHcljSMVIq3w7q0I=
 github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 h1:tfuBGBXKqDEevZMzYi5KSi8KkcZtzBcTgAUUtapy0OI=
-github.com/go-test/deep v1.0.8/go.mod h1:5C2ZWiW0ErCdrYzpqxLbTX7MG14M9iiw8DgHncVwcsE=
+github.com/go-test/deep v1.0.8 h1:TDsG77qcSprGbC6vTN8OuXp5g+J+b5Pcguhf7Zt61VM=
 github.com/gobwas/glob v0.2.3 h1:A4xDbljILXROh+kObIiy5kIaPYD8e96x1tgBhUI5J+Y=
 github.com/goccy/go-json v0.10.2 h1:CrxCmQqYDkv1z7lO7Wbh2HN93uovUHgrECaO5ZrCXAU=
 github.com/goccy/go-json v0.10.2/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
@@ -107,7 +107,6 @@ github.com/google/uuid v1.3.1 h1:KjJaJ9iWZ3jOFZIf1Lqf4laDRCasjl0BCmnEGxkdLb4=
 github.com/google/uuid v1.3.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gorilla/css v1.0.0 h1:BQqNyPTi50JCFMTw/b67hByjMVXZRwGha6wxVGkeihY=
 github.com/gorilla/css v1.0.0/go.mod h1:Dn721qIggHpt4+EFCcTLTU/vk5ySda2ReITrtgBl60c=
-github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWmnc=
 github.com/imdario/mergo v0.3.16 h1:wwQJbIsHYGMUyLSPrEq1CT16AhnhNJQ51+4fdHUnCl4=
@@ -197,7 +196,7 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/procyon-projects/chrono v1.1.2 h1:Uw7V96Ckl/pOeMBNvaEki7k6Ssgd9OX8b9PY0gpXmoU=
 github.com/procyon-projects/chrono v1.1.2/go.mod h1:RwQ27W7hRaq+QUWN2yXU3BDG2FUyEQiKds8/M1FI5C8=
-github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjRBZyWFQ=
+github.com/rogpeppe/go-internal v1.11.0 h1:cWPaGQEPrBb5/AsnsZesgZZ9yb1OQ+GOISoDNXVBh4M=
 github.com/rs/xid v1.5.0 h1:mKX4bl4iPYJtEIxp6CYiUuLQ/8DYMoz0PUdtGgMFRVc=
 github.com/rs/xid v1.5.0/go.mod h1:trrq9SKmegXys3aeAKXMUTdJsYXVwGY3RLcfgqegfbg=
 github.com/rs/zerolog v1.30.0 h1:SymVODrcRsaRaSInD9yQtKbtWqwsfoPcRff/oRXLj4c=
@@ -222,8 +221,6 @@ github.com/steadybit/action-kit/go/action_kit_sdk v1.1.5 h1:X7g9KpreF/A/mDCHKwWk
 github.com/steadybit/action-kit/go/action_kit_sdk v1.1.5/go.mod h1:ABoB087BeiUAfRsLnVEmQ5KDMww7N/v57siEvjmhJtw=
 github.com/steadybit/action-kit/go/action_kit_test v1.1.0 h1:YBVextaCDO3UsaduzWh4QKdCXff8HLrKyRQ6vB+polk=
 github.com/steadybit/action-kit/go/action_kit_test v1.1.0/go.mod h1:89XzYH4AQ5k/zLWsLqrwO7/DQEGLKR14oAdStxmZSrw=
-github.com/steadybit/discovery-kit/go/discovery_kit_api v1.4.1 h1:J9eFfHazLk8Jlk5xZg3yiAON7W61Dm+okeNvAwLl1RY=
-github.com/steadybit/discovery-kit/go/discovery_kit_api v1.4.1/go.mod h1:OnIfjrBhmMQCYxriHmr8mT1wCpvqIZxwBHWnanFhgNA=
 github.com/steadybit/discovery-kit/go/discovery_kit_api v1.4.2 h1:xWgCtshETS11ixcF+SIMqZEG6NBbtgUnjvo8wivbnec=
 github.com/steadybit/discovery-kit/go/discovery_kit_api v1.4.2/go.mod h1:bcDdLYjTxUYyIvQ/Uz4GjHU7Io+VGFM8Oi2zoveTp08=
 github.com/steadybit/discovery-kit/go/discovery_kit_test v1.0.1 h1:Wvk5uPMIUu/EJWwAprHGTKKVW78FFWPkAO5KKekFlbA=
