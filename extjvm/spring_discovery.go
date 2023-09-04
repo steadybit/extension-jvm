@@ -24,10 +24,15 @@ var (
 	SpringWebclientBeanClass           = "org.springframework.web.reactive.function.client.WebClient"
 	SpringWebclientBuilderBeanClass    = "org.springframework.web.reactive.function.client.WebClient$Builder"
 
-	SpringApplications = sync.Map{} // map[Pid int32]SpringApplication
-
-	discoverySpringJobs = make(chan DiscoverySpringWork)
+	SpringApplications                  = sync.Map{} // map[Pid int32]SpringApplication
+	springVMDiscoverySchedulerHolderMap = sync.Map{} // map[Pid int32]SpringVMDiscoverySchedulerHolder
 )
+
+type SpringVMDiscoverySchedulerHolder struct {
+	scheduledSpringDiscoveryTask30s chrono.ScheduledTask
+	scheduledSpringDiscoveryTask60s chrono.ScheduledTask
+	scheduledSpringDiscoveryTask60m chrono.ScheduledTask
+}
 
 type SpringMvcMapping struct {
 	Consumes          []string `json:"consumes"`
@@ -57,14 +62,13 @@ type SpringApplication struct {
 	HttpClientRequests *[]HttpRequest
 }
 
-type DiscoverySpringWork struct {
-	jvm     *jvm.JavaVm
-	retries int
-}
-
 type SpringDiscovery struct{}
 
+func (s SpringDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
+	startScheduledSpringDiscovery(jvm)
+}
 func (s SpringDiscovery) AttachedProcessStopped(jvm *jvm.JavaVm) {
+	stopScheduledSpringDiscoveryForVM(jvm)
 	SpringApplications.Delete(jvm.Pid)
 }
 
@@ -89,56 +93,61 @@ func FindSpringApplication(pid int32) *SpringApplication {
 
 func InitSpringDiscovery() {
 	log.Info().Msg("Init Spring Plugin")
-	// create discovery worker pool
-	for w := 1; w <= 4; w++ {
-		go discoverySpringWorker(discoverySpringJobs)
-	}
 	AddAutoloadAgentPlugin(SpringPlugin, SpringMarkerClass)
 	AddAttachedListener(SpringDiscovery{})
 }
-
-func discoverySpringWorker(discoveryJobs chan DiscoverySpringWork) {
-	for job := range discoveryJobs {
-		job.retries--
-		if job.retries + 1 > 0 {
-			springDiscover(job)
-		} else {
-			log.Warn().Msgf("Spring discovery retries for %s exceeded.", job.jvm.ToDebugString())
+func stopScheduledSpringDiscoveryForVM(vm *jvm.JavaVm) {
+	springVMDiscoverySchedulerHolder, ok := springVMDiscoverySchedulerHolderMap.Load(vm.Pid)
+	if ok {
+		if springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask30s != nil {
+			springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask30s.Cancel()
+		}
+		if springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60s != nil {
+			springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60s.Cancel()
+		}
+		if springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60m != nil {
+			springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60m.Cancel()
 		}
 	}
 }
 
-func StartSpringDiscovery() {
-	task30s, err := scheduleSpringDiscovery(30 * time.Second)
+func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
+	schedulerHolder := &SpringVMDiscoverySchedulerHolder{}
+	springVMDiscoverySchedulerHolderMap.Store(vm.Pid, schedulerHolder)
+
+	scheduledSpringDiscoveryTask30s, err := scheduleSpringDiscoveryForVM(30*time.Second, vm)
+	schedulerHolder.scheduledSpringDiscoveryTask30s = scheduledSpringDiscoveryTask30s
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 30s interval.")
+		log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 30s interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 		return
 	} else {
-		log.Info().Msg("Spring Watcher Task in 30s interval has been scheduled successfully.")
+		log.Info().Msg("Spring Watcher Task in 30s interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 	}
 
 	go func() {
 		time.Sleep(5 * time.Minute)
-		task30s.Cancel()
+		scheduledSpringDiscoveryTask30s.Cancel()
 		log.Info().Msg("Spring Watcher in 30s interval has been canceled.")
-		task60s, err := scheduleSpringDiscovery(60 * time.Second)
+		scheduledSpringDiscoveryTask60s, err := scheduleSpringDiscoveryForVM(60*time.Second, vm)
+		schedulerHolder.scheduledSpringDiscoveryTask60s = scheduledSpringDiscoveryTask60s
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 60s interval.")
+			log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 60s interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 			return
 		} else {
-			log.Info().Msg("Spring Watcher Task in 60s interval has been scheduled successfully.")
+			log.Info().Msg("Spring Watcher Task in 60s interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 		}
 		go func() {
 			time.Sleep(5 * time.Minute)
-			task60s.Cancel()
+			scheduledSpringDiscoveryTask60s.Cancel()
 			log.Info().Msg("Spring Watcher in 60s interval has been canceled.")
-			_, err = scheduleSpringDiscovery(1 * time.Hour)
+			scheduledSpringDiscoveryTask60m, err := scheduleSpringDiscoveryForVM(1*time.Hour, vm)
+			schedulerHolder.scheduledSpringDiscoveryTask60m = scheduledSpringDiscoveryTask60m
 			if err != nil {
-				log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 1h interval.")
+				log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 1h interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 				return
 			} else {
-				log.Info().Msg("Spring Watcher Task in 1h interval has been scheduled successfully.")
+				log.Info().Msg("Spring Watcher Task in 1h interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 			}
 		}()
 
@@ -148,53 +157,19 @@ func StartSpringDiscovery() {
 func DeactivateSpringDiscovery() {
 	RemoveAutoloadAgentPlugin(SpringPlugin, SpringMarkerClass)
 }
-
-func scheduleSpringDiscovery(interval time.Duration) (chrono.ScheduledTask, error) {
+func scheduleSpringDiscoveryForVM(interval time.Duration, vm *jvm.JavaVm) (chrono.ScheduledTask, error) {
 	taskScheduler := chrono.NewDefaultTaskScheduler()
 	return taskScheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
-		jvMs := GetJVMs()
-		for _, vm := range jvMs {
-      springDiscoverInternal(&vm)
-		}
+		springDiscover(vm)
 	}, interval)
 }
 
-func (s SpringDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
-	doSpringDiscover(jvm, 5)
-}
-
-func doSpringDiscover(jvm *jvm.JavaVm, retries int) {
-	discoverySpringJobs <- DiscoverySpringWork{
-		jvm:     jvm,
-		retries: retries,
-	}
-}
-
-func springDiscover(work DiscoverySpringWork) {
-	jvm := work.jvm
-	log.Trace().Msgf("Discovering Spring Application on PID %d", jvm.Pid)
+func springDiscover(jvm *jvm.JavaVm) {
 	if hasSpringPlugin(jvm) {
-    springDiscoverInternal(jvm)
-	} else if HasClassLoaded(jvm, SpringMarkerClass) {
-		if work.retries == 1 {
-			log.Error().Msgf("Application on PID %d is a Spring Application but does not have the Spring Plugin attached.", jvm.Pid)
-		}
-		go func() {
-			time.Sleep(time.Duration(60/work.retries) * time.Second)
-			// do retry
-			doSpringDiscover(jvm, work.retries)
-		}()
-	} else {
-		log.Trace().Msgf("Application on PID %d is not a Spring Application", jvm.Pid)
+		springApplication := createSpringApplication(jvm)
+		SpringApplications.Store(jvm.Pid, springApplication)
+		log.Trace().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", springApplication.Name, jvm.Pid, springApplication)
 	}
-}
-
-func springDiscoverInternal (jvm *jvm.JavaVm){
-  if hasSpringPlugin(jvm) {
-    springApplication := createSpringApplication(jvm)
-    SpringApplications.Store(jvm.Pid, springApplication)
-    log.Trace().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", springApplication.Name, jvm.Pid, springApplication)
-  }
 }
 
 func createSpringApplication(vm *jvm.JavaVm) SpringApplication {
