@@ -14,12 +14,17 @@ import (
 )
 
 var (
-	DataSourcePlugin        = common.GetJarPath("discovery-java-javaagent.jar")
-	DataSourceMarkerClass   = "javax.sql.DataSource"
-	DataSourceApplications  = sync.Map{} // map[Pid int32]DataSourceApplication
-	discoveryDataSourceJobs = make(chan DiscoveryDataSourceWork)
+	DataSourcePlugin                        = common.GetJarPath("discovery-java-javaagent.jar")
+	DataSourceMarkerClass                   = "javax.sql.DataSource"
+	DataSourceApplications                  = sync.Map{} // map[Pid int32]DataSourceApplication
+	datasourceVMDiscoverySchedulerHolderMap = sync.Map{} // map[Pid int32]DataSourceDiscoverySchedulerHolder
 )
 
+type DataSourceDiscoverySchedulerHolder struct {
+	scheduledDatasourceDiscoveryTask30s chrono.ScheduledTask
+	scheduledDatasourceDiscoveryTask60s chrono.ScheduledTask
+	scheduledDatasourceDiscoveryTask60m chrono.ScheduledTask
+}
 type DataSourceConnection struct {
 	Pid          int32
 	DatabaseType string
@@ -31,14 +36,13 @@ type DataSourceApplication struct {
 	DataSourceConnections []DataSourceConnection
 }
 
-type DiscoveryDataSourceWork struct {
-	jvm     *jvm.JavaVm
-	retries int
-}
-
 type DataSourceDiscovery struct{}
 
+func (s DataSourceDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
+	startScheduledDatasourceDiscovery(jvm)
+}
 func (s DataSourceDiscovery) AttachedProcessStopped(jvm *jvm.JavaVm) {
+	stopScheduledDatasourceDiscoveryForVM(jvm)
 	DataSourceApplications.Delete(jvm.Pid)
 }
 
@@ -53,32 +57,34 @@ func GetDataSourceApplications() []DataSourceApplication {
 
 func InitDataSourceDiscovery() {
 	log.Info().Msg("Init DataSource Plugin")
-	// create attach worker pool
-	for w := 1; w <= 4; w++ {
-		go discoveryDataSourceWorker(discoveryDataSourceJobs)
-	}
 	AddAutoloadAgentPlugin(DataSourcePlugin, DataSourceMarkerClass)
 	AddAttachedListener(DataSourceDiscovery{})
 }
-
-func discoveryDataSourceWorker(discoveryJobs chan DiscoveryDataSourceWork) {
-	for job := range discoveryJobs {
-		job.retries--
-		if job.retries + 1 > 0 {
-			DataSourceDiscover(job)
-		} else {
-			log.Warn().Msgf("Datasource discovery retries for %s exceeded.", job.jvm.ToDebugString())
-		}
-	}
-}
-
 func DeactivateDataSourceDiscovery() {
 	RemoveAutoloadAgentPlugin(DataSourcePlugin, DataSourceMarkerClass)
 }
 
-func StartDataSourceDiscovery() {
-	task30s, err := scheduleDataSourceDiscovery(30 * time.Second)
+func stopScheduledDatasourceDiscoveryForVM(vm *jvm.JavaVm) {
+	datasourceVMDiscoverySchedulerHolder, ok := datasourceVMDiscoverySchedulerHolderMap.Load(vm.Pid)
+	if ok {
+		if datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask30s != nil {
+			datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask30s.Cancel()
+		}
+		if datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask60s != nil {
+			datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask60s.Cancel()
+		}
+		if datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask60m != nil {
+			datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask60m.Cancel()
+		}
+	}
+}
 
+func startScheduledDatasourceDiscovery(vm *jvm.JavaVm) {
+	schedulerHolder := &DataSourceDiscoverySchedulerHolder{}
+	datasourceVMDiscoverySchedulerHolderMap.Store(vm.Pid, schedulerHolder)
+
+	task30s, err := scheduleDataSourceDiscoveryForVM(30*time.Second, vm)
+	schedulerHolder.scheduledDatasourceDiscoveryTask30s = task30s
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to schedule DataSource Watcher in 30s interval.")
 		return
@@ -90,75 +96,46 @@ func StartDataSourceDiscovery() {
 		time.Sleep(5 * time.Minute)
 		task30s.Cancel()
 		log.Info().Msg("DataSource Watcher in 30s interval has been canceled.")
-		task60s, err := scheduleDataSourceDiscovery(60 * time.Second)
+		task60s, err := scheduleDataSourceDiscoveryForVM(60*time.Second, vm)
+		schedulerHolder.scheduledDatasourceDiscoveryTask60s = task60s
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to schedule DataSource Watcher in 60s interval.")
+			log.Error().Err(err).Msg("Failed to schedule DataSource Watcher in 60s interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 			return
 		} else {
-			log.Info().Msg("DataSource Watcher Task in 60s interval has been scheduled successfully.")
+			log.Info().Msg("DataSource Watcher Task in 60s interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 		}
 		go func() {
 			time.Sleep(5 * time.Minute)
 			task60s.Cancel()
-			log.Info().Msg("DataSource Watcher in 60s interval has been canceled.")
-			_, err = scheduleDataSourceDiscovery(1 * time.Hour)
+			log.Info().Msg("DataSource Watcher in 60s interval has been canceled for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+			task60m, err := scheduleDataSourceDiscoveryForVM(1*time.Hour, vm)
+			schedulerHolder.scheduledDatasourceDiscoveryTask60m = task60m
 			if err != nil {
-				log.Error().Err(err).Msg("Failed to schedule DataSource Watcher in 1h interval.")
+				log.Error().Err(err).Msg("Failed to schedule DataSource Watcher in 1h interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 				return
 			} else {
-				log.Info().Msg("DataSource Watcher Task in 1h interval has been scheduled successfully.")
+				log.Info().Msg("DataSource Watcher Task in 1h interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 			}
 		}()
 
 	}()
 }
 
-func scheduleDataSourceDiscovery(interval time.Duration) (chrono.ScheduledTask, error) {
+func scheduleDataSourceDiscoveryForVM(interval time.Duration, vm *jvm.JavaVm) (chrono.ScheduledTask, error) {
 	taskScheduler := chrono.NewDefaultTaskScheduler()
 	return taskScheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
-		jvMs := GetJVMs()
-		for _, vm := range jvMs {
-      dataSourceDiscoverInternal(&vm)
-		}
+		dataSourceDiscover(vm)
 	}, interval)
 }
 
-func (s DataSourceDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
-	doDataSourceDiscover(jvm, 5)
-}
-
-func doDataSourceDiscover(jvm *jvm.JavaVm, retries int) {
-	discoveryDataSourceJobs <- DiscoveryDataSourceWork{
-		jvm:     jvm,
-		retries: retries,
-	}
-}
-
-func DataSourceDiscover(work DiscoveryDataSourceWork) {
-	jvm := work.jvm
+func dataSourceDiscover(jvm *jvm.JavaVm) {
 	if hasDataSourcePlugin(jvm) {
-    dataSourceDiscoverInternal(jvm)
-	} else if HasClassLoaded(jvm, DataSourceMarkerClass) {
-		// something is wrong here... need to retry
-		if work.retries == 1 {
-			log.Error().Msgf("Application on PID %d is a DataSource but does not have the Datasource Plugin attached.", jvm.Pid)
+		dataSourceApplication := createDataSourceApplication(jvm)
+		if dataSourceApplication != nil {
+			DataSourceApplications.Store(jvm.Pid, *dataSourceApplication)
+			log.Info().Msgf("DataSource discovered on PID %d: %+v", jvm.Pid, dataSourceApplication)
 		}
-		go func() {
-			time.Sleep(time.Duration(60/work.retries) * time.Second)
-			// do retry
-			doDataSourceDiscover(jvm, work.retries)
-		}()
-	} else {
-		log.Trace().Msgf("Application on PID %d does not have DataSource plugin", jvm.Pid)
 	}
-}
-
-func dataSourceDiscoverInternal(jvm *jvm.JavaVm) {
-  dataSourceApplication := createDataSourceApplication(jvm)
-  if dataSourceApplication != nil {
-    DataSourceApplications.Store(jvm.Pid, *dataSourceApplication)
-    log.Info().Msgf("DataSource discovered on PID %d: %+v", jvm.Pid, dataSourceApplication)
-  }
 }
 
 func createDataSourceApplication(vm *jvm.JavaVm) *DataSourceApplication {

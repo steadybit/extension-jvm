@@ -115,8 +115,8 @@ func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
 	schedulerHolder := &SpringVMDiscoverySchedulerHolder{}
 	springVMDiscoverySchedulerHolderMap.Store(vm.Pid, schedulerHolder)
 
-	scheduledSpringDiscoveryTask30s, err := scheduleSpringDiscoveryForVM(30*time.Second, vm)
-	schedulerHolder.scheduledSpringDiscoveryTask30s = scheduledSpringDiscoveryTask30s
+	task30s, err := scheduleSpringDiscoveryForVM(30*time.Second, vm)
+	schedulerHolder.scheduledSpringDiscoveryTask30s = task30s
 
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 30s interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
@@ -127,10 +127,10 @@ func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
 
 	go func() {
 		time.Sleep(5 * time.Minute)
-		scheduledSpringDiscoveryTask30s.Cancel()
-		log.Info().Msg("Spring Watcher in 30s interval has been canceled.")
-		scheduledSpringDiscoveryTask60s, err := scheduleSpringDiscoveryForVM(60*time.Second, vm)
-		schedulerHolder.scheduledSpringDiscoveryTask60s = scheduledSpringDiscoveryTask60s
+		task30s.Cancel()
+		log.Info().Msg("Spring Watcher in 30s interval has been canceled for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+		task60s, err := scheduleSpringDiscoveryForVM(60*time.Second, vm)
+		schedulerHolder.scheduledSpringDiscoveryTask60s = task60s
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 60s interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 			return
@@ -139,10 +139,10 @@ func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
 		}
 		go func() {
 			time.Sleep(5 * time.Minute)
-			scheduledSpringDiscoveryTask60s.Cancel()
+			task60s.Cancel()
 			log.Info().Msg("Spring Watcher in 60s interval has been canceled.")
-			scheduledSpringDiscoveryTask60m, err := scheduleSpringDiscoveryForVM(1*time.Hour, vm)
-			schedulerHolder.scheduledSpringDiscoveryTask60m = scheduledSpringDiscoveryTask60m
+			task60m, err := scheduleSpringDiscoveryForVM(1*time.Hour, vm)
+			schedulerHolder.scheduledSpringDiscoveryTask60m = task60m
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 1h interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 				return

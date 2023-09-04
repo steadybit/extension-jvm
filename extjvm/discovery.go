@@ -50,9 +50,6 @@ func InitDiscovery() {
 	// Start listening for JVM events
 	AddJVMListener()
 
-	// Start Datasource Discovery
-	StartDataSourceDiscovery()
-
 	//Start attaching to JVMs
 	StartAttachment()
 
