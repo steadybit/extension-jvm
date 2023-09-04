@@ -174,10 +174,7 @@ func RemoveListener(listener Listener) {
 
 func checkProcessPathAvailable(p *process.Process) bool {
   _, err := GetProcessPath(p)
-  if err != nil {
-    return false
-  }
-  return true
+  return err == nil
 }
 
 func isJava(p *process.Process) bool {
