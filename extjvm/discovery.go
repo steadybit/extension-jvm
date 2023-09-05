@@ -245,10 +245,6 @@ func getContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
 				Name:    "container.image",
 			},
 			{
-				Matcher: discovery_kit_api.Equals,
-				Name:    "container.name",
-			},
-			{
 				Matcher: discovery_kit_api.StartsWith,
 				Name:    "label.",
 			},
