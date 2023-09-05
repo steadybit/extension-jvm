@@ -91,3 +91,10 @@ For discovery the extension needs access to the container runtime socket.
 The jvm attachment reuses the target container's linux namespace(s), control group(s) and user.
 This requires the following capabilities: SYS_ADMIN, SYS_RESOURCE, SYS_PTRACE, KILL, NET_ADMIN, DAC_OVERRIDE, SETUID, SETGID, AUDIT_WRITE.
 
+#### How do I exclude my JVM from the discovery mechanism?
+
+Add the `steadybit.agent.disable-jvm-attachment` flag to your JVM commandline like in this example:
+
+```
+java -Dsteadybit.agent.disable-jvm-attachment -jar spring-boot-sample.jar --server.port=0
+```
