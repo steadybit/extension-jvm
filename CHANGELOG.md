@@ -1,6 +1,11 @@
 # Changelog
 
 
+## v1.0.7
+
+- fix application discovery for rolling node deployments
+- refactor spring and datasource discovery
+
 ## v1.0.6
 
 - fix application name discovery
