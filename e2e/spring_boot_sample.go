@@ -39,7 +39,7 @@ func (n *SpringBootSample) Deploy(podName string, opts ...func(c *acorev1.PodApp
 			Containers: []acorev1.ContainerApplyConfiguration{
 				{
 					Name:  extutil.Ptr("spring-boot-sample"),
-					Image: extutil.Ptr("steadybit/spring-boot-sample:1.0.23"),
+					Image: extutil.Ptr("docker.io/steadybit/spring-boot-sample:1.0.23"),
 					Ports: []acorev1.ContainerPortApplyConfiguration{
 						{
 							ContainerPort: extutil.Ptr(int32(80)),
