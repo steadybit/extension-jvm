@@ -23,7 +23,7 @@ var (
 type DataSourceDiscoverySchedulerHolder struct {
 	scheduledDatasourceDiscoveryTask30s chrono.ScheduledTask
 	scheduledDatasourceDiscoveryTask60s chrono.ScheduledTask
-	scheduledDatasourceDiscoveryTask60m chrono.ScheduledTask
+	scheduledDatasourceDiscoveryTask15m chrono.ScheduledTask
 }
 type DataSourceConnection struct {
 	Pid          int32
@@ -73,8 +73,8 @@ func stopScheduledDatasourceDiscoveryForVM(vm *jvm.JavaVm) {
 		if datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask60s != nil {
 			datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask60s.Cancel()
 		}
-		if datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask60m != nil {
-			datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask60m.Cancel()
+		if datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask15m != nil {
+			datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask15m.Cancel()
 		}
 	}
 }
@@ -108,13 +108,13 @@ func startScheduledDatasourceDiscovery(vm *jvm.JavaVm) {
 			time.Sleep(5 * time.Minute)
 			task60s.Cancel()
 			log.Info().Msg("DataSource Watcher in 60s interval has been canceled for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
-			task60m, err := scheduleDataSourceDiscoveryForVM(1*time.Hour, vm)
-			schedulerHolder.scheduledDatasourceDiscoveryTask60m = task60m
+			task15m, err := scheduleDataSourceDiscoveryForVM(15*time.Minute, vm)
+			schedulerHolder.scheduledDatasourceDiscoveryTask15m = task15m
 			if err != nil {
-				log.Error().Err(err).Msg("Failed to schedule DataSource Watcher in 1h interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+				log.Error().Err(err).Msg("Failed to schedule DataSource Watcher in 15m interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 				return
 			} else {
-				log.Info().Msg("DataSource Watcher Task in 1h interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+				log.Info().Msg("DataSource Watcher Task in 15m interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 			}
 		}()
 

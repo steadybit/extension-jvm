@@ -31,7 +31,7 @@ var (
 type SpringVMDiscoverySchedulerHolder struct {
 	scheduledSpringDiscoveryTask30s chrono.ScheduledTask
 	scheduledSpringDiscoveryTask60s chrono.ScheduledTask
-	scheduledSpringDiscoveryTask60m chrono.ScheduledTask
+	scheduledSpringDiscoveryTask15m chrono.ScheduledTask
 }
 
 type SpringMvcMapping struct {
@@ -105,8 +105,8 @@ func stopScheduledSpringDiscoveryForVM(vm *jvm.JavaVm) {
 		if springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60s != nil {
 			springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60s.Cancel()
 		}
-		if springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60m != nil {
-			springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60m.Cancel()
+		if springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask15m != nil {
+			springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask15m.Cancel()
 		}
 	}
 }
@@ -141,13 +141,13 @@ func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
 			time.Sleep(5 * time.Minute)
 			task60s.Cancel()
 			log.Info().Msg("Spring Watcher in 60s interval has been canceled.")
-			task60m, err := scheduleSpringDiscoveryForVM(1*time.Hour, vm)
-			schedulerHolder.scheduledSpringDiscoveryTask60m = task60m
+			task15m, err := scheduleSpringDiscoveryForVM(15*time.Minute, vm)
+			schedulerHolder.scheduledSpringDiscoveryTask15m = task15m
 			if err != nil {
-				log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 1h interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+				log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 15m interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 				return
 			} else {
-				log.Info().Msg("Spring Watcher Task in 1h interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+				log.Info().Msg("Spring Watcher Task in 15m interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
 			}
 		}()
 
