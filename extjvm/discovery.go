@@ -183,6 +183,10 @@ func getKubernetesContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichm
 				Name:    "k8s.pod.label.",
 			},
 			{
+				Matcher: discovery_kit_api.StartsWith,
+				Name:    "k8s.label.",
+			},
+			{
 				Matcher: discovery_kit_api.Equals,
 				Name:    "k8s.replicaset",
 			},
@@ -237,7 +241,7 @@ func getContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
 			},
 			{
 				Matcher: discovery_kit_api.StartsWith,
-				Name:    "label.",
+				Name:    "container.label.",
 			},
 		},
 	}
