@@ -240,6 +240,18 @@ func getContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
 				Matcher: discovery_kit_api.Equals,
 				Name:    "container.image",
 			},
+      {
+				Matcher: discovery_kit_api.Equals,
+				Name:    "aws.account",
+			},
+      {
+				Matcher: discovery_kit_api.Equals,
+				Name:    "aws.zone",
+			},
+      {
+				Matcher: discovery_kit_api.Equals,
+				Name:    "aws.region",
+			},
 			{
 				Matcher: discovery_kit_api.StartsWith,
 				Name:    "label.",
