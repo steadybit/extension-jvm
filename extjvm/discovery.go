@@ -184,10 +184,6 @@ func getKubernetesContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichm
 				Name:    "k8s.service.name",
 			},
 			{
-				Matcher: discovery_kit_api.Equals,
-				Name:    "k8s.service.namespace",
-			},
-			{
 				Matcher: discovery_kit_api.StartsWith,
 				Name:    "k8s.pod.label.",
 			},
