@@ -29,7 +29,6 @@ func RegisterDiscoveryHandlers() {
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/target-description", exthttp.GetterAsHandler(getTargetDescription))
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/attribute-descriptions", exthttp.GetterAsHandler(getAttributeDescriptions))
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/discovered-targets", getDiscoveredTargets)
-	exthttp.RegisterHttpHandler(discoveryBasePath+"/rules/host-to-jvm", exthttp.GetterAsHandler(getHostToJvmEnrichmentRule))
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/rules/container-to-jvm", exthttp.GetterAsHandler(getContainerToJvmEnrichmentRule))
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/rules/k8s-container-to-jvm", exthttp.GetterAsHandler(getKubernetesContainerToJvmEnrichmentRule))
 
@@ -87,10 +86,6 @@ func GetDiscoveryList() discovery_kit_api.DiscoveryList {
 			{
 				Method: "GET",
 				Path:   discoveryBasePath + "/rules/container-to-jvm",
-			},
-			{
-				Method: "GET",
-				Path:   discoveryBasePath + "/rules/host-to-jvm",
 			},
 		},
 	}
@@ -240,46 +235,9 @@ func getContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
 				Matcher: discovery_kit_api.Equals,
 				Name:    "container.image",
 			},
-      {
-				Matcher: discovery_kit_api.Equals,
-				Name:    "aws.account",
-			},
-      {
-				Matcher: discovery_kit_api.Equals,
-				Name:    "aws.zone",
-			},
-      {
-				Matcher: discovery_kit_api.Equals,
-				Name:    "aws.region",
-			},
 			{
 				Matcher: discovery_kit_api.StartsWith,
 				Name:    "label.",
-			},
-		},
-	}
-}
-
-func getHostToJvmEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
-	return discovery_kit_api.TargetEnrichmentRule{
-		Id:      "com.steadybit.extension_jvm.host-to-jvm",
-		Version: extbuild.GetSemverVersionStringOrUnknown(),
-		Src: discovery_kit_api.SourceOrDestination{
-			Type: "com.steadybit.extension_host.host",
-			Selector: map[string]string{
-				"host.hostname": "${dest.application.hostname}",
-			},
-		},
-		Dest: discovery_kit_api.SourceOrDestination{
-			Type: targetID,
-			Selector: map[string]string{
-				"application.hostname": "${src.host.hostname}",
-			},
-		},
-		Attributes: []discovery_kit_api.Attribute{
-			{
-				Matcher: discovery_kit_api.Equals,
-				Name:    "host.hostname",
 			},
 		},
 	}
@@ -361,6 +319,7 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 				"container.id.stripped": {vm.ContainerId},
 				"process.pid":           {strconv.Itoa(int(vm.Pid))},
 				"application.hostname":  {vm.Hostname},
+				"host.hostname":         {vm.Hostname},
 			},
 		}
 	}
