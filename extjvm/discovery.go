@@ -374,6 +374,12 @@ func addHttpClientRequests(target *discovery_kit_api.Target, requests *[]HttpReq
 	}
 	for _, request := range *requests {
 		target.Attributes["application.http-outgoing-calls"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
+    if !request.CircuitBreaker {
+		  target.Attributes["application.http-outgoing-calls.missing-circuit-breaker"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
+    }
+    if request.Timeout == 0 {
+      target.Attributes["application.http-outgoing-calls.missing-timeout"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
+    }
 	}
 }
 
