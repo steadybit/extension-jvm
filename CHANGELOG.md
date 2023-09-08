@@ -1,6 +1,11 @@
 # Changelog
 
 
+## v1.0.8
+
+- Improve process discovery
+- Add enrichment rules for AWS attributes
+
 ## v1.0.7
 
 - fix application discovery for rolling node deployments
