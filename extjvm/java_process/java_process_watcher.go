@@ -101,7 +101,7 @@ func discoverProcessJVM(job DiscoveryWork) {
       if !checkProcessPathAvailable(job.p) {
         log.Debug().Msgf("Process %d is running but path is not available yet.", job.p.Pid)
         go func() {
-          time.Sleep(30 * time.Second)
+          time.Sleep(1 * time.Minute)
           discover(job.p, job.retries)
         }()
         return
@@ -112,11 +112,7 @@ func discoverProcessJVM(job DiscoveryWork) {
 			} else {
 				//retry
 				go func() {
-          waitTime := 1
-          if job.retries > 0 {
-            waitTime = initialRetries*2/job.retries
-          }
-					time.Sleep(time.Duration(waitTime) * time.Second)
+					time.Sleep(30 * time.Second)
 					discover(job.p, job.retries)
 				}()
 			}
