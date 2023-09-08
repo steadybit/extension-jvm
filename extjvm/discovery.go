@@ -179,9 +179,14 @@ func getKubernetesContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichm
 				Name:    "k8s.service.name",
 			},
 			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.pod.name",
+			},
+			{
 				Matcher: discovery_kit_api.StartsWith,
 				Name:    "k8s.pod.label.",
-			}, {
+			},
+			{
 				Matcher: discovery_kit_api.StartsWith,
 				Name:    "k8s.deployment.label.",
 			},
@@ -377,12 +382,12 @@ func addHttpClientRequests(target *discovery_kit_api.Target, requests *[]HttpReq
 	}
 	for _, request := range *requests {
 		target.Attributes["application.http-outgoing-calls"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
-    if !request.CircuitBreaker {
-		  target.Attributes["application.http-outgoing-calls.missing-circuit-breaker"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
-    }
-    if request.Timeout == 0 {
-      target.Attributes["application.http-outgoing-calls.missing-timeout"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
-    }
+		if !request.CircuitBreaker {
+			target.Attributes["application.http-outgoing-calls.missing-circuit-breaker"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
+		}
+		if request.Timeout == 0 {
+			target.Attributes["application.http-outgoing-calls.missing-timeout"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
+		}
 	}
 }
 
