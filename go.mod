@@ -9,9 +9,9 @@ require (
 	github.com/procyon-projects/chrono v1.1.2
 	github.com/rs/zerolog v1.30.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
-	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.7.2
-	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.6
-	github.com/steadybit/action-kit/go/action_kit_test v1.1.0
+	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.7.3
+	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.7
+	github.com/steadybit/action-kit/go/action_kit_test v1.2.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.4.2
 	github.com/steadybit/discovery-kit/go/discovery_kit_test v1.0.2
 	github.com/steadybit/extension-kit v1.8.8
@@ -32,11 +32,11 @@ require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/bytedance/sonic v1.10.0 // indirect
+	github.com/bytedance/sonic v1.10.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/deepmap/oapi-codegen v1.14.0 // indirect
+	github.com/deepmap/oapi-codegen v1.15.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/flosch/pongo2/v4 v4.0.2 // indirect
@@ -51,13 +51,13 @@ require (
 	github.com/go-openapi/swag v0.22.4 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.15.3 // indirect
+	github.com/go-playground/validator/v10 v10.15.4 // indirect
 	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/gomarkdown/markdown v0.0.0-20230716120725-531d2d74bc12 // indirect
+	github.com/gomarkdown/markdown v0.0.0-20230912175223-14b07df9d538 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -69,7 +69,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kataras/blocks v0.0.7 // indirect
 	github.com/kataras/golog v0.1.9 // indirect
-	github.com/kataras/iris/v12 v12.2.5 // indirect
+	github.com/kataras/iris/v12 v12.2.6-0.20230908161203-24ba4e8933b9 // indirect
 	github.com/kataras/pio v0.0.12 // indirect
 	github.com/kataras/sitemap v0.0.6 // indirect
 	github.com/kataras/tunnel v0.0.4 // indirect
@@ -96,6 +96,7 @@ require (
 	github.com/schollz/closestmatch v2.1.0+incompatible // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/stretchr/objx v0.5.1 // indirect
 	github.com/tdewolff/minify/v2 v2.12.9 // indirect
 	github.com/tdewolff/parse/v2 v2.6.8 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
