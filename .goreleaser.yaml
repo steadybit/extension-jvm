@@ -2,6 +2,7 @@ project_name: steadybit-extension-jvm
 before:
   hooks:
     - go mod download
+    - make licenses-report
 release:
   prerelease: "false"
 builds:
@@ -64,6 +65,8 @@ nfpms:
         type: config
       - src: ./javaagents/download/target/javaagent
         dst: /opt/steadybit/extension-jvm/javaagent
+      - src: ./licenses
+        dst: /opt/steadybit/extension-jvm/licenses
 
     scripts:
       preinstall: ./linuxpkg/scripts/preinstall.sh

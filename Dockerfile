@@ -47,6 +47,7 @@ USER $USERNAME
 WORKDIR /
 
 COPY --from=build /app/extension /extension
+COPY --from=build /app/licenses /licenses
 COPY javaagents/download/target/javaagent /javaagent
 
 

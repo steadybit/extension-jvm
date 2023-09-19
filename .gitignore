@@ -39,3 +39,4 @@ target/
 
 .mvn/.gradle-enterprise/gradle-enterprise-workspace-id
 e2e-coverage-containerd.out
+/licenses
