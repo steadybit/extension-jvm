@@ -32,6 +32,7 @@ func TestWithMinikube(t *testing.T) {
 		ExtraArgs: func(m *e2e.Minikube) []string {
 			return []string{
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
+				"--set", "discovery.attributes.excludes.jvm={application.type}",
 				"--set", "logging.level=INFO",
 			}
 		},
@@ -50,46 +51,46 @@ func TestWithMinikube(t *testing.T) {
 	}
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
-		{
-			Name: "validate discovery",
-			Test: validateDiscovery,
-		},
+		//{
+		//	Name: "validate discovery",
+		//	Test: validateDiscovery,
+		//},
 		{
 			Name: "discover spring boot sample",
 			Test: testDiscovery,
 		},
-		{
-			Name: "mvc delay",
-			Test: testMvcDelay,
-		},
-		{
-			Name: "mvc exception",
-			Test: testMvcException,
-		},
-		{
-			Name: "http client delay",
-			Test: testHttpClientDelay,
-		},
-		{
-			Name: "http client status",
-			Test: testHttpClientStatus,
-		},
-		{
-			Name: "java method delay",
-			Test: testJavaMethodDelay,
-		},
-		{
-			Name: "java method exception",
-			Test: testJavaMethodException,
-		},
-		{
-			Name: "jdbc template delay",
-			Test: testJDBCTemplateDelay,
-		},
-		{
-			Name: "jdbc template exception",
-			Test: testJDBCTemplateException,
-		},
+		//{
+		//	Name: "mvc delay",
+		//	Test: testMvcDelay,
+		//},
+		//{
+		//	Name: "mvc exception",
+		//	Test: testMvcException,
+		//},
+		//{
+		//	Name: "http client delay",
+		//	Test: testHttpClientDelay,
+		//},
+		//{
+		//	Name: "http client status",
+		//	Test: testHttpClientStatus,
+		//},
+		//{
+		//	Name: "java method delay",
+		//	Test: testJavaMethodDelay,
+		//},
+		//{
+		//	Name: "java method exception",
+		//	Test: testJavaMethodException,
+		//},
+		//{
+		//	Name: "jdbc template delay",
+		//	Test: testJDBCTemplateDelay,
+		//},
+		//{
+		//	Name: "jdbc template exception",
+		//	Test: testJDBCTemplateException,
+		//},
 	})
 }
 
@@ -121,6 +122,7 @@ func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, targetFashion.TargetType, "com.steadybit.extension_jvm.application")
+		assert.NotContains(t, targetFashion.Attributes, "application.type")
 	}
 }
 

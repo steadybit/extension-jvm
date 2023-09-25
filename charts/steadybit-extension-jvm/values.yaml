@@ -134,3 +134,10 @@ securityContext:
       - SETUID
       - SETGID
       - AUDIT_WRITE
+
+
+discovery:
+  attributes:
+    excludes:
+      # discovery.attributes.excludes.jvm -- List of attributes to exclude from VM discovery.
+      jvm: []

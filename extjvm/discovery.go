@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/steadybit/extension-jvm/config"
+  "github.com/steadybit/discovery-kit/go/discovery_kit_commons"
+  "github.com/steadybit/extension-jvm/config"
 	"github.com/steadybit/extension-jvm/extjvm/controller"
 	"github.com/steadybit/extension-jvm/extjvm/hotspot"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
@@ -338,7 +339,7 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 	// enhance with spring infos
 	enhanceTargetsWithSpringAttributes(targets)
 	enhanceTargetsWithDataSourceAttributes(targets)
-	exthttp.WriteBody(w, discovery_kit_api.DiscoveryData{Targets: &targets})
+	exthttp.WriteBody(w, discovery_kit_api.DiscoveryData{Targets: extutil.Ptr(discovery_kit_commons.ApplyAttributeExcludes(targets, config.Config.DiscoveryAttributesExcludesJVM))})
 }
 
 func enhanceTargetsWithDataSourceAttributes(targets []discovery_kit_api.Target) {

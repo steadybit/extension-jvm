@@ -67,6 +67,10 @@ spec:
               value: {{ .Values.containerPorts.http | quote }}
             - name: STEADYBIT_EXTENSION_HEALTH_PORT
               value: {{ .Values.containerPorts.health | quote }}
+            {{- if .Values.discovery.attributes.excludes.jvm }}
+            - name: STEADYBIT_EXTENSION_DISCOVERY_ATTRIBUTES_EXCLUDES_JVM
+              value: {{ join "," .Values.discovery.attributes.excludes.jvm | quote }}
+            {{- end }}
             {{- include "extensionlib.deployment.env" (list .) | nindent 12 }}
             {{- with .Values.extraEnv }}
               {{- toYaml . | nindent 12 }}

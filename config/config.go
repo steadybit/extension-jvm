@@ -13,10 +13,11 @@ import (
 // through environment variables. Learn more through the documentation of the envconfig package.
 // https://github.com/kelseyhightower/envconfig
 type Specification struct {
-	DiscoveryCallInterval   string `json:"discoveryCallInterval" split_words:"true" required:"false" default:"1m"`
-	Port                    uint16 `json:"port" split_words:"true" required:"false" default:"8087"`
-	HealthPort              uint16 `json:"healthPort" split_words:"true" required:"false" default:"8083"`
-	JavaAgentAttachmentPort uint16 `json:"javaAgentAttachmentPort" split_words:"true" required:"false" default:"8095"`
+	DiscoveryCallInterval          string `json:"discoveryCallInterval" split_words:"true" required:"false" default:"1m"`
+	Port                           uint16 `json:"port" split_words:"true" required:"false" default:"8087"`
+	HealthPort                     uint16 `json:"healthPort" split_words:"true" required:"false" default:"8083"`
+	JavaAgentAttachmentPort        uint16 `json:"javaAgentAttachmentPort" split_words:"true" required:"false" default:"8095"`
+	DiscoveryAttributesExcludesJVM []string `json:"discoveryAttributesExcludesJVM" split_words:"true" required:"false"`
 }
 
 var (

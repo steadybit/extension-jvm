@@ -1,6 +1,11 @@
 # Changelog
 
 
+## v1.0.9
+
+- Improve process discovery
+- Add enrichment rules for AWS attributes
+
 ## v1.0.8
 
 - Improve process discovery
