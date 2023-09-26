@@ -32,7 +32,7 @@ func TestWithMinikube(t *testing.T) {
 		ExtraArgs: func(m *e2e.Minikube) []string {
 			return []string{
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
-				"--set", "discovery.attributes.excludes.jvm={application.type}",
+				"--set", "discovery.attributes.excludes.jvm={spring.http-client}",
 				"--set", "logging.level=INFO",
 			}
 		},
@@ -122,7 +122,6 @@ func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, targetFashion.TargetType, "com.steadybit.extension_jvm.application")
-		assert.NotContains(t, targetFashion.Attributes, "application.type")
 	}
 }
 
@@ -132,11 +131,11 @@ func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extensi
 		return e2e.HasAttribute(target, "application.name", "app") &&
 			e2e.HasAttribute(target, "application.type", "spring-boot") &&
 			e2e.HasAttribute(target, "spring.application.name", "spring-boot-sample") &&
-			e2e.HasAttribute(target, "spring.http-client", "true") &&
 			e2e.HasAttribute(target, "datasource.jdbc-url", "jdbc:h2:mem:testdb") &&
 			e2e.HasAttribute(target, "spring.jdbc-template", "true")
 	})
 	require.NoError(t, err)
+  assert.NotContains(t, target.Attributes, "spring.http-client")
 	return target
 }
 
