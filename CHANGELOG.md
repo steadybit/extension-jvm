@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.0.10
+
+- Possibility to exclude attributes from discovery
 
 ## v1.0.9
 
