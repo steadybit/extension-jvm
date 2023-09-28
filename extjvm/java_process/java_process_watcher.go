@@ -98,14 +98,14 @@ func updatePids() {
 func discoverProcessJVM(job DiscoveryWork) {
 	if !utils.Contains(discoveredPids, job.p.Pid) {
 		if IsRunning(job.p) {
-      if !checkProcessPathAvailable(job.p) {
-        log.Debug().Msgf("Process %d is running but path is not available yet.", job.p.Pid)
-        go func() {
-          time.Sleep(1 * time.Minute)
-          discover(job.p, job.retries)
-        }()
-        return
-      }
+			if !checkProcessPathAvailable(job.p) {
+				log.Debug().Msgf("Process %d is running but path is not available yet.", job.p.Pid)
+				go func() {
+					time.Sleep(1 * time.Minute)
+					discover(job.p, job.retries)
+				}()
+				return
+			}
 			success := notifyListenersForNewProcess(job.p)
 			if success {
 				addPidToDiscoveredPids(job)
@@ -169,8 +169,8 @@ func RemoveListener(listener Listener) {
 }
 
 func checkProcessPathAvailable(p *process.Process) bool {
-  _, err := GetProcessPath(p)
-  return err == nil
+	_, err := GetProcessPath(p)
+	return err == nil
 }
 
 func isJava(p *process.Process) bool {

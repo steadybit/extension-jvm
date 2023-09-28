@@ -16,21 +16,21 @@ func TestAppendIfMissing(t *testing.T) {
 		want []string
 	}{
 		{
-      name: "Append because it is missing",
-      args: args{
-        slice: []string{"a", "b", "c"},
-        val: "d",
-      },
-      want: []string{"a", "b", "c", "d"},
-    },
-    {
-      name: "Do not append because it is not missing",
-      args: args{
-        slice: []string{"a", "b", "c"},
-        val: "b",
-      },
-      want: []string{"a", "b", "c"},
-    },
+			name: "Append because it is missing",
+			args: args{
+				slice: []string{"a", "b", "c"},
+				val:   "d",
+			},
+			want: []string{"a", "b", "c", "d"},
+		},
+		{
+			name: "Do not append because it is not missing",
+			args: args{
+				slice: []string{"a", "b", "c"},
+				val:   "b",
+			},
+			want: []string{"a", "b", "c"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

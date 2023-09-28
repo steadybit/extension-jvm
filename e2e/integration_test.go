@@ -135,7 +135,7 @@ func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extensi
 			e2e.HasAttribute(target, "spring.jdbc-template", "true")
 	})
 	require.NoError(t, err)
-  assert.NotContains(t, target.Attributes, "spring.http-client")
+	assert.NotContains(t, target.Attributes, "spring.http-client")
 	return target
 }
 
