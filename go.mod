@@ -19,9 +19,9 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/xin053/hsperfdata v0.2.3
 	golang.org/x/sys v0.12.0
-	k8s.io/api v0.29.0-alpha.0
+	k8s.io/api v0.29.0-alpha.1
 	k8s.io/apimachinery v0.29.0-alpha.1
-	k8s.io/client-go v0.29.0-alpha.0
+	k8s.io/client-go v0.29.0-alpha.1
 )
 
 require (
@@ -63,6 +63,7 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/invopop/yaml v0.2.0 // indirect
 	github.com/iris-contrib/schema v0.0.6 // indirect
