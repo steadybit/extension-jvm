@@ -5,6 +5,7 @@ manifest should match snapshot using containerd and resources:
     metadata:
       labels:
         steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
       name: RELEASE-NAME-steadybit-extension-jvm
       namespace: NAMESPACE
     spec:
@@ -114,6 +115,7 @@ manifest should match snapshot using crio using podAnnotations and Labels:
     metadata:
       labels:
         steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
       name: RELEASE-NAME-steadybit-extension-jvm
       namespace: NAMESPACE
     spec:
@@ -225,6 +227,7 @@ manifest should match snapshot using docker:
     metadata:
       labels:
         steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
       name: RELEASE-NAME-steadybit-extension-jvm
       namespace: NAMESPACE
     spec:
@@ -334,6 +337,7 @@ manifest should match snapshot with TLS:
     metadata:
       labels:
         steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
       name: RELEASE-NAME-steadybit-extension-jvm
       namespace: NAMESPACE
     spec:
@@ -454,6 +458,7 @@ manifest should match snapshot with different containerPorts:
     metadata:
       labels:
         steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
       name: RELEASE-NAME-steadybit-extension-jvm
       namespace: NAMESPACE
     spec:
@@ -563,6 +568,7 @@ manifest should match snapshot with extra env vars:
     metadata:
       labels:
         steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
       name: RELEASE-NAME-steadybit-extension-jvm
       namespace: NAMESPACE
     spec:
@@ -679,6 +685,7 @@ manifest should match snapshot with extra labels:
     metadata:
       labels:
         steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
         tags.datadoghq.com/service: steadybit-extension
       name: RELEASE-NAME-steadybit-extension-jvm
       namespace: NAMESPACE
@@ -790,6 +797,7 @@ manifest should match snapshot with mutual TLS:
     metadata:
       labels:
         steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
       name: RELEASE-NAME-steadybit-extension-jvm
       namespace: NAMESPACE
     spec:
@@ -919,6 +927,7 @@ manifest should match snapshot with mutual TLS using containerPaths:
     metadata:
       labels:
         steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
       name: RELEASE-NAME-steadybit-extension-jvm
       namespace: NAMESPACE
     spec:
@@ -1034,6 +1043,7 @@ manifest should match snapshot with podSecurityContext:
     metadata:
       labels:
         steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
       name: RELEASE-NAME-steadybit-extension-jvm
       namespace: NAMESPACE
     spec:
@@ -1145,6 +1155,7 @@ manifest should match snapshot with priority class:
     metadata:
       labels:
         steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
       name: RELEASE-NAME-steadybit-extension-jvm
       namespace: NAMESPACE
     spec:
@@ -1255,6 +1266,7 @@ manifest should match snapshot with update strategy:
     metadata:
       labels:
         steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
       name: RELEASE-NAME-steadybit-extension-jvm
       namespace: NAMESPACE
     spec:
