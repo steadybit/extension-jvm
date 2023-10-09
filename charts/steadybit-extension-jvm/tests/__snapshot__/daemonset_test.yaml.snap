@@ -56,7 +56,7 @@ manifest should match snapshot using containerd and resources:
                   cpu: 500m
                   memory: 128Mi
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 32Mi
               securityContext:
                 capabilities:
@@ -168,7 +168,7 @@ manifest should match snapshot using crio using podAnnotations and Labels:
                   cpu: 500m
                   memory: 128Mi
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 32Mi
               securityContext:
                 capabilities:
@@ -278,7 +278,7 @@ manifest should match snapshot using docker:
                   cpu: 500m
                   memory: 128Mi
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 32Mi
               securityContext:
                 capabilities:
@@ -392,7 +392,7 @@ manifest should match snapshot with TLS:
                   cpu: 500m
                   memory: 128Mi
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 32Mi
               securityContext:
                 capabilities:
@@ -509,7 +509,7 @@ manifest should match snapshot with different containerPorts:
                   cpu: 500m
                   memory: 128Mi
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 32Mi
               securityContext:
                 capabilities:
@@ -626,7 +626,7 @@ manifest should match snapshot with extra env vars:
                   cpu: 500m
                   memory: 128Mi
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 32Mi
               securityContext:
                 capabilities:
@@ -738,7 +738,7 @@ manifest should match snapshot with extra labels:
                   cpu: 500m
                   memory: 128Mi
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 32Mi
               securityContext:
                 capabilities:
@@ -854,7 +854,7 @@ manifest should match snapshot with mutual TLS:
                   cpu: 500m
                   memory: 128Mi
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 32Mi
               securityContext:
                 capabilities:
@@ -984,7 +984,7 @@ manifest should match snapshot with mutual TLS using containerPaths:
                   cpu: 500m
                   memory: 128Mi
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 32Mi
               securityContext:
                 capabilities:
@@ -1094,7 +1094,7 @@ manifest should match snapshot with podSecurityContext:
                   cpu: 500m
                   memory: 128Mi
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 32Mi
               securityContext:
                 capabilities:
@@ -1206,7 +1206,7 @@ manifest should match snapshot with priority class:
                   cpu: 500m
                   memory: 128Mi
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 32Mi
               securityContext:
                 capabilities:
@@ -1317,7 +1317,7 @@ manifest should match snapshot with update strategy:
                   cpu: 500m
                   memory: 128Mi
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 32Mi
               securityContext:
                 capabilities:
