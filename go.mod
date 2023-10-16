@@ -20,7 +20,7 @@ require (
 	github.com/xin053/hsperfdata v0.2.3
 	golang.org/x/sys v0.13.0
 	k8s.io/api v0.29.0-alpha.1
-	k8s.io/apimachinery v0.29.0-alpha.1
+	k8s.io/apimachinery v0.29.0-alpha.2
 	k8s.io/client-go v0.29.0-alpha.1
 )
 
