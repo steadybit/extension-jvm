@@ -31,6 +31,7 @@ func RegisterDiscoveryHandlers() {
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/attribute-descriptions", exthttp.GetterAsHandler(getAttributeDescriptions))
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/discovered-targets", getDiscoveredTargets)
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/rules/container-to-jvm", exthttp.GetterAsHandler(getContainerToJvmEnrichmentRule))
+	exthttp.RegisterHttpHandler(discoveryBasePath+"/rules/jvm-to-container", exthttp.GetterAsHandler(getJvmToContainerEnrichmentRule))
 	exthttp.RegisterHttpHandler(discoveryBasePath+"/rules/k8s-container-to-jvm", exthttp.GetterAsHandler(getKubernetesContainerToJvmEnrichmentRule))
 
 }
@@ -87,6 +88,10 @@ func GetDiscoveryList() discovery_kit_api.DiscoveryList {
 			{
 				Method: "GET",
 				Path:   discoveryBasePath + "/rules/container-to-jvm",
+			},
+			{
+				Method: "GET",
+				Path:   discoveryBasePath + "/rules/jvm-to-container",
 			},
 		},
 	}
@@ -222,13 +227,13 @@ func getContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
 		Src: discovery_kit_api.SourceOrDestination{
 			Type: "com.steadybit.extension_container.container",
 			Selector: map[string]string{
-				"k8s.container.id.stripped": "${dest.container.id.stripped}",
+				"container.id.stripped": "${dest.container.id.stripped}",
 			},
 		},
 		Dest: discovery_kit_api.SourceOrDestination{
 			Type: targetID,
 			Selector: map[string]string{
-				"container.id.stripped": "${src.k8s.container.id.stripped}",
+				"container.id.stripped": "${src.container.id.stripped}",
 			},
 		},
 		Attributes: []discovery_kit_api.Attribute{
@@ -251,6 +256,31 @@ func getContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
 			{
 				Matcher: discovery_kit_api.StartsWith,
 				Name:    "container.label.",
+			},
+		},
+	}
+}
+
+func getJvmToContainerEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
+	return discovery_kit_api.TargetEnrichmentRule{
+		Id:      "com.steadybit.extension_jvm.jvm-to-container",
+		Version: extbuild.GetSemverVersionStringOrUnknown(),
+		Src: discovery_kit_api.SourceOrDestination{
+			Type: targetID,
+			Selector: map[string]string{
+				"container.id.stripped": "${dest.container.id.stripped}",
+			},
+		},
+		Dest: discovery_kit_api.SourceOrDestination{
+			Type: "com.steadybit.extension_container.container",
+			Selector: map[string]string{
+				"container.id.stripped": "${src.container.id.stripped}",
+			},
+		},
+		Attributes: []discovery_kit_api.Attribute{
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "application.name",
 			},
 		},
 	}

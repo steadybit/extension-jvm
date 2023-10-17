@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.11 (NEXT RELEASE)
+
+- Enrich `application.name` to `container` targets
+- Fixed `container-to-jvm` enrichment
+
 ## v1.0.10
 
 - Possibility to exclude attributes from discovery
