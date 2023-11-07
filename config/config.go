@@ -13,6 +13,7 @@ import (
 // through environment variables. Learn more through the documentation of the envconfig package.
 // https://github.com/kelseyhightower/envconfig
 type Specification struct {
+	ActiveAdviceList               []string `required:"false" split_words:"true" default:"*"`
 	DiscoveryCallInterval          string   `json:"discoveryCallInterval" split_words:"true" required:"false" default:"1m"`
 	Port                           uint16   `json:"port" split_words:"true" required:"false" default:"8087"`
 	HealthPort                     uint16   `json:"healthPort" split_words:"true" required:"false" default:"8083"`

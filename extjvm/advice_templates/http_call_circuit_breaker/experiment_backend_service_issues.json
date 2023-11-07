@@ -1,0 +1,57 @@
+{
+  "name": "${target.application.name} Backend Service Issues",
+  "lanes": [
+    {
+      "steps": [
+        {
+          "type": "action",
+          "ignoreFailure": false,
+          "parameters": {
+						"ip": [],
+						"port": [
+							"8084"
+						],
+						"duration": "60s",
+						"hostname": [
+							"${target.application.http-outgoing-calls[0]}"
+						],
+						"failOnHostNetwork": true
+
+					},
+          "actionType": "com.steadybit.extension_container.network_blackhole",
+          "radius": {
+            "targetType": "com.steadybit.extension_container.container",
+            "predicate": {
+              "operator": "AND",
+              "predicates": [
+                {
+                  "key": "k8s.cluster-name",
+                  "operator": "EQUALS",
+                  "values": [
+                    "{{k8s.cluster-name}}"
+                  ]
+                },
+                {
+                  "key": "k8s.namespace",
+                  "operator": "EQUALS",
+                  "values": [
+                    "{{k8s.namespace}}"
+                  ]
+                },
+                {
+                  "key": "k8s.deployment",
+                  "operator": "EQUALS",
+                  "values": [
+                    "{{k8s.deployment}}"
+                  ]
+                }
+              ]
+            },
+            "query": null,
+            "percentage": 50
+          }
+        }
+      ]
+    }
+  ]
+}
