@@ -115,6 +115,12 @@ func getAdviceRefs() []advice_kit_api.DescribingEndpointReference {
 				Path:   "/jvm/advice/http-call-circuit-breaker",
 			})
 		}
+		if adviceId == "*" || adviceId == extjvm.HttpCallTimeoutID {
+			refs = append(refs, advice_kit_api.DescribingEndpointReference{
+				Method: "GET",
+				Path:   "/jvm/advice/http-call-timeout",
+			})
+		}
 	}
 	return refs
 }

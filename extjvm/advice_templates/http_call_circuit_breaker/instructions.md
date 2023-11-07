@@ -1,17 +1,14 @@
-There are many circuit breaker implementations available, one is ```spring-cloud-starter-netflix-hystrix```. After adding it to the dependency section of your build tooling (e.g. maven) you can easily configure it via annotations.
-
+Consider configuring the timeout for ${target.application.name} globally in the Spring Container. Adding an appropriate timeout as well as a fallback helps to improve by decoupling ${target.application.name}.
 
 ```java
-% startHighlight %
-@HystrixCommand(fallbackMethod = "reliable")
+
+@Bean
+public RestTemplateBuilder restTemplateBuilder(RestTemplateBuilderConfigurer configurer)
+	{
+	return configurer.configure(new RestTemplateBuilder())
+	% startHighlight %
+	.setConnectTimeout(Duration.ofSeconds(5))
+	.setReadTimeout(Duration.ofSeconds(2));
 % endHighlight %
-public String readingList() {
-	URI uri = URI.create("${target.application.http-outgoing-calls[0]}....");
-	return this.restTemplate.getForObject(uri, String.class);
 	}
-% startHighlight %
-public String reliable() {
-	return "Steadybit";
-}
-% endHighlight %
 ```
