@@ -1,3 +1,3 @@
-Having too many requests waiting on ${target.application.http-outgoing-calls[]} response causes higher consumption of resources and negatively affects the performance of ${target.application.name}.
+The circuit breaker avoid a cascading failure in case ${target.application.http-outgoing-calls[]} is unresponsive. Then, the circuit breaker triggers a fallback and allows only a small portion of requests to hit ${target.application.http-outgoing-calls[]}. Up until a normal response time is detected the fallback remains active.
 
-[Spring Boot RestTemplate Customization](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-resttemplate-customization)
+[Spring Circuit Breaker Guide](https://spring.io/guides/gs/circuit-breaker/)

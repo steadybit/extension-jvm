@@ -1,5 +1,5 @@
 {
-  "name": "${target.application.name} Backend Service Issues",
+  "name": "${target.application.name} Response Time Issues",
   "lanes": [
     {
       "steps": [
