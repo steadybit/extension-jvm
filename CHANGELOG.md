@@ -1,9 +1,11 @@
 # Changelog
 
-## v1.0.11 (NEXT RELEASE)
+## v1.0.11
 
 - Enrich `application.name` to `container` targets
 - Fixed `container-to-jvm` enrichment
+- Update dependencies
+- Prepared jvm advice
 
 ## v1.0.10
 
