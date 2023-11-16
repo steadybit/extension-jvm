@@ -1,6 +1,8 @@
 module github.com/steadybit/extension-jvm
 
-go 1.21
+go 1.21.3
+
+toolchain go1.21.4
 
 require (
 	github.com/dimchansky/utfbom v1.1.1
