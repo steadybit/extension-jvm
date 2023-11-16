@@ -98,6 +98,7 @@ jobs:
           minikube config set cpus max
           minikube config set memory 8g
           #exec in a new sell for the group change to take effect
+          go version
           sudo -u $USER make audit
 
       - name: Check Sonar Token
