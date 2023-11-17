@@ -12,6 +12,7 @@ help:
 .PHONY: licenses-report
 licenses-report:
 	rm -rf ./licenses
+	go version
 	go run github.com/google/go-licenses@v1.6.0 save . --save_path ./licenses
 	go run github.com/google/go-licenses@v1.6.0 report . > ./licenses/THIRD-PARTY.csv
 	cp LICENSE ./licenses/LICENSE.txt
