@@ -1,5 +1,4 @@
 When ${target.application.name}'s downstream endpoints aren't working correctly, it doesn't back off requesting the endpoint and thus risks the downstream application becoming unavailable. Eventually, this may lead to a catastrophic cascade when ${target.application.name} is failing as well, causing upstream failures.
 
-
-***Downstream Endpoints***
+### Downstream Endpoints
 ${target.application.http-outgoing-calls[]:ul}
