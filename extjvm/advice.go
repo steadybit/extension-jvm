@@ -29,30 +29,39 @@ var httpCallTimeoutContent embed.FS
 func getAdviceDescriptionHttpCallCircuitBreaker() advice_kit_api.AdviceDefinition {
 
 	return advice_kit_api.AdviceDefinition{
-		Id:                          HttpCallCircuitBreakerID,
-		Label:                       "Circuit Breaker",
-		Version:                     extbuild.GetSemverVersionStringOrUnknown(),
-		Icon:                        targetIcon,
-		Tags:                        &[]string{"java", "jvm", "spring", "http", "circuit-breaker"},
-		AssessmentQueryApplicable:   "target.type=\"" + targetID + "\" and application.http-outgoing-calls IS PRESENT",
-		AssessmentQueryActionNeeded: "application.http-outgoing-calls.missing-circuit-breaker IS PRESENT",
-		Experiments: &[]advice_kit_api.ExperimentTemplate{{
-			Id:         targetID + ".advice.http-call-circuit-breaker.experiment-1",
-			Name:       "Backend Service Issues",
-			Description: extutil.Ptr("When calling external services, problems with response time, errors, etc. can occur again and again. Your service should be able to handle this well. An experiment can be used to simulate an incorrect response behavior in order to check what effects this has on the affected component. Also, the correct functionality of an implemented circuit breaker should always be validated with an experiment."),
-			Experiment: readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/experiment_backend_service_issues.json"),
-		}},
-		Description: advice_kit_api.AdviceDefinitionDescription{
-			ActionNeeded: advice_kit_api.AdviceDefinitionDescriptionActionNeeded{
-				Instruction: readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/instructions.md"),
-				Motivation:  readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/motivation.md"),
-				Summary:     readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/action_needed_summary.md"),
+		Id:                        HttpCallCircuitBreakerID,
+		Label:                     "Circuit Breaker",
+		Version:                   extbuild.GetSemverVersionStringOrUnknown(),
+		Icon:                      targetIcon,
+		Tags:                      &[]string{"java", "jvm", "spring", "http", "circuit-breaker"},
+		AssessmentQueryApplicable: "target.type=\"" + targetID + "\" and application.http-outgoing-calls IS PRESENT",
+		Status: advice_kit_api.AdviceDefinitionStatus{
+			ActionNeeded: advice_kit_api.AdviceDefinitionStatusActionNeeded{
+				AssessmentQuery: "application.http-outgoing-calls.missing-circuit-breaker IS PRESENT",
+				Description: advice_kit_api.AdviceDefinitionStatusActionNeededDescription{
+					Instruction: readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/instructions.md"),
+					Motivation:  readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/motivation.md"),
+					Summary:     readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/action_needed_summary.md"),
+				},
 			},
-			ValidationNeeded: advice_kit_api.AdviceDefinitionDescriptionValidationNeeded{
-				Summary: readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/validation_needed.md"),
+			Implemented: advice_kit_api.AdviceDefinitionStatusImplemented{
+				Description: advice_kit_api.AdviceDefinitionStatusImplementedDescription{
+					Summary: readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/implemented.md"),
+				},
 			},
-			Implemented: advice_kit_api.AdviceDefinitionDescriptionImplemented{
-				Summary: readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/implemented.md"),
+			ValidationNeeded: advice_kit_api.AdviceDefinitionStatusValidationNeeded{
+				Description: advice_kit_api.AdviceDefinitionStatusValidationNeededDescription{
+					Summary: readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/validation_needed.md"),
+				},
+				Validation: extutil.Ptr([]advice_kit_api.Validation{
+					{
+						Id:          targetID + ".advice.http-call-circuit-breaker.experiment-1",
+						Name:        "Backend Service Issues",
+						Description: "When calling external services, problems with response time, errors, etc. can occur again and again. Your service should be able to handle this well. An experiment can be used to simulate an incorrect response behavior in order to check what effects this has on the affected component. Also, the correct functionality of an implemented circuit breaker should always be validated with an experiment.",
+						Type:        "EXPERIMENT",
+						Experiment:  extutil.Ptr(advice_kit_api.Experiment(readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/experiment_backend_service_issues.json"))),
+					},
+				}),
 			},
 		},
 	}
@@ -61,30 +70,39 @@ func getAdviceDescriptionHttpCallCircuitBreaker() advice_kit_api.AdviceDefinitio
 func getAdviceDescriptionHttpCallTimeout() advice_kit_api.AdviceDefinition {
 
 	return advice_kit_api.AdviceDefinition{
-		Id:                          HttpCallTimeoutID,
-		Label:                       "Timeouts",
-		Version:                     extbuild.GetSemverVersionStringOrUnknown(),
-		Icon:                        targetIcon,
-		Tags:                         &[]string{"java", "jvm", "spring", "http", "timeout"},
-		AssessmentQueryApplicable:   "target.type=\"" + targetID + "\" and application.http-outgoing-calls IS PRESENT",
-		AssessmentQueryActionNeeded: "application.http-outgoing-calls.missing-timeout IS PRESENT",
-		Experiments: &[]advice_kit_api.ExperimentTemplate{{
-			Id:         targetID + ".advice.http-call-timeout.experiment-1",
-			Name:       "Response Time Issues",
-			Description: extutil.Ptr("Validate with an experiment if the service can handle longer response times well and also check if the set timeout has the desired effect."),
-			Experiment: readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/experiment_response_time_issues.json"),
-		}},
-		Description: advice_kit_api.AdviceDefinitionDescription{
-			ActionNeeded: advice_kit_api.AdviceDefinitionDescriptionActionNeeded{
-				Instruction: readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/instructions.md"),
-				Motivation:  readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/motivation.md"),
-				Summary:     readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/action_needed_summary.md"),
+		Id:                        HttpCallTimeoutID,
+		Label:                     "Timeouts",
+		Version:                   extbuild.GetSemverVersionStringOrUnknown(),
+		Icon:                      targetIcon,
+		Tags:                      &[]string{"java", "jvm", "spring", "http", "timeout"},
+		AssessmentQueryApplicable: "target.type=\"" + targetID + "\" and application.http-outgoing-calls IS PRESENT",
+		Status: advice_kit_api.AdviceDefinitionStatus{
+			ActionNeeded: advice_kit_api.AdviceDefinitionStatusActionNeeded{
+				AssessmentQuery: "application.http-outgoing-calls.missing-timeout IS PRESENT",
+				Description: advice_kit_api.AdviceDefinitionStatusActionNeededDescription{
+					Instruction: readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/instructions.md"),
+					Motivation:  readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/motivation.md"),
+					Summary:     readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/action_needed_summary.md"),
+				},
 			},
-			ValidationNeeded: advice_kit_api.AdviceDefinitionDescriptionValidationNeeded{
-				Summary: readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/validation_needed.md"),
+			Implemented: advice_kit_api.AdviceDefinitionStatusImplemented{
+				Description: advice_kit_api.AdviceDefinitionStatusImplementedDescription{
+					Summary: readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/implemented.md"),
+				},
 			},
-			Implemented: advice_kit_api.AdviceDefinitionDescriptionImplemented{
-				Summary: readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/implemented.md"),
+			ValidationNeeded: advice_kit_api.AdviceDefinitionStatusValidationNeeded{
+				Description: advice_kit_api.AdviceDefinitionStatusValidationNeededDescription{
+					Summary: readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/validation_needed.md"),
+				},
+				Validation: extutil.Ptr([]advice_kit_api.Validation{
+					{
+						Id:          targetID + ".advice.http-call-timeout.experiment-1",
+						Name:        "Response Time Issues",
+						Type:        "EXPERIMENT",
+						Description: "Validate with an experiment if the service can handle longer response times well and also check if the set timeout has the desired effect.",
+						Experiment:  extutil.Ptr(advice_kit_api.Experiment(readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/experiment_response_time_issues.json"))),
+					},
+				}),
 			},
 		},
 	}
