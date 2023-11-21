@@ -1,1 +1,4 @@
-When endpoint ${target.application.http-outgoing-calls[]} is unresponsive, your application ${target.application.name} will wait the defined time interval on the response and closes the connection after that. This possibly reduces long running requests and makes your application more responsive.
+${target.application.name}'s configured timeout results in closing the connection after the defined time interval and thus makes the application more responsive.
+
+***Downstream Endpoints***
+${target.application.http-outgoing-calls[]:ul}

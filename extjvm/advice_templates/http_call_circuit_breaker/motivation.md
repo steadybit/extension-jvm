@@ -1,3 +1,4 @@
-The circuit breaker avoid a cascading failure in case ${target.application.http-outgoing-calls[]} is unresponsive. Then, the circuit breaker triggers a fallback and allows only a small portion of requests to hit ${target.application.http-outgoing-calls[]}. Up until a normal response time is detected the fallback remains active.
+A circuit breaker avoids a cascading failure if a downstream endpoint is unresponsive. By having a fallback for the actual downstream call, the circuit breaker only allows a small portion of requests to go through in case the downstream requests fail. Until a certain amount of successful downstream responses, the fallback remains active.
 
-[Spring Circuit Breaker Guide](https://spring.io/guides/gs/circuit-breaker/)
+***More Resources***
+* [CircuitBreaker by Martin Fowler](https://martinfowler.com/bliki/CircuitBreaker.html)

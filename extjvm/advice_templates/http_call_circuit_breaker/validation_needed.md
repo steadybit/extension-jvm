@@ -1,1 +1,1 @@
-You already took action and configured it. Validate your configuration via the experiment.
+You already took action and implemented a circuit breaker. Now, validate your configuration via an experiment.

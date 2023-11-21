@@ -1,1 +1,4 @@
-The configured circuit breaker improves the response handling in case of an error of the endpoints ${target.application.http-outgoing-calls[]}. Your application ${target.application.name} will continue to work with a controllable beheviour.
+${target.application.name}'s configured circuit breaker disrupts a catastrophic cascade in case of unavailable downstream endpoints.
+
+***Downstream Endpoints***
+${target.application.http-outgoing-calls[]:ul}
