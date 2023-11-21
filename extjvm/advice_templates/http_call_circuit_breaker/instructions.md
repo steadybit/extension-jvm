@@ -16,5 +16,6 @@ public String reliable() {
 % endHighlight %
 ```
 
-***More Resources***
-* [Spring Cloud Circuit Breaker Guide](https://spring.io/guides/gs/cloud-circuit-breaker/)
+
+***Read More***
+[Spring Cloud Circuit Breaker Guide](https://spring.io/guides/gs/cloud-circuit-breaker/)
