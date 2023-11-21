@@ -11,3 +11,9 @@ public RestTemplateBuilder restTemplateBuilder(RestTemplateBuilderConfigurer con
 % endHighlight %
 }
 ```
+
+### Downstream Endpoints
+Ensure to configure timeouts for each of the following downstream endpoints:
+${target.application.http-outgoing-calls[]:ul}
+
+
