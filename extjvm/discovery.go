@@ -5,10 +5,12 @@
 package extjvm
 
 import (
+	"context"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_commons"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_sdk"
 	"github.com/steadybit/extension-jvm/config"
 	"github.com/steadybit/extension-jvm/extjvm/controller"
 	"github.com/steadybit/extension-jvm/extjvm/hotspot"
@@ -16,43 +18,39 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
-	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
-	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
-const discoveryBasePath = basePath + "/discovery"
-
-func RegisterDiscoveryHandlers() {
-	exthttp.RegisterHttpHandler(discoveryBasePath, exthttp.GetterAsHandler(getDiscoveryDescription))
-	exthttp.RegisterHttpHandler(discoveryBasePath+"/target-description", exthttp.GetterAsHandler(getTargetDescription))
-	exthttp.RegisterHttpHandler(discoveryBasePath+"/attribute-descriptions", exthttp.GetterAsHandler(getAttributeDescriptions))
-	exthttp.RegisterHttpHandler(discoveryBasePath+"/discovered-targets", getDiscoveredTargets)
-	exthttp.RegisterHttpHandler(discoveryBasePath+"/rules/container-to-jvm", exthttp.GetterAsHandler(getContainerToJvmEnrichmentRule))
-	exthttp.RegisterHttpHandler(discoveryBasePath+"/rules/jvm-to-container", exthttp.GetterAsHandler(getJvmToContainerEnrichmentRule))
-	exthttp.RegisterHttpHandler(discoveryBasePath+"/rules/k8s-container-to-jvm", exthttp.GetterAsHandler(getKubernetesContainerToJvmEnrichmentRule))
-
+type jvmDiscovery struct {
 }
 
-func InitDiscovery() {
+var (
+	_ discovery_kit_sdk.TargetDescriber          = (*jvmDiscovery)(nil)
+	_ discovery_kit_sdk.AttributeDescriber       = (*jvmDiscovery)(nil)
+	_ discovery_kit_sdk.EnrichmentRulesDescriber = (*jvmDiscovery)(nil)
+)
 
-	// Shutdown Discovery on SIGTERM
-	InstallSignalHandler()
+func NewJvmDiscovery() discovery_kit_sdk.TargetDiscovery {
+	discovery := &jvmDiscovery{}
+	return discovery_kit_sdk.NewCachedTargetDiscovery(discovery,
+		discovery_kit_sdk.WithRefreshTargetsNow(),
+		discovery_kit_sdk.WithRefreshTargetsInterval(context.Background(), 30*time.Second),
+	)
+}
 
-	//Start Java agent controller
+func StartJvmInfrastructure() {
+	installSignalHandler()
+
 	controller.Start(config.Config.JavaAgentAttachmentPort)
 
-	//Init discover Datasources
-	InitDataSourceDiscovery()
-	//Init discover Spring Applications
-	InitSpringDiscovery()
-	// Start listening for JVM events
-	AddJVMListener()
+	initDataSourceDiscovery()
+	initSpringDiscovery()
+	addJVMListener()
 
-	//Start attaching to JVMs
-	StartAttachment()
+	startAttachment()
 
 	// Start JVM Watcher
 	java_process.Start()
@@ -60,56 +58,17 @@ func InitDiscovery() {
 	hotspot.Start()
 }
 
-func GetDiscoveryList() discovery_kit_api.DiscoveryList {
-	return discovery_kit_api.DiscoveryList{
-		Discoveries: []discovery_kit_api.DescribingEndpointReference{
-			{
-				Method: "GET",
-				Path:   discoveryBasePath,
-			},
-		},
-		TargetTypes: []discovery_kit_api.DescribingEndpointReference{
-			{
-				Method: "GET",
-				Path:   discoveryBasePath + "/target-description",
-			},
-		},
-		TargetAttributes: []discovery_kit_api.DescribingEndpointReference{
-			{
-				Method: "GET",
-				Path:   discoveryBasePath + "/attribute-descriptions",
-			},
-		},
-		TargetEnrichmentRules: []discovery_kit_api.DescribingEndpointReference{
-			{
-				Method: "GET",
-				Path:   discoveryBasePath + "/rules/k8s-container-to-jvm",
-			},
-			{
-				Method: "GET",
-				Path:   discoveryBasePath + "/rules/container-to-jvm",
-			},
-			{
-				Method: "GET",
-				Path:   discoveryBasePath + "/rules/jvm-to-container",
-			},
-		},
-	}
-}
-
-func getDiscoveryDescription() discovery_kit_api.DiscoveryDescription {
+func (j *jvmDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
 	return discovery_kit_api.DiscoveryDescription{
 		Id:         targetID,
 		RestrictTo: extutil.Ptr(discovery_kit_api.LEADER),
 		Discover: discovery_kit_api.DescribingEndpointReferenceWithCallInterval{
-			Method:       "GET",
-			Path:         discoveryBasePath + "/discovered-targets",
 			CallInterval: extutil.Ptr(config.Config.DiscoveryCallInterval),
 		},
 	}
 }
 
-func getTargetDescription() discovery_kit_api.TargetDescription {
+func (j *jvmDiscovery) DescribeTarget() discovery_kit_api.TargetDescription {
 	return discovery_kit_api.TargetDescription{
 		Id:      targetID,
 		Version: extbuild.GetSemverVersionStringOrUnknown(),
@@ -137,6 +96,14 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
 				},
 			},
 		},
+	}
+}
+
+func (j *jvmDiscovery) DescribeEnrichmentRules() []discovery_kit_api.TargetEnrichmentRule {
+	return []discovery_kit_api.TargetEnrichmentRule{
+		getKubernetesContainerToJvmEnrichmentRule(),
+		getContainerToJvmEnrichmentRule(),
+		getJvmToContainerEnrichmentRule(),
 	}
 }
 
@@ -286,73 +253,71 @@ func getJvmToContainerEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
 	}
 }
 
-func getAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
-	return discovery_kit_api.AttributeDescriptions{
-		Attributes: []discovery_kit_api.AttributeDescription{
-			{
-				Attribute: "application.name",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "Application Name",
-					Other: "Application Names",
-				},
+func (j *jvmDiscovery) DescribeAttributes() []discovery_kit_api.AttributeDescription {
+	return []discovery_kit_api.AttributeDescription{
+		{
+			Attribute: "application.name",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "Application Name",
+				Other: "Application Names",
 			},
-			{
-				Attribute: "application.type",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "Application Type",
-					Other: "Application Types",
-				},
-			}, {
-				Attribute: "application.hostname",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "Application Hostname",
-					Other: "Application Hostnames",
-				},
+		},
+		{
+			Attribute: "application.type",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "Application Type",
+				Other: "Application Types",
 			},
-			{
-				Attribute: "process.pid",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "Process Pid",
-					Other: "Process Pids",
-				},
+		}, {
+			Attribute: "application.hostname",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "Application Hostname",
+				Other: "Application Hostnames",
 			},
-			{
-				Attribute: "k8s.container.name",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "container name",
-					Other: "container names",
-				},
+		},
+		{
+			Attribute: "process.pid",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "Process Pid",
+				Other: "Process Pids",
 			},
-			{
-				Attribute: "k8s.namespace",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "Namespace name",
-					Other: "Namespace names",
-				},
+		},
+		{
+			Attribute: "k8s.container.name",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "container name",
+				Other: "container names",
 			},
-			{
-				Attribute: "k8s.cluster-name",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "Cluster name",
-					Other: "Cluster names",
-				},
+		},
+		{
+			Attribute: "k8s.namespace",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "Namespace name",
+				Other: "Namespace names",
 			},
-			{
-				Attribute: "k8s.deployment",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "deployment name",
-					Other: "deployment names",
-				},
+		},
+		{
+			Attribute: "k8s.cluster-name",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "Cluster name",
+				Other: "Cluster names",
+			},
+		},
+		{
+			Attribute: "k8s.deployment",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "deployment name",
+				Other: "deployment names",
 			},
 		},
 	}
 }
 
-func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
+func (j *jvmDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.Target, error) {
 	vms := GetJVMs()
-	targets := make([]discovery_kit_api.Target, len(vms))
-	for i, vm := range vms {
-		targets[i] = discovery_kit_api.Target{
+	targets := make([]discovery_kit_api.Target, 0, len(vms))
+	for _, vm := range vms {
+		targets = append(targets, discovery_kit_api.Target{
 			Id:         fmt.Sprintf("%s/%d", vm.Hostname, vm.Pid),
 			TargetType: targetID,
 			Label:      getApplicationName(vm, "?"),
@@ -364,12 +329,11 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 				"application.hostname":  {vm.Hostname},
 				"host.hostname":         {vm.Hostname},
 			},
-		}
+		})
 	}
-	// enhance with spring infos
 	enhanceTargetsWithSpringAttributes(targets)
 	enhanceTargetsWithDataSourceAttributes(targets)
-	exthttp.WriteBody(w, discovery_kit_api.DiscoveryData{Targets: extutil.Ptr(discovery_kit_commons.ApplyAttributeExcludes(targets, config.Config.DiscoveryAttributesExcludesJVM))})
+	return discovery_kit_commons.ApplyAttributeExcludes(targets, config.Config.DiscoveryAttributesExcludesJVM), nil
 }
 
 func enhanceTargetsWithDataSourceAttributes(targets []discovery_kit_api.Target) {

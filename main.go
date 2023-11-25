@@ -10,6 +10,7 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/advice-kit/go/advice_kit_api"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_sdk"
 	"github.com/steadybit/extension-jvm/config"
 	"github.com/steadybit/extension-jvm/extjvm"
 	"github.com/steadybit/extension-kit/extbuild"
@@ -54,7 +55,7 @@ func main() {
 	// This is a section you will most likely want to change: The registration of HTTP handlers
 	// for your extension. You might want to change these because the names do not fit, or because
 	// you do not have a need for all of them.
-	extjvm.RegisterDiscoveryHandlers()
+	discovery_kit_sdk.Register(extjvm.NewJvmDiscovery())
 	action_kit_sdk.RegisterAction(extjvm.NewControllerDelay())
 	action_kit_sdk.RegisterAction(extjvm.NewControllerException())
 	action_kit_sdk.RegisterAction(extjvm.NewJdbcTemplateException())
@@ -68,7 +69,7 @@ func main() {
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
 
-	extjvm.InitDiscovery()
+	extjvm.StartJvmInfrastructure()
 
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)
@@ -98,7 +99,7 @@ func getExtensionList() ExtensionListResponse {
 
 		// See this document to learn more about the discovery list:
 		// https://github.com/steadybit/discovery-kit/blob/main/docs/discovery-api.md#index-response
-		DiscoveryList: extjvm.GetDiscoveryList(),
+		DiscoveryList: discovery_kit_sdk.GetDiscoveryList(),
 		AdviceList: advice_kit_api.AdviceList{
 			Advice: getAdviceRefs(),
 		},
