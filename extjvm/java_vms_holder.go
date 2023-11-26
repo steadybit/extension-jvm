@@ -59,7 +59,7 @@ func RemoveListener(listener Listener) {
 	}
 }
 
-func AddJVMListener() {
+func addJVMListener() {
 	java_process.AddListener(&JavaVMS{})
 	hotspot.AddListener(&JavaVMS{})
 }
@@ -363,7 +363,7 @@ func isExcluded(vm *jvm.JavaVm) bool {
 	return false
 }
 
-func InstallSignalHandler() {
+func installSignalHandler() {
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
 	go func(signals <-chan os.Signal) {

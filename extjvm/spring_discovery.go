@@ -91,7 +91,7 @@ func FindSpringApplication(pid int32) *SpringApplication {
 	return nil
 }
 
-func InitSpringDiscovery() {
+func initSpringDiscovery() {
 	log.Info().Msg("Init Spring Plugin")
 	AddAutoloadAgentPlugin(SpringPlugin, SpringMarkerClass)
 	AddAttachedListener(SpringDiscovery{})

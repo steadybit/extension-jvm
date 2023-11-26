@@ -55,7 +55,7 @@ func GetDataSourceApplications() []DataSourceApplication {
 	return result
 }
 
-func InitDataSourceDiscovery() {
+func initDataSourceDiscovery() {
 	log.Info().Msg("Init DataSource Plugin")
 	AddAutoloadAgentPlugin(DataSourcePlugin, DataSourceMarkerClass)
 	AddAttachedListener(DataSourceDiscovery{})

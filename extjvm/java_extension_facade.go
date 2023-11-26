@@ -62,7 +62,7 @@ var (
 	SocketTimeout = 10 * time.Second
 )
 
-func StartAttachment() {
+func startAttachment() {
 	attachmentEnabled := os.Getenv("STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED")
 	if attachmentEnabled != "" && strings.ToLower(attachmentEnabled) != "true" {
 		return
