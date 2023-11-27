@@ -11,7 +11,7 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.8.0
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.8
-	github.com/steadybit/action-kit/go/action_kit_test v1.2.1
+	github.com/steadybit/action-kit/go/action_kit_test v1.2.3
 	github.com/steadybit/advice-kit/go/advice_kit_api v0.0.1-beta.6
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_commons v0.1.0
@@ -117,7 +117,7 @@ require (
 	golang.org/x/crypto v0.15.0 // indirect
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
 	golang.org/x/net v0.18.0 // indirect
-	golang.org/x/oauth2 v0.12.0 // indirect
+	golang.org/x/oauth2 v0.13.0 // indirect
 	golang.org/x/term v0.14.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.4.0 // indirect
