@@ -30,7 +30,7 @@ func getAdviceDescriptionHttpCallCircuitBreaker() advice_kit_api.AdviceDefinitio
 
 	return advice_kit_api.AdviceDefinition{
 		Id:                        HttpCallCircuitBreakerID,
-		Label:                     "Circuit Breaker",
+		Label:                     "Request Endpoints via Circuit Breaker",
 		Version:                   extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:                      targetIcon,
 		Tags:                      &[]string{"java", "jvm", "spring", "http", "circuit-breaker"},
@@ -71,7 +71,7 @@ func getAdviceDescriptionHttpCallTimeout() advice_kit_api.AdviceDefinition {
 
 	return advice_kit_api.AdviceDefinition{
 		Id:                        HttpCallTimeoutID,
-		Label:                     "Timeouts",
+		Label:                     "Request Endpoints with Timeouts",
 		Version:                   extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:                      targetIcon,
 		Tags:                      &[]string{"java", "jvm", "spring", "http", "timeout"},
