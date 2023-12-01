@@ -57,7 +57,7 @@ func getAdviceDescriptionHttpCallCircuitBreaker() advice_kit_api.AdviceDefinitio
 					{
 						Id:          targetID + ".advice.http-call-circuit-breaker.experiment-1",
 						Name:        "Backend Service Issues",
-						Description: "When calling external services, problems with response time, errors, etc. can occur again and again. Your service should be able to handle this well. An experiment can be used to simulate an incorrect response behavior in order to check what effects this has on the affected component. Also, the correct functionality of an implemented circuit breaker should always be validated with an experiment.",
+						ShortDescription: "When calling external services, problems with response time, errors, etc. can occur again and again. Your service should be able to handle this well. An experiment can be used to simulate an incorrect response behavior in order to check what effects this has on the affected component. Also, the correct functionality of an implemented circuit breaker should always be validated with an experiment.",
 						Type:        "EXPERIMENT",
 						Experiment:  extutil.Ptr(advice_kit_api.Experiment(readLocalFile(httpCallCircuitBreakerContent, "advice_templates/http_call_circuit_breaker/experiment_backend_service_issues.json"))),
 					},
@@ -99,7 +99,7 @@ func getAdviceDescriptionHttpCallTimeout() advice_kit_api.AdviceDefinition {
 						Id:          targetID + ".advice.http-call-timeout.experiment-1",
 						Name:        "Response Time Issues",
 						Type:        "EXPERIMENT",
-						Description: "Validate with an experiment if the service can handle longer response times well and also check if the set timeout has the desired effect.",
+						ShortDescription: "Validate with an experiment if the service can handle longer response times well and also check if the set timeout has the desired effect.",
 						Experiment:  extutil.Ptr(advice_kit_api.Experiment(readLocalFile(httpCallTimeoutContent, "advice_templates/http_call_timeout/experiment_response_time_issues.json"))),
 					},
 				}),
