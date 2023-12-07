@@ -69,7 +69,7 @@ func (j *JavaVMS) NewJavaProcess(p *process.Process) bool {
 	if !ok && java_process.IsRunning(p) {
 		vm := createJvm(p)
 		if vm != nil {
-			log.Info().Msgf("Discovered JVM %s via process with pid %s", vm.VmName, string(p.Pid))
+			log.Info().Msgf("Discovered JVM %s via process with pid %d", vm.VmName, p.Pid)
 			addJvm(vm)
 			return true
 		}
@@ -83,7 +83,7 @@ func (j *JavaVMS) NewHotspotProcess(p *process.Process) bool {
 	if !ok && java_process.IsRunning(p) {
 		vm := createJvm(p)
 		if vm != nil {
-			log.Info().Msgf("Discovered JVM %s via hotspot with pid %s", vm.VmName, string(p.Pid))
+			log.Info().Msgf("Discovered JVM %s via hotspot with pid %d", vm.VmName, p.Pid)
 			addJvm(vm)
 			return true
 		}
@@ -118,11 +118,12 @@ func removeStoppedJvms() {
 		vm := value.(jvm.JavaVm)
 		p, err := process.NewProcess(vm.Pid)
 		if err != nil {
-			log.Trace().Err(err).Msg("Process not found")
+			log.Trace().Err(err).Msg("Process not found: " + strconv.Itoa(int(vm.Pid)) + " - removing from JVMs. Error: " + err.Error())
 			removeJVM(key, vm)
 			return true
 		}
 		if !java_process.IsRunning(p) {
+			log.Trace().Msg("Process not running: " + strconv.Itoa(int(vm.Pid)) + " - removing from JVMs")
 			removeJVM(key, vm)
 		}
 		return true

@@ -10,6 +10,7 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-kit/extutil"
 	"io"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -119,23 +120,23 @@ func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
 	schedulerHolder.scheduledSpringDiscoveryTask30s = task30s
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 30s interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+		log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 30s interval for VM Name: " + vm.VmName + " and PID: " + strconv.Itoa(int(vm.Pid)))
 		return
 	} else {
-		log.Info().Msg("Spring Watcher Task in 30s interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+		log.Info().Msg("Spring Watcher Task in 30s interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + strconv.Itoa(int(vm.Pid)))
 	}
 
 	go func() {
 		time.Sleep(5 * time.Minute)
 		task30s.Cancel()
-		log.Info().Msg("Spring Watcher in 30s interval has been canceled for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+		log.Info().Msg("Spring Watcher in 30s interval has been canceled for VM Name: " + vm.VmName + " and PID: " + strconv.Itoa(int(vm.Pid)))
 		task60s, err := scheduleSpringDiscoveryForVM(60*time.Second, vm)
 		schedulerHolder.scheduledSpringDiscoveryTask60s = task60s
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 60s interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+			log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 60s interval for VM Name: " + vm.VmName + " and PID: " + strconv.Itoa(int(vm.Pid)))
 			return
 		} else {
-			log.Info().Msg("Spring Watcher Task in 60s interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+			log.Info().Msg("Spring Watcher Task in 60s interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + strconv.Itoa(int(vm.Pid)))
 		}
 		go func() {
 			time.Sleep(5 * time.Minute)
@@ -144,10 +145,10 @@ func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
 			task15m, err := scheduleSpringDiscoveryForVM(15*time.Minute, vm)
 			schedulerHolder.scheduledSpringDiscoveryTask15m = task15m
 			if err != nil {
-				log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 15m interval for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+				log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 15m interval for VM Name: " + vm.VmName + " and PID: " + strconv.Itoa(int(vm.Pid)))
 				return
 			} else {
-				log.Info().Msg("Spring Watcher Task in 15m interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + string(vm.Pid))
+				log.Info().Msg("Spring Watcher Task in 15m interval has been scheduled successfully for VM Name: " + vm.VmName + " and PID: " + strconv.Itoa(int(vm.Pid)))
 			}
 		}()
 

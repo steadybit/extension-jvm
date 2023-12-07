@@ -171,7 +171,7 @@ func loadAgentPluginJob(job LoadPluginJvmWork) {
 	if err != nil || !success {
 		log.Error().Msgf("Error loading plugin %s for JVM %+v: %s", job.plugin, job.jvm, err)
 		go func() {
-			time.Sleep(time.Duration(60/job.retries) * time.Second)
+			time.Sleep(time.Duration(120/job.retries) * time.Second)
 			// do retry
 			scheduleLoadAgentPlugin(job.jvm, job.plugin, job.args, job.retries)
 		}()
@@ -444,7 +444,7 @@ func loadAutoLoadPlugin(jvm *jvm.JavaVm, markerClass string, plugin string) {
 	log.Info().Msgf("Autoloading plugin %s for %s", plugin, jvm.ToDebugString())
 	if HasClassLoaded(jvm, markerClass) {
 		log.Info().Msgf("Sending plugin %s for %s: %s", plugin, jvm.ToDebugString(), markerClass)
-		scheduleLoadAgentPlugin(jvm, plugin, "", 5)
+		scheduleLoadAgentPlugin(jvm, plugin, "", 6)
 	}
 }
 
