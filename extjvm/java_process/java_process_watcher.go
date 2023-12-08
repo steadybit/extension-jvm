@@ -28,7 +28,7 @@ var (
 	ignoredPidsMutex    sync.Mutex
 	ignoredPids         []int32
 	listeners           []Listener
-	RunningStates       = []string{"R", "W", "S"} // Running, Waiting, Sleeping
+	RunningStates       = []string{"R", "W", "S", "I", "L"} // Running, Waiting, Sleeping
 
 	discoveryJobs = make(chan DiscoveryWork)
 )
@@ -89,6 +89,7 @@ func updatePids() {
 	}
 	for _, p := range processes {
 		if utils.Contains(ignoredPids, p.Pid) {
+			log.Trace().Msgf("Process %d is ignored", p.Pid)
 			continue
 		}
 		discover(p, initialRetries)
@@ -101,7 +102,7 @@ func discoverProcessJVM(job DiscoveryWork) {
 			if !checkProcessPathAvailable(job.p) {
 				log.Debug().Msgf("Process %d is running but path is not available yet.", job.p.Pid)
 				go func() {
-					time.Sleep(1 * time.Minute)
+					time.Sleep(2 * time.Minute)
 					discover(job.p, job.retries)
 				}()
 				return
@@ -112,7 +113,7 @@ func discoverProcessJVM(job DiscoveryWork) {
 			} else {
 				//retry
 				go func() {
-					time.Sleep(30 * time.Second)
+					time.Sleep(1 * time.Minute)
 					discover(job.p, job.retries)
 				}()
 			}
@@ -192,7 +193,7 @@ func GetProcessPath(p *process.Process) (string, error) {
 	if err != nil {
 		exe, err := p.Exe()
 		if err != nil {
-			log.Debug().Err(err).Msg("Failed to get process exe, maybe it's not running anymore")
+			log.Debug().Err(err).Msgf("Failed to get process exe, maybe it's not running anymore. Pid: %d. Error: %s", p.Pid, err.Error())
 			return "", err
 		}
 		output = []byte(exe)
@@ -203,7 +204,7 @@ func GetProcessPath(p *process.Process) (string, error) {
 func IsRunning(p *process.Process) bool {
 	status, err := p.Status()
 	if err != nil {
-		log.Trace().Err(err).Msg("Failed to get process status")
+		log.Trace().Err(err).Msgf("Failed to get process status. Pid: %d. Error: %s", p.Pid, err.Error())
 		return false
 	}
 	return utils.ContainsString(RunningStates, status)

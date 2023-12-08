@@ -66,14 +66,19 @@ func addJVMListener() {
 
 func (j *JavaVMS) NewJavaProcess(p *process.Process) bool {
 	_, ok := jvms.Load(p.Pid)
-	if !ok && java_process.IsRunning(p) {
-		vm := createJvm(p)
-		if vm != nil {
-			log.Info().Msgf("Discovered JVM %s via process with pid %d", vm.VmName, p.Pid)
-			addJvm(vm)
-			return true
+	if !ok {
+		if java_process.IsRunning(p) {
+			vm := createJvm(p)
+			if vm != nil {
+				log.Info().Msgf("Discovered JVM %s via process with pid %d", vm.VmName, p.Pid)
+				addJvm(vm)
+				return true
+			}
+			return false
+		} else {
+			log.Trace().Msgf("Process %d is not running anymore", p.Pid)
+			return false
 		}
-		return false
 	}
 	return true
 }
