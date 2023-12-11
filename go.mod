@@ -11,7 +11,7 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.8.0
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.8
-	github.com/steadybit/action-kit/go/action_kit_test v1.2.6
+	github.com/steadybit/action-kit/go/action_kit_test v1.2.7
 	github.com/steadybit/advice-kit/go/advice_kit_api v0.0.1-beta.7
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_commons v0.1.0
@@ -44,7 +44,7 @@ require (
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/flosch/pongo2/v4 v4.0.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
-	github.com/getkin/kin-openapi v0.121.0 // indirect
+	github.com/getkin/kin-openapi v0.122.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.9.1 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
