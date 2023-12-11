@@ -207,7 +207,11 @@ func IsRunning(p *process.Process) bool {
 		log.Trace().Err(err).Msgf("Failed to get process status. Pid: %d. Error: %s", p.Pid, err.Error())
 		return false
 	}
-	return utils.ContainsString(RunningStates, status)
+	containsString := utils.ContainsString(RunningStates, status)
+	if !containsString {
+		log.Warn().Msgf("Process %d is not running. Status: %s", p.Pid, status)
+	}
+	return containsString
 }
 
 func IsRunningProcess(pid int32) bool {
