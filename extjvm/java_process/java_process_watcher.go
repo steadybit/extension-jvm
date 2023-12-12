@@ -117,6 +117,13 @@ func discoverProcessJVM(job DiscoveryWork) {
 					discover(job.p, job.retries)
 				}()
 			}
+		} else {
+			log.Trace().Msgf("Process %d is not running actually", job.p.Pid)
+			go func() {
+				time.Sleep(1 * time.Minute)
+				discover(job.p, job.retries)
+			}()
+			return
 		}
 	}
 }
@@ -124,6 +131,17 @@ func discoverProcessJVM(job DiscoveryWork) {
 func addPidToDiscoveredPids(job DiscoveryWork) {
 	discoveredPidsMutex.Lock()
 	discoveredPids = append(discoveredPids, job.p.Pid)
+	discoveredPidsMutex.Unlock()
+}
+
+func RemovePidFromDiscoveredPids(pid int32) {
+	discoveredPidsMutex.Lock()
+	for i, p := range discoveredPids {
+		if p == pid {
+			discoveredPids = append(discoveredPids[:i], discoveredPids[i+1:]...)
+			break
+		}
+	}
 	discoveredPidsMutex.Unlock()
 }
 
@@ -209,7 +227,7 @@ func IsRunning(p *process.Process) bool {
 	}
 	containsString := utils.ContainsString(RunningStates, status)
 	if !containsString {
-		log.Warn().Msgf("Process %d is not running. Status: %s", p.Pid, status)
+		log.Trace().Msgf("Process %d is not running. Status: %s", p.Pid, status)
 	}
 	return containsString
 }

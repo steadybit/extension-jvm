@@ -128,7 +128,7 @@ func removeStoppedJvms() {
 			return true
 		}
 		if !java_process.IsRunning(p) {
-			log.Trace().Msg("Process not running: " + strconv.Itoa(int(vm.Pid)) + " - removing from JVMs")
+			log.Warn().Msgf("Process not running: %s: %s - removing from JVMs ", strconv.Itoa(int(vm.Pid)), vm.MainClass)
 			removeJVM(key, vm)
 		}
 		return true
@@ -137,6 +137,7 @@ func removeStoppedJvms() {
 
 func removeJVM(key interface{}, vm jvm.JavaVm) {
 	jvms.Delete(key)
+	java_process.RemovePidFromDiscoveredPids(vm.Pid)
 	log.Debug().Msgf("Removing JVM %s", vm.ToDebugString())
 	for _, listener := range listeners {
 		listener.RemovedJvm(&vm)
