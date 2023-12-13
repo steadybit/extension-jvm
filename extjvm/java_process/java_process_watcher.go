@@ -2,6 +2,7 @@ package java_process
 
 import (
 	"context"
+	"fmt"
 	"github.com/procyon-projects/chrono"
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/process"
@@ -23,12 +24,11 @@ type DiscoveryWork struct {
 }
 
 var (
-	discoveredPidsMutex sync.Mutex
-	discoveredPids      []int32
-	ignoredPidsMutex    sync.Mutex
-	ignoredPids         []int32
-	listeners           []Listener
-	RunningStates       = []string{"R", "W", "S", "I", "L"} // Running, Waiting, Sleeping
+	discoveredPids   sync.Map
+	ignoredPidsMutex sync.Mutex
+	ignoredPids      []string
+	listeners        []Listener
+	RunningStates    = []string{"R", "W", "S", "I", "L"} // Running, Waiting, Sleeping
 
 	discoveryJobs = make(chan DiscoveryWork)
 )
@@ -56,7 +56,7 @@ func Start() {
 	_, err = taskScheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
 		// Clear ignored pids because they might be reused
 		ignoredPidsMutex.Lock()
-		ignoredPids = []int32{}
+		ignoredPids = []string{}
 		ignoredPidsMutex.Unlock()
 	}, 1*time.Hour)
 
@@ -88,7 +88,13 @@ func updatePids() {
 		return
 	}
 	for _, p := range processes {
-		if utils.Contains(ignoredPids, p.Pid) {
+		createTime, err := p.CreateTime()
+		if err != nil {
+			log.Err(err).Msgf("Failed to get process creation time. Pid: %d. Error: %s", p.Pid, err.Error())
+			return
+		}
+		cacheId := createCacheId(p.Pid, createTime)
+		if utils.ContainsString(ignoredPids, cacheId) {
 			log.Trace().Msgf("Process %d is ignored", p.Pid)
 			continue
 		}
@@ -96,8 +102,18 @@ func updatePids() {
 	}
 }
 
+func createCacheId(pid int32, createTime int64) string {
+	return fmt.Sprintf("%d-%d", pid, createTime)
+}
+
 func discoverProcessJVM(job DiscoveryWork) {
-	if !utils.Contains(discoveredPids, job.p.Pid) {
+	createTime, err := job.p.CreateTime()
+	if err != nil {
+		log.Err(err).Msgf("Failed to get process creation time. Pid: %d. Error: %s", job.p.Pid, err.Error())
+		return
+	}
+	cacheId := createCacheId(job.p.Pid, createTime)
+	if _, ok := discoveredPids.Load(cacheId); !ok {
 		if IsRunning(job.p) {
 			if !checkProcessPathAvailable(job.p) {
 				log.Debug().Msgf("Process %d is running but path is not available yet.", job.p.Pid)
@@ -129,25 +145,34 @@ func discoverProcessJVM(job DiscoveryWork) {
 }
 
 func addPidToDiscoveredPids(job DiscoveryWork) {
-	discoveredPidsMutex.Lock()
-	discoveredPids = append(discoveredPids, job.p.Pid)
-	discoveredPidsMutex.Unlock()
+	createTime, err := job.p.CreateTime()
+	if err != nil {
+		log.Err(err).Msgf("Failed to get process creation time. Pid: %d. Error: %s", job.p.Pid, err.Error())
+		return
+	}
+	cacheId := createCacheId(job.p.Pid, createTime)
+	discoveredPids.Store(cacheId, job.p.Pid)
 }
 
 func RemovePidFromDiscoveredPids(pid int32) {
-	discoveredPidsMutex.Lock()
-	for i, p := range discoveredPids {
-		if p == pid {
-			discoveredPids = append(discoveredPids[:i], discoveredPids[i+1:]...)
-			break
+	discoveredPids.Range(func(key, value interface{}) bool {
+		if value.(int32) == pid {
+			discoveredPids.Delete(key)
+			return false
 		}
-	}
-	discoveredPidsMutex.Unlock()
+		return true
+	})
 }
 
 func addPidToIgnoredPids(job DiscoveryWork) {
+	createTime, err := job.p.CreateTime()
+	if err != nil {
+		log.Err(err).Msgf("Failed to get process creation time. Pid: %d. Error: %s", job.p.Pid, err.Error())
+		return
+	}
+	cacheId := createCacheId(job.p.Pid, createTime)
 	ignoredPidsMutex.Lock()
-	ignoredPids = append(ignoredPids, job.p.Pid)
+	ignoredPids = append(ignoredPids, cacheId)
 	ignoredPidsMutex.Unlock()
 }
 
@@ -166,16 +191,15 @@ func notifyListenersForNewProcess(p *process.Process) bool {
 
 func AddListener(listener Listener) {
 	listeners = append(listeners, listener)
-	for _, pid := range discoveredPids {
-		p, err := process.NewProcess(pid)
+	discoveredPids.Range(func(key, pid interface{}) bool {
+		p, err := process.NewProcess(pid.(int32))
 		if err != nil {
 			log.Warn().Err(err).Msg("Error in listener for notifyListenersForNewProcess")
-			continue
-		}
-		if isJava(p) {
+		} else if isJava(p) {
 			listener.NewJavaProcess(p)
 		}
-	}
+		return true
+	})
 }
 
 func RemoveListener(listener Listener) {
