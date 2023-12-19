@@ -148,10 +148,8 @@ func testSpringDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.application")
 		springBootSample2.Delete()
 	}
-
-
-
-
+	springBootSample = deploySpringBootSample(t, m)
+	springBootSample.AssertIsReachable(t, true)
 }
 
 func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extension) discovery_kit_api.Target {
