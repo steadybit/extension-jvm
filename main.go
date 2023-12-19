@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/advice-kit/go/advice_kit_api"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_sdk"
 	"github.com/steadybit/extension-jvm/config"
@@ -64,7 +63,6 @@ func main() {
 	action_kit_sdk.RegisterAction(extjvm.NewHttpClientDelay())
 	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodDelay())
 	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodException())
-	extjvm.RegisterAdviceHandlers()
 
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
@@ -88,7 +86,6 @@ func main() {
 type ExtensionListResponse struct {
 	action_kit_api.ActionList       `json:",inline"`
 	discovery_kit_api.DiscoveryList `json:",inline"`
-	advice_kit_api.AdviceList       `json:",inline"`
 }
 
 func getExtensionList() ExtensionListResponse {
@@ -100,28 +97,5 @@ func getExtensionList() ExtensionListResponse {
 		// See this document to learn more about the discovery list:
 		// https://github.com/steadybit/discovery-kit/blob/main/docs/discovery-api.md#index-response
 		DiscoveryList: discovery_kit_sdk.GetDiscoveryList(),
-		AdviceList: advice_kit_api.AdviceList{
-			Advice: getAdviceRefs(),
-		},
 	}
-}
-
-func getAdviceRefs() []advice_kit_api.DescribingEndpointReference {
-	var refs []advice_kit_api.DescribingEndpointReference
-	refs = make([]advice_kit_api.DescribingEndpointReference, 0)
-	for _, adviceId := range config.Config.ActiveAdviceList {
-		if adviceId == "*" || adviceId == extjvm.HttpCallCircuitBreakerID {
-			refs = append(refs, advice_kit_api.DescribingEndpointReference{
-				Method: "GET",
-				Path:   "/jvm/advice/http-call-circuit-breaker",
-			})
-		}
-		if adviceId == "*" || adviceId == extjvm.HttpCallTimeoutID {
-			refs = append(refs, advice_kit_api.DescribingEndpointReference{
-				Method: "GET",
-				Path:   "/jvm/advice/http-call-timeout",
-			})
-		}
-	}
-	return refs
 }

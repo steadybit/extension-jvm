@@ -1,5 +1,9 @@
 # Changelog
 
+## Next Release
+
+- Removed jvm advice
+
 ## v1.0.12
 
 - Update dependencies

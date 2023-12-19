@@ -19,7 +19,6 @@ Learn about the capabilities of this extension in our [Reliability Hub](https://
 | `STEADYBIT_EXTENSION_JAVA_AGENT_ATTACHMENT_PORT`        |                                                        | java agent attachment port                                                                                                                                         | no       | 8095    |
 | `STEADYBIT_EXTENSION_CONTAINER_ADDRESS`                 |                                                        | public ip of the extension                                                                                                                                         | no       |         |
 | `STEADYBIT_EXTENSION_DISCOVERY_ATTRIBUTES_EXCLUDES_JVM` | `discovery.attributes.excludes.jvm`                    | List of Target Attributes which will be excluded during discovery. Checked by key equality and supporting trailing "*"                                             | false    |         |
-| `STEADYBIT_EXTENSION_ACTIVE_ADVICE_LIST`                |                                                        | List of active advice definitions, default is all (*). You can define a list of active adviceDefinitionId. See UI -> Settings -> Extension -> Advice -> Column: ID | false    | `*`     |
 
 The extension supports all environment variables provided by [steadybit/extension-kit](https://github.com/steadybit/extension-kit#environment-variables).
 
