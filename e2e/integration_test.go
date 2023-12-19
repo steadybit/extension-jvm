@@ -39,8 +39,7 @@ func TestWithMinikube(t *testing.T) {
 	}
 
 	mOpts := e2e.DefaultMinikubeOpts().
-		//WithRuntimes(e2e.RuntimeDocker, e2e.RuntimeContainerd).
-		WithRuntimes(e2e.RuntimeDocker).
+		WithRuntimes(e2e.RuntimeDocker, e2e.RuntimeContainerd).
 		AfterStart(func(m *e2e.Minikube) error {
 			springBootSample = deploySpringBootSample(t, m)
 			springBootSample.AssertIsReachable(t, true)
@@ -52,50 +51,50 @@ func TestWithMinikube(t *testing.T) {
 	}
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
-		//{
-		//	Name: "validate discovery",
-		//	Test: validateDiscovery,
-		//},
-		//{
-		//	Name: "discover spring boot sample",
-		//	Test: testDiscovery,
-		//},
+		{
+			Name: "validate discovery",
+			Test: validateDiscovery,
+		},
+		{
+			Name: "discover spring boot sample",
+			Test: testDiscovery,
+		},
 		{
 			Name: "discover spring boot sample as spring discovery",
 			Test: testSpringDiscovery,
 		},
-		//{
-		//	Name: "mvc delay",
-		//	Test: testMvcDelay,
-		//},
-		//{
-		//	Name: "mvc exception",
-		//	Test: testMvcException,
-		//},
-		//{
-		//	Name: "http client delay",
-		//	Test: testHttpClientDelay,
-		//},
-		//{
-		//	Name: "http client status",
-		//	Test: testHttpClientStatus,
-		//},
-		//{
-		//	Name: "java method delay",
-		//	Test: testJavaMethodDelay,
-		//},
-		//{
-		//	Name: "java method exception",
-		//	Test: testJavaMethodException,
-		//},
-		//{
-		//	Name: "jdbc template delay",
-		//	Test: testJDBCTemplateDelay,
-		//},
-		//{
-		//	Name: "jdbc template exception",
-		//	Test: testJDBCTemplateException,
-		//},
+		{
+			Name: "mvc delay",
+			Test: testMvcDelay,
+		},
+		{
+			Name: "mvc exception",
+			Test: testMvcException,
+		},
+		{
+			Name: "http client delay",
+			Test: testHttpClientDelay,
+		},
+		{
+			Name: "http client status",
+			Test: testHttpClientStatus,
+		},
+		{
+			Name: "java method delay",
+			Test: testJavaMethodDelay,
+		},
+		{
+			Name: "java method exception",
+			Test: testJavaMethodException,
+		},
+		{
+			Name: "jdbc template delay",
+			Test: testJDBCTemplateDelay,
+		},
+		{
+			Name: "jdbc template exception",
+			Test: testJDBCTemplateException,
+		},
 	})
 }
 
