@@ -165,12 +165,12 @@ func createContainerizedJvm(p *process.Process, containerId string, containerPid
 	}
 	hsPerfDataPath := filePaths[strconv.Itoa(int(containerPid))]
 	if hsPerfDataPath == "" {
-		log.Error().Msgf("Could not find hsperfdata path for container %s", containerId)
+		log.Debug().Msgf("Could not find hsperfdata path for container %s", containerId)
 		return nil
 	}
 	javaVm := parsePerfDataBuffer(p, hsPerfDataPath)
 	if javaVm == nil {
-		log.Error().Msgf("Could not parse hsperfdata for container %s", containerId)
+		log.Warn().Msgf("Could not parse hsperfdata for container %s", containerId)
 		return nil
 	}
 	javaVm.InContainerPid = int(containerPid)
