@@ -1,8 +1,9 @@
 # Changelog
 
-## Next Release
+## v1.0.13
 
 - Removed jvm advice
+- Fixed flaky spring discovery
 
 ## v1.0.12
 
