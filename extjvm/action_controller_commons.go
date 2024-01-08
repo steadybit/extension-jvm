@@ -16,7 +16,7 @@ var (
 		Required:    extutil.Ptr(true),
 		Options: extutil.Ptr([]action_kit_api.ParameterOption{
 			action_kit_api.ParameterOptionsFromTargetAttribute{
-				Attribute: "spring.mvc-mapping",
+				Attribute: "spring-instance.mvc-mapping",
 			},
 		}),
 	}
@@ -109,7 +109,7 @@ func extractHandlerMethods(_ action_kit_api.PrepareActionRequestBody, state *Con
 	if application == nil {
 		return &action_kit_api.PrepareResult{
 			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Spring application not found",
+				Title:  "Spring instance not found",
 				Status: extutil.Ptr(action_kit_api.Errored),
 			}),
 		}

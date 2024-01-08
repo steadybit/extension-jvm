@@ -169,7 +169,7 @@ func springDiscover(jvm *jvm.JavaVm) {
 	if hasSpringPlugin(jvm) {
 		springApplication := createSpringApplication(jvm)
 		SpringApplications.Store(jvm.Pid, springApplication)
-		log.Trace().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", springApplication.Name, jvm.Pid, springApplication)
+		log.Trace().Msgf("Spring Instance '%s' on PID %d has been discovered: %+v", springjvm-instance.name, jvm.Pid, springApplication)
 	}
 }
 
@@ -183,7 +183,7 @@ func createSpringApplication(vm *jvm.JavaVm) SpringApplication {
 		MvcMappings:        readRequestMappings(vm),
 		HttpClientRequests: readHttpClientRequest(vm),
 	}
-	log.Info().Msgf("Spring Application '%s' on PID %d has been discovered: %+v", app.Name, vm.Pid, app)
+	log.Info().Msgf("Spring Instance '%s' on PID %d has been discovered: %+v", app.Name, vm.Pid, app)
 	return app
 }
 
@@ -246,18 +246,18 @@ func isSpringBootApplication(vm *jvm.JavaVm) bool {
 }
 
 func readSpringApplicationName(vm *jvm.JavaVm) string {
-	result := SendCommandToAgentViaSocket(vm, "spring-env", "spring.application.name", func(rc string, response io.Reader) string {
+	result := SendCommandToAgentViaSocket(vm, "spring-env", "spring-instance.name", func(rc string, response io.Reader) string {
 		if rc == "OK" {
 			resultMessage, _ := GetCleanSocketCommandResult(response)
 			if resultMessage == "" {
-				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-env", "spring.application.name", vm.Pid, resultMessage)
+				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-env", "spring-instance.name", vm.Pid, resultMessage)
 				return ""
 			} else {
-				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned : %s", "spring-env", "spring.application.name", vm.Pid, resultMessage)
+				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned : %s", "spring-env", "spring-instance.name", vm.Pid, resultMessage)
 				return resultMessage
 			}
 		} else {
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-env", "spring.application.name", vm.Pid, rc)
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-env", "spring-instance.name", vm.Pid, rc)
 			return ""
 		}
 

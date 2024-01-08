@@ -32,7 +32,7 @@ func TestWithMinikube(t *testing.T) {
 		ExtraArgs: func(m *e2e.Minikube) []string {
 			return []string{
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
-				"--set", "discovery.attributes.excludes.jvm={spring.http-client}",
+				"--set", "discovery.attributes.excludes.jvm={spring-instance.http-client}",
 				"--set", "logging.level=INFO",
 			}
 		},
@@ -122,7 +122,7 @@ func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	if os.Getenv("CI") == "true" {
 		targetFashion, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.application", func(target discovery_kit_api.Target) bool {
 			log.Debug().Msgf("targetApplications: %+v", target.Attributes)
-			return e2e.HasAttribute(target, "application.name", "fashion-bestseller")
+			return e2e.HasAttribute(target, "jvm-instance.name", "fashion-bestseller")
 		})
 		require.NoError(t, err)
 		assert.Equal(t, targetFashion.TargetType, "com.steadybit.extension_jvm.application")
@@ -155,14 +155,14 @@ func testSpringDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extension) discovery_kit_api.Target {
 	target, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.application", func(target discovery_kit_api.Target) bool {
 		//log.Debug().Msgf("targetApplications: %+v", target.Attributes)
-		return e2e.HasAttribute(target, "application.name", "app") &&
-			e2e.HasAttribute(target, "application.type", "spring-boot") &&
-			e2e.HasAttribute(target, "spring.application.name", "spring-boot-sample") &&
+		return e2e.HasAttribute(target, "jvm-instance.name", "app") &&
+			e2e.HasAttribute(target, "instance.type", "spring-boot") &&
+			e2e.HasAttribute(target, "spring-instance.name", "spring-boot-sample") &&
 			e2e.HasAttribute(target, "datasource.jdbc-url", "jdbc:h2:mem:testdb") &&
-			e2e.HasAttribute(target, "spring.jdbc-template", "true")
+			e2e.HasAttribute(target, "spring-instance.jdbc-template", "true")
 	})
 	require.NoError(t, err)
-	assert.NotContains(t, target.Attributes, "spring.http-client")
+	assert.NotContains(t, target.Attributes, "spring-instance.http-client")
 	return target
 }
 
@@ -717,7 +717,7 @@ func getTarget(t *testing.T, e *e2e.Extension) *action_kit_api.Target {
 	discovered := getSpringBootSampleTarget(t, ctx, e)
 
 	target := action_kit_api.Target{
-		Name:       "spring.application.name",
+		Name:       "spring-instance.name",
 		Attributes: map[string][]string{},
 	}
 

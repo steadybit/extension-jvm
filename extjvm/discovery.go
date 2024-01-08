@@ -75,7 +75,7 @@ func (j *jvmDiscovery) DescribeTarget() discovery_kit_api.TargetDescription {
 		Icon:    extutil.Ptr(targetIcon),
 
 		// Labels used in the UI
-		Label: discovery_kit_api.PluralLabel{One: "JVM application", Other: "JVM applications"},
+		Label: discovery_kit_api.PluralLabel{One: "JVM instance", Other: "JVM instances"},
 
 		// Category for the targets to appear in
 		Category: extutil.Ptr(category),
@@ -83,15 +83,15 @@ func (j *jvmDiscovery) DescribeTarget() discovery_kit_api.TargetDescription {
 		// Specify attributes shown in table columns and to be used for sorting
 		Table: discovery_kit_api.Table{
 			Columns: []discovery_kit_api.Column{
-				{Attribute: "application.name"},
-				{Attribute: "application.type"},
+				{Attribute: "jvm-instance.name"},
+				{Attribute: "instance.type"},
 				{Attribute: "k8s.namespace"},
 				{Attribute: "k8s.cluster-name"},
 				{Attribute: "k8s.deployment"},
 			},
 			OrderBy: []discovery_kit_api.OrderBy{
 				{
-					Attribute: "application.name",
+					Attribute: "jvm-instance.name",
 					Direction: "ASC",
 				},
 			},
@@ -247,7 +247,7 @@ func getJvmToContainerEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
 		Attributes: []discovery_kit_api.Attribute{
 			{
 				Matcher: discovery_kit_api.Equals,
-				Name:    "application.name",
+				Name:    "jvm-instance.name",
 			},
 		},
 	}
@@ -256,23 +256,23 @@ func getJvmToContainerEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
 func (j *jvmDiscovery) DescribeAttributes() []discovery_kit_api.AttributeDescription {
 	return []discovery_kit_api.AttributeDescription{
 		{
-			Attribute: "application.name",
+			Attribute: "jvm-instance.name",
 			Label: discovery_kit_api.PluralLabel{
-				One:   "Application Name",
-				Other: "Application Names",
+				One:   "Instance Name",
+				Other: "Instance Names",
 			},
 		},
 		{
-			Attribute: "application.type",
+			Attribute: "instance.type",
 			Label: discovery_kit_api.PluralLabel{
-				One:   "Application Type",
-				Other: "Application Types",
+				One:   "Instance Type",
+				Other: "Instance Types",
 			},
 		}, {
-			Attribute: "application.hostname",
+			Attribute: "instance.hostname",
 			Label: discovery_kit_api.PluralLabel{
-				One:   "Application Hostname",
-				Other: "Application Hostnames",
+				One:   "Instance Hostname",
+				Other: "Instance Hostnames",
 			},
 		},
 		{
@@ -322,11 +322,11 @@ func (j *jvmDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.T
 			TargetType: targetID,
 			Label:      getApplicationName(vm, "?"),
 			Attributes: map[string][]string{
-				"application.type":      {"java"},
-				"application.name":      {getApplicationName(vm, "")},
+				"instance.type":      {"java"},
+				"jvm-instance.name":      {getApplicationName(vm, "")},
 				"container.id.stripped": {vm.ContainerId},
 				"process.pid":           {strconv.Itoa(int(vm.Pid))},
-				"application.hostname":  {vm.Hostname},
+				"instance.hostname":  {vm.Hostname},
 				"host.hostname":         {vm.Hostname},
 			},
 		})
@@ -353,17 +353,17 @@ func enhanceTargetsWithSpringAttributes(targets []discovery_kit_api.Target) {
 	for _, app := range springApplications {
 		target := findTargetByPid(targets, app.Pid)
 		if target != nil {
-			target.Attributes["application.name"] = utils.AppendIfMissing(target.Attributes["application.name"], app.Name)
-			target.Attributes["spring.application.name"] = []string{app.Name}
-			target.Attributes["application.type"] = append(target.Attributes["application.type"], "spring")
+			target.Attributes["jvm-instance.name"] = utils.AppendIfMissing(target.Attributes["jvm-instance.name"], app.Name)
+			target.Attributes["spring-instance.name"] = []string{app.Name}
+			target.Attributes["instance.type"] = append(target.Attributes["instance.type"], "spring")
 			if app.SpringBoot {
-				target.Attributes["application.type"] = append(target.Attributes["application.type"], "spring-boot")
+				target.Attributes["instance.type"] = append(target.Attributes["instance.type"], "spring-boot")
 			}
 			if app.UsingJdbcTemplate {
-				target.Attributes["spring.jdbc-template"] = []string{"true"}
+				target.Attributes["spring-instance.jdbc-template"] = []string{"true"}
 			}
 			if app.UsingHttpClient {
-				target.Attributes["spring.http-client"] = []string{"true"}
+				target.Attributes["spring-instance.http-client"] = []string{"true"}
 			}
 			addMvcMappings(target, app.MvcMappings)
 			addHttpClientRequests(target, app.HttpClientRequests)
@@ -376,12 +376,12 @@ func addHttpClientRequests(target *discovery_kit_api.Target, requests *[]HttpReq
 		return
 	}
 	for _, request := range *requests {
-		target.Attributes["application.http-outgoing-calls"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
+		target.Attributes["spring-instance.http-outgoing-calls"] = append(target.Attributes["spring-instance.http-outgoing-calls"], request.Address)
 		if !request.CircuitBreaker {
-			target.Attributes["application.http-outgoing-calls.missing-circuit-breaker"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
+			target.Attributes["spring-instance.http-outgoing-calls.missing-circuit-breaker"] = append(target.Attributes["spring-instance.http-outgoing-calls"], request.Address)
 		}
 		if request.Timeout == 0 {
-			target.Attributes["application.http-outgoing-calls.missing-timeout"] = append(target.Attributes["application.http-outgoing-calls"], request.Address)
+			target.Attributes["spring-instance.http-outgoing-calls.missing-timeout"] = append(target.Attributes["spring-instance.http-outgoing-calls"], request.Address)
 		}
 	}
 }
@@ -400,7 +400,7 @@ func addMvcMappings(target *discovery_kit_api.Target, mappings *[]SpringMvcMappi
 	}
 	log.Trace().Msgf("mappingsByPath: %v", mappingsByPath)
 	for pattern := range mappingsByPath {
-		target.Attributes["spring.mvc-mapping"] = append(target.Attributes["spring.mvc-mapping"], pattern)
+		target.Attributes["spring-instance.mvc-mapping"] = append(target.Attributes["spring-instance.mvc-mapping"], pattern)
 	}
 }
 
