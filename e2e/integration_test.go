@@ -117,15 +117,15 @@ func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	}
 
 	target := getSpringBootSampleTarget(t, ctx, e)
-	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.application")
+	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.instance")
 
 	if os.Getenv("CI") == "true" {
-		targetFashion, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.application", func(target discovery_kit_api.Target) bool {
+		targetFashion, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.instance", func(target discovery_kit_api.Target) bool {
 			log.Debug().Msgf("targetApplications: %+v", target.Attributes)
 			return e2e.HasAttribute(target, "jvm-instance.name", "fashion-bestseller")
 		})
 		require.NoError(t, err)
-		assert.Equal(t, targetFashion.TargetType, "com.steadybit.extension_jvm.application")
+		assert.Equal(t, targetFashion.TargetType, "com.steadybit.extension_jvm.instance")
 	}
 }
 
@@ -136,7 +136,7 @@ func testSpringDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 
 	target := getSpringBootSampleTarget(t, ctx, e)
-	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.application")
+	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.instance")
 
 	springBootSample.Delete()
 
@@ -145,7 +145,7 @@ func testSpringDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		springBootSample2 := deploySpringBootSample(t, m)
 		springBootSample2.AssertIsReachable(t, true)
 		target = getSpringBootSampleTarget(t, ctx, e)
-		assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.application")
+		assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.instance")
 		springBootSample2.Delete()
 	}
 	springBootSample = deploySpringBootSample(t, m)
@@ -153,7 +153,7 @@ func testSpringDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extension) discovery_kit_api.Target {
-	target, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.application", func(target discovery_kit_api.Target) bool {
+	target, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.instance", func(target discovery_kit_api.Target) bool {
 		//log.Debug().Msgf("targetApplications: %+v", target.Attributes)
 		return e2e.HasAttribute(target, "jvm-instance.name", "app") &&
 			e2e.HasAttribute(target, "instance.type", "spring-boot") &&
