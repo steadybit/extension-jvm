@@ -169,7 +169,7 @@ func springDiscover(jvm *jvm.JavaVm) {
 	if hasSpringPlugin(jvm) {
 		springApplication := createSpringApplication(jvm)
 		SpringApplications.Store(jvm.Pid, springApplication)
-		log.Trace().Msgf("Spring Instance '%s' on PID %d has been discovered: %+v", springjvm-instance.name, jvm.Pid, springApplication)
+		log.Trace().Msgf("Spring Instance '%s' on PID %d has been discovered: %+v", springApplication.Name, jvm.Pid, springApplication)
 	}
 }
 
