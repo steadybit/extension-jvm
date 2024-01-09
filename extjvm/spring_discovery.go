@@ -246,18 +246,19 @@ func isSpringBootApplication(vm *jvm.JavaVm) bool {
 }
 
 func readSpringApplicationName(vm *jvm.JavaVm) string {
-	result := SendCommandToAgentViaSocket(vm, "spring-env", "application.name", func(rc string, response io.Reader) string {
+	result := SendCommandToAgentViaSocket(vm, "spring-env", "spring.application.name", func(rc string, response io.Reader) string {
 		if rc == "OK" {
 			resultMessage, _ := GetCleanSocketCommandResult(response)
 			if resultMessage == "" {
-				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-env", "application.name", vm.Pid, resultMessage)
+				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-env", "spring.application.name", vm.Pid, resultMessage)
+
 				return ""
 			} else {
-				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned : %s", "spring-env", "application.name", vm.Pid, resultMessage)
+				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned : %s", "spring-env", "spring.application.name", vm.Pid, resultMessage)
 				return resultMessage
 			}
 		} else {
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-env", "application.name", vm.Pid, rc)
+			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-env", "spring.application.name", vm.Pid, rc)
 			return ""
 		}
 
