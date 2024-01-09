@@ -211,9 +211,12 @@
           <version>${maven-surefire-plugin.version}</version>
           <configuration>
             <properties>
-              <predictiveSelection>
-                <enabled>${gradle.predictive.test.selection.enabled}</enabled>
-              </predictiveSelection>
+							<property>
+								<name>predictive</name>
+								<predictiveSelection>
+									<enabled>${gradle.predictive.test.selection.enabled}</enabled>
+								</predictiveSelection>
+							</property>
             </properties>
             <redirectTestOutputToFile>false</redirectTestOutputToFile>
             <trimStackTrace>false</trimStackTrace>
