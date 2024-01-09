@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.0
+
+- Renamed application name to instance
+
 ## v1.0.13
 
 - Removed jvm advice
