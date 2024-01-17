@@ -181,6 +181,14 @@ func getKubernetesContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichm
 			},
 			{
 				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.workload-type",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
+				Name:    "k8s.workload-owner",
+			},
+			{
+				Matcher: discovery_kit_api.Equals,
 				Name:    "k8s.statefulset",
 			},
 		},
@@ -322,11 +330,11 @@ func (j *jvmDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.T
 			TargetType: targetID,
 			Label:      getApplicationName(vm, "?"),
 			Attributes: map[string][]string{
-				"instance.type":      {"java"},
-				"jvm-instance.name":      {getApplicationName(vm, "")},
+				"instance.type":         {"java"},
+				"jvm-instance.name":     {getApplicationName(vm, "")},
 				"container.id.stripped": {vm.ContainerId},
 				"process.pid":           {strconv.Itoa(int(vm.Pid))},
-				"instance.hostname":  {vm.Hostname},
+				"instance.hostname":     {vm.Hostname},
 				"host.hostname":         {vm.Hostname},
 			},
 		})
