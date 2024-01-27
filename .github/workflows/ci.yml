@@ -182,6 +182,7 @@ jobs:
       container_image: ghcr.io/${{ github.repository }}:latest
     secrets:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      VERSION_BUMPER_SECRET: ${{ secrets.GH_APP_STEADYBIT_PRIVATE_KEY }}
 
   snyk-monitor:
     name: "[Release] Snyk Monitor latest"
@@ -194,6 +195,7 @@ jobs:
       target_ref: latest
     secrets:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      VERSION_BUMPER_SECRET: ${{ secrets.GH_APP_STEADYBIT_PRIVATE_KEY }}
 
   build-packages:
     name: Build Linux Packages
