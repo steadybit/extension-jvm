@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.1
+
+- update depencencies
+
 ## v1.1.0
 
 - Renamed application name to instance
