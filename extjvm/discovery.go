@@ -60,8 +60,7 @@ func StartJvmInfrastructure() {
 
 func (j *jvmDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
 	return discovery_kit_api.DiscoveryDescription{
-		Id:         targetID,
-		RestrictTo: extutil.Ptr(discovery_kit_api.LEADER),
+		Id: targetID,
 		Discover: discovery_kit_api.DescribingEndpointReferenceWithCallInterval{
 			CallInterval: extutil.Ptr(config.Config.DiscoveryCallInterval),
 		},
