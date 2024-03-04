@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.4
+
+- update depencencies
+
 ## v1.1.3
 
 - update depencencies

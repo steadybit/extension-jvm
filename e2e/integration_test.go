@@ -134,7 +134,6 @@ func testSpringDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancel()
 
-
 	target := getSpringBootSampleTarget(t, ctx, e)
 	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.jvm-instance")
 
