@@ -166,3 +166,4 @@ daemonSet:
     list:
       - ACTION
       - DISCOVERY
+      - ADVICE
