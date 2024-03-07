@@ -119,7 +119,10 @@ jobs:
     permissions:
       contents: read
       packages: write
-
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      deployer_available: ${{ secrets.PAT_TOKEN_EXTENSION_DEPLOYER  != '' }}
+      version_bump_available: ${{ vars.VERSION_BUMPER_APPID != '' && secrets.VERSION_BUMPER_SECRET  != '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
