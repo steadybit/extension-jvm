@@ -13,13 +13,13 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.9.0
-	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.8
+	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.9
 	github.com/steadybit/action-kit/go/action_kit_test v1.2.9
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.2
 	github.com/steadybit/discovery-kit/go/discovery_kit_commons v0.1.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_sdk v1.0.6
 	github.com/steadybit/discovery-kit/go/discovery_kit_test v1.1.2
-	github.com/steadybit/extension-kit v1.8.11
+	github.com/steadybit/extension-kit v1.8.12
 	github.com/stretchr/testify v1.9.0
 	github.com/xin053/hsperfdata v0.2.3
 	go.uber.org/automaxprocs v1.5.3
