@@ -32,4 +32,5 @@ type JavaVm struct {
 	Path           string
 	DiscoveredVia  string
 	Hostname       string
+	HostFQDN       string
 }
