@@ -335,7 +335,6 @@ func (j *jvmDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.T
 				"process.pid":           {strconv.Itoa(int(vm.Pid))},
 				"instance.hostname":     {vm.Hostname},
 				"host.hostname":         {vm.Hostname},
-				"host.domainname":       {vm.HostFQDN},
 			},
 		})
 	}
