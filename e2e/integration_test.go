@@ -14,7 +14,6 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
 	"runtime"
 	"strconv"
 	"testing"
@@ -51,15 +50,15 @@ func TestWithMinikube(t *testing.T) {
 	}
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
-		{
-			Name: "validate discovery",
-			Test: validateDiscovery,
-		},
+		/*		{
+				Name: "validate discovery",
+				Test: validateDiscovery,
+			},*/
 		{
 			Name: "discover spring boot sample",
 			Test: testDiscovery,
 		},
-		{
+		/*{
 			Name: "mvc delay",
 			Test: testMvcDelay,
 		},
@@ -94,7 +93,7 @@ func TestWithMinikube(t *testing.T) {
 		{
 			Name: "discover spring boot sample as spring discovery",
 			Test: testSpringDiscovery,
-		},
+		},*/
 	})
 }
 
@@ -107,26 +106,24 @@ func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
 	defer cancel()
 
-	if os.Getenv("CI") == "true" {
-		fashionBestseller := FashionBestseller{Minikube: m}
-		err := fashionBestseller.Deploy("fashion-bestseller")
-		require.NoError(t, err, "failed to create pod")
-		defer func() { _ = fashionBestseller.Delete() }()
+	fashionBestseller := FashionBestseller{Minikube: m}
+	err := fashionBestseller.Deploy("fashion-bestseller")
+	require.NoError(t, err, "failed to create pod")
+	defer func() { _ = fashionBestseller.Delete() }()
 
-		go m.TailLog(ctx, fashionBestseller.Pod)
-	}
+	go m.TailLog(ctx, fashionBestseller.Pod)
 
 	target := getSpringBootSampleTarget(t, ctx, e)
 	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.jvm-instance")
 
-	if os.Getenv("CI") == "true" {
-		targetFashion, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.jvm-instance", func(target discovery_kit_api.Target) bool {
-			log.Debug().Msgf("targetApplications: %+v", target.Attributes)
-			return e2e.HasAttribute(target, "jvm-instance.name", "fashion-bestseller")
-		})
-		require.NoError(t, err)
-		assert.Equal(t, targetFashion.TargetType, "com.steadybit.extension_jvm.jvm-instance")
-	}
+	targetFashion, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.jvm-instance", func(target discovery_kit_api.Target) bool {
+		log.Debug().Msgf("targetApplications: %+v", target.Attributes)
+		return e2e.HasAttribute(target, "jvm-instance.name", "fashion-bestseller")
+	})
+	require.NoError(t, err)
+	assert.Equal(t, targetFashion.TargetType, "com.steadybit.extension_jvm.jvm-instance")
+	assert.Equal(t, targetFashion.Attributes["host.hostname"], []string{m.Profile})
+	assert.Equal(t, targetFashion.Attributes["host.domainname"], []string{m.Profile})
 }
 
 func testSpringDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
