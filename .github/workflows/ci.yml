@@ -14,10 +14,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
   build_jars:
     name: Build Jars
@@ -53,6 +49,8 @@ jobs:
     runs-on:
       labels: steadybit_runner_ubuntu_latest_4cores_16GB
     timeout-minutes: 60
+    env:
+      sonar_available: ${{ secrets.SONAR_TOKEN  != '' && 'true' || 'false' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -93,27 +91,23 @@ jobs:
           go version
           sudo -u $USER env PATH=$PATH make audit
 
-      - name: Check Sonar Token
-        id: check-sonar
-        shell: bash
-        run: |
-          if [ "${{ secrets.SONAR_TOKEN }}" != '' ]; then
-            echo "available=true" >> $GITHUB_OUTPUT;
-          else
-            echo "available=false" >> $GITHUB_OUTPUT;
-          fi
-
       - name: SonarCloud Scan
-        if: ${{ steps.check-sonar.outputs.available == 'true' }}
-        uses: SonarSource/sonarcloud-github-action@master
+        if: ${{ env.sonar_available == 'true' }}
+        uses: SonarSource/sonarcloud-github-action@v2.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+      - name: SonarCloud Quality Gate check
+        if: ${{ startsWith(github.ref, 'refs/tags/') && env.sonar_available == 'true' }}
+        uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
   build-images:
     name: Build Docker Images
-    needs:
-      - audit
+    needs: [audit]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -136,7 +130,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -144,7 +138,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ghcr.io/${{ github.repository }}
 
       - name: Download JARs
         uses: actions/download-artifact@v4
@@ -190,8 +184,7 @@ jobs:
 
   build-packages:
     name: Build Linux Packages
-    needs:
-      - audit
+    needs: [audit]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -259,7 +252,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Helm
-        uses: azure/setup-helm@v3
+        uses: azure/setup-helm@v4
         with:
           version: v3.12.2
 
@@ -335,7 +328,7 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Set up Helm
-        uses: azure/setup-helm@v3
+        uses: azure/setup-helm@v4
         with:
           version: v3.12.2
 
@@ -353,16 +346,15 @@ jobs:
 
   trigger-test-environment-updates:
     name: Trigger test environment updates
-    if: needs.build-images.outputs.deployer_available
+    if: github.ref == 'refs/heads/main' && needs.build-images.outputs.deployer_available
     needs: [build-images]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - run: |
-          curl -L \
-          -X POST \
-          -H "Accept: application/vnd.github+json" \
-          -H "Authorization: Bearer ${{secrets.PAT_TOKEN_EXTENSION_DEPLOYER}}" \
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          https://api.github.com/repos/steadybit/extension-deployer/actions/workflows/extension-restart.yml/dispatches \
-          -d '{"ref":"main","inputs":{"extension":"${{ github.repository }}","version":"${{ needs.build-images.outputs.version }}","revision":"${{ github.sha }}"}}'
+      - uses: benc-uk/workflow-dispatch@v1
+        with:
+          ref: main
+          workflow: extension-restart.yml
+          repo: steadybit/extension-deployer
+          inputs: '{"extension":"${{ github.repository }}","version":"${{ needs.build-images.outputs.version }}","revision":"${{ github.sha }}"}'
+          token: ${{ secrets.PAT_TOKEN_EXTENSION_DEPLOYER }}
