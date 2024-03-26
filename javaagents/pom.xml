@@ -67,8 +67,6 @@
     <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
     <!--provide default empty argLine for surefire, is overridden by jacoco -->
     <argLine/>
-    <!-- Gradle Enterprise -->
-    <gradle.predictive.test.selection.enabled>false</gradle.predictive.test.selection.enabled>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -210,14 +208,6 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${maven-surefire-plugin.version}</version>
           <configuration>
-            <properties>
-							<property>
-								<name>predictive</name>
-								<predictiveSelection>
-									<enabled>${gradle.predictive.test.selection.enabled}</enabled>
-								</predictiveSelection>
-							</property>
-            </properties>
             <redirectTestOutputToFile>false</redirectTestOutputToFile>
             <trimStackTrace>false</trimStackTrace>
             <includes>
