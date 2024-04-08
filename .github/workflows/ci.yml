@@ -51,6 +51,7 @@ jobs:
     timeout-minutes: 60
     env:
       sonar_available: ${{ secrets.SONAR_TOKEN  != '' && 'true' || 'false' }}
+      snyk_available: ${{ secrets.SNYK_TOKEN  != '' && 'true' || 'false' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -91,6 +92,15 @@ jobs:
           go version
           sudo -u $USER env PATH=$PATH make audit
 
+      - name: "[release] Snyk test"
+        if: ${{ startsWith(github.ref, 'refs/tags/') && env.snyk_available == 'true' }}
+        uses: snyk/actions/golang@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --project-name=${{ github.repository }} --target-reference=${{ github.ref_name }}
+          command: test
+
       - name: SonarCloud Scan
         if: ${{ env.sonar_available == 'true' }}
         uses: SonarSource/sonarcloud-github-action@v2.1.1
@@ -98,7 +108,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: SonarCloud Quality Gate check
+      - name: "[release] SonarCloud Quality Gate check"
         if: ${{ startsWith(github.ref, 'refs/tags/') && env.sonar_available == 'true' }}
         uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
         timeout-minutes: 5
@@ -117,6 +127,8 @@ jobs:
       version: ${{ steps.meta.outputs.version }}
       deployer_available: ${{ secrets.PAT_TOKEN_EXTENSION_DEPLOYER  != '' }}
       version_bump_available: ${{ vars.VERSION_BUMPER_APPID != '' && secrets.VERSION_BUMPER_SECRET  != '' }}
+    env:
+      snyk_available: ${{ secrets.SNYK_TOKEN  != '' && 'true' || 'false' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
