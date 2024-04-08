@@ -1,27 +1,32 @@
 # Changelog
 
+## v1.1.6
+
+- update dependencies
+
 ## v1.1.5
 
 - feat: add host.domainname attribute containing the host FQDN
 
 ## v1.1.4
 
-- update depencencies
+- update dependencies
+
 ## v1.1.4
 
-- update depencencies
+- update dependencies
 
 ## v1.1.3
 
-- update depencencies
+- update dependencies
 
 ## v1.1.2
 
-- update depencencies
+- update dependencies
 
 ## v1.1.1
 
-- update depencencies
+- update dependencies
 
 ## v1.1.0
 
