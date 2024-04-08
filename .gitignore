@@ -39,3 +39,4 @@ target/
 
 e2e-coverage-containerd.out
 /licenses
+/snyk.sarif
