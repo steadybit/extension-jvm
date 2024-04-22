@@ -1,8 +1,7 @@
 module github.com/steadybit/extension-jvm
 
 go 1.21.0
-
-toolchain go1.21.7
+toolchain go1.22.2
 
 require (
 	github.com/KimMachineGun/automemlimit v0.5.0
@@ -25,7 +24,7 @@ require (
 	go.uber.org/automaxprocs v1.5.3
 	golang.org/x/sys v0.19.0
 	k8s.io/api v0.29.3
-	k8s.io/apimachinery v0.29.3
+	k8s.io/apimachinery v0.30.0
 	k8s.io/client-go v0.29.3
 )
 
