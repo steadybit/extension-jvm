@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.8 (next)
+
+- Update dependencies (go 1.22)
+
 ## v1.1.7
 
 - update dependencies
