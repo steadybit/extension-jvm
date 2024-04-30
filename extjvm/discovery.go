@@ -160,6 +160,10 @@ func getKubernetesContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichm
 			},
 			{
 				Matcher: discovery_kit_api.StartsWith,
+				Name:    "k8s.namespace.label.",
+			},
+			{
+				Matcher: discovery_kit_api.StartsWith,
 				Name:    "k8s.deployment.label.",
 			},
 			{
