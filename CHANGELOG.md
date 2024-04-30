@@ -3,6 +3,7 @@
 ## v1.1.8 (next)
 
 - Update dependencies (go 1.22)
+- Added namespace label to jvm-instance
 
 ## v1.1.7
 
