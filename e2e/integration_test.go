@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"runtime"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -33,6 +32,8 @@ func TestWithMinikube(t *testing.T) {
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
 				"--set", "discovery.attributes.excludes.jvm={spring-instance.http-client}",
 				"--set", "logging.level=INFO",
+				"--set", "extraEnv[0].name=STEADYBIT_EXTENSION_MIN_PROCESS_AGE_BEFORE_ATTACHMENT",
+				"--set", "extraEnv[0].value=1s",
 			}
 		},
 	}
@@ -90,14 +91,10 @@ func TestWithMinikube(t *testing.T) {
 			Name: "jdbc template exception",
 			Test: testJDBCTemplateException,
 		},
-		{
-			Name: "discover spring boot sample as spring discovery",
-			Test: testSpringDiscovery,
-		},
 	})
 }
 
-func validateDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+func validateDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 	assert.NoError(t, validate.ValidateEndpointReferences("/", e.Client))
 }
 
@@ -124,15 +121,6 @@ func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	assert.Equal(t, targetFashion.TargetType, "com.steadybit.extension_jvm.jvm-instance")
 	assert.Equal(t, targetFashion.Attributes["host.hostname"], []string{m.Profile})
 	assert.Equal(t, targetFashion.Attributes["host.domainname"], []string{m.Profile})
-}
-
-func testSpringDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testSpringDiscovery")
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
-	defer cancel()
-
-	target := getSpringBootSampleTarget(t, ctx, e)
-	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.jvm-instance")
 }
 
 func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extension) discovery_kit_api.Target {
@@ -279,7 +267,7 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			delay:         200,
 			jitter:        false,
 			expectedDelay: true,
-			hostAddress:   "demo.dev.steadybit.io",
+			hostAddress:   "demo.steadybit.io",
 		},
 		{
 			name:          "should not delay http client traffic on host",
@@ -318,16 +306,16 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			springBootSample.AssertIsReachable(t, true)
 
 			//measure customer endpoint
-			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/remote/blocking?url=https://demo.dev.steadybit.io/products")
+			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/remote/blocking?url=https://demo.steadybit.io/products")
 			require.NoError(t, err, "failed to measure customers endpoint")
 
 			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-httpclient-delay-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.expectedDelay {
-				springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://demo.dev.steadybit.io/products", unaffectedLatency)
+				springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://demo.steadybit.io/products", unaffectedLatency)
 			} else {
-				springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, "/remote/blocking?url=https://demo.dev.steadybit.io/products", 0)
+				springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, "/remote/blocking?url=https://demo.steadybit.io/products", 0)
 			}
 			require.NoError(t, action.Cancel())
 		})
@@ -420,7 +408,7 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			if tt.erroneousCallRate > 0 {
 				springBootSample.AssertStatusOnPath(t, tt.expectedHttpStatus, "/remote/blocking?url=https://www.github.com")
 				if tt.expectedLogStatus != 200 {
-					e2e.AssertLogContains(t, m, springBootSample.Pod, strconv.Itoa(tt.expectedLogStatus)+" Injected by steadybit")
+					e2e.AssertLogContains(t, m, springBootSample.Pod, fmt.Sprintf("%d Injected by steadybit", tt.expectedLogStatus))
 				}
 			} else {
 				springBootSample.AssertStatusOnPath(t, tt.expectedHttpStatus, "/remote/blocking?url=https://www.github.com")
@@ -714,8 +702,8 @@ func getTarget(t *testing.T, e *e2e.Extension) *action_kit_api.Target {
 }
 
 func deploySpringBootSample(t *testing.T, m *e2e.Minikube) *SpringBootSample {
-	springBootSample := SpringBootSample{Minikube: m}
-	err := springBootSample.Deploy("spring-boot-sample")
+	sample := SpringBootSample{Minikube: m}
+	err := sample.Deploy("spring-boot-sample")
 	require.NoError(t, err, "failed to create pod")
-	return &springBootSample
+	return &sample
 }

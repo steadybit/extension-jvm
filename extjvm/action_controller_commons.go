@@ -1,11 +1,12 @@
 package extjvm
 
 import (
+	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extutil"
+	"slices"
 )
 
 var (
@@ -79,87 +80,76 @@ var (
 	})
 )
 
-type ControllerState struct {
-	Pattern        string
-	HttpMethods    []string
-	HandlerMethods []string
-	*AttackState
-}
-
-func extractPattern(request action_kit_api.PrepareActionRequestBody, state *ControllerState) *action_kit_api.PrepareResult {
+func extractPattern(request action_kit_api.PrepareActionRequestBody) (string, error) {
 	pattern := extutil.ToString(request.Config["pattern"])
 	if pattern == "" {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Pattern is required",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}
+		return "", errors.New("pattern is required")
 	}
-	state.Pattern = pattern
-	return nil
+	return pattern, nil
 }
 
-func extractHttpMethods(request action_kit_api.PrepareActionRequestBody, state *ControllerState) *action_kit_api.PrepareResult {
-	state.HttpMethods = make([]string, 0)
+func extractMethods(request action_kit_api.PrepareActionRequestBody) ([]string, error) {
+	httpMethods := make([]string, 0)
 
 	method := extutil.ToString(request.Config["method"])
 	if method != "" {
 		log.Info().Msg("`HTTP Method` is deprecated, use `HTTP Methods` instead.")
-		state.HttpMethods = append(state.HttpMethods, method)
+		httpMethods = append(httpMethods, method)
 	}
 
-	state.HttpMethods = append(state.HttpMethods, extutil.ToStringArray(request.Config["methods"])...)
-	if len(state.HttpMethods) == 0 {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Method is required",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}
+	httpMethods = append(httpMethods, extutil.ToStringArray(request.Config["methods"])...)
+	if len(httpMethods) == 0 {
+		return httpMethods, errors.New("pattern is required")
 	}
-	return nil
+
+	return httpMethods, nil
 }
 
-func extractHandlerMethods(_ action_kit_api.PrepareActionRequestBody, state *ControllerState) *action_kit_api.PrepareResult {
-	application := FindSpringApplication(state.Pid)
+func extractHandlerMethods(spring *SpringDiscovery, request action_kit_api.PrepareActionRequestBody) ([]string, error) {
+	pattern, err := extractPattern(request)
+	if err != nil {
+		return nil, err
+	}
+
+	methods, err := extractMethods(request)
+	if err != nil {
+		return nil, err
+	}
+
+	pid, err := extractPid(request)
+	if err != nil {
+		return nil, err
+	}
+
+	application := spring.findApplication(pid)
 	if application == nil {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Spring instance not found",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}
+		return nil, errors.New("spring instance not found")
 	}
 
 	if application.MvcMappings == nil {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Spring MVC mappings not found",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}
+		return nil, errors.New("spring MVC mappings not found")
 	}
+
 	relevantMappings := make([]SpringMvcMapping, 0)
-	for _, m := range *application.MvcMappings {
-		if utils.ContainsString(m.Patterns, state.Pattern) {
-			if utils.ContainsString(state.HttpMethods, "*") || (len(m.Methods) == 0 && utils.ContainsString(state.HttpMethods, "GET")) {
-				relevantMappings = append(relevantMappings, m)
-			} else {
-				for _, method := range m.Methods {
-					if utils.ContainsString(state.HttpMethods, method) {
-						relevantMappings = append(relevantMappings, m)
-						break
-					}
+	for _, mapping := range application.MvcMappings {
+		if !slices.Contains(mapping.Patterns, pattern) {
+			continue
+		}
+		if slices.Contains(methods, "*") || (len(mapping.Methods) == 0 && slices.Contains(methods, "GET")) {
+			relevantMappings = append(relevantMappings, mapping)
+		} else {
+			for _, mappingMethod := range mapping.Methods {
+				if slices.Contains(methods, mappingMethod) {
+					relevantMappings = append(relevantMappings, mapping)
+					break
 				}
 			}
 		}
 	}
+
 	configMethods := make([]string, 0)
 	for _, m := range relevantMappings {
-		method := fmt.Sprintf("%s#%s", m.HandlerClass, m.HandlerName)
-		configMethods = append(configMethods, method)
+		configMethods = append(configMethods, fmt.Sprintf("%s#%s", m.HandlerClass, m.HandlerName))
 	}
-	state.HandlerMethods = configMethods
-	return nil
+	return configMethods, nil
 }
