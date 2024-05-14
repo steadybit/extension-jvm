@@ -50,15 +50,15 @@ func TestWithMinikube(t *testing.T) {
 	}
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
-		/*		{
+		{
 				Name: "validate discovery",
 				Test: validateDiscovery,
-			},*/
+		},
 		{
 			Name: "discover spring boot sample",
 			Test: testDiscovery,
 		},
-		/*{
+		{
 			Name: "mvc delay",
 			Test: testMvcDelay,
 		},
@@ -93,7 +93,7 @@ func TestWithMinikube(t *testing.T) {
 		{
 			Name: "discover spring boot sample as spring discovery",
 			Test: testSpringDiscovery,
-		},*/
+		},
 	})
 }
 
