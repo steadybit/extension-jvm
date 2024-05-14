@@ -6,7 +6,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/extjvm/attachment"
 	"github.com/steadybit/extension-jvm/extjvm/attack"
-	"github.com/steadybit/extension-jvm/extjvm/common"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"sync"
@@ -14,8 +13,6 @@ import (
 )
 
 var (
-	attackJavaJavaAgentJar = common.GetJarPath("attack-java-javaagent.jar")
-
 	attackStartTimeout = 10 * time.Second
 )
 
@@ -27,8 +24,9 @@ func Prepare(jvm *jvm.JavaVm, configJson string) (string, int) {
 	log.Debug().Msgf("Callback URL: %s", callbackUrl)
 	return callbackUrl, attackEndpointPort
 }
-func Start(jvm *jvm.JavaVm, callbackUrl string) error {
-	success, err := LoadAgentPlugin(jvm, attackJavaJavaAgentJar, callbackUrl)
+
+func Start(jvm *jvm.JavaVm, pluginJar, callbackUrl string) error {
+	success, err := LoadAgentPlugin(jvm, pluginJar, callbackUrl)
 	if err != nil {
 		return err
 	}
@@ -61,9 +59,9 @@ func Start(jvm *jvm.JavaVm, callbackUrl string) error {
 	return nil
 }
 
-func Stop(jvm *jvm.JavaVm) bool {
+func Stop(jvm *jvm.JavaVm, pluginJar string) bool {
 	attack.StopAttackEndpoint(jvm.Pid)
-	success, err := UnloadAgentPlugin(jvm, attackJavaJavaAgentJar)
+	success, err := UnloadAgentPlugin(jvm, pluginJar)
 	if err != nil {
 		log.Error().Msgf("Failed to unload attack plugin: %s", err)
 		return false

@@ -7,13 +7,6 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <!-- NOTE: when updating to the next boot version please check if we can remove our override for snakeyaml.version -->
-    <version>2.7.14</version>
-    <relativePath/> <!-- lookup parent from repository -->
-  </parent>
   <groupId>com.steadybit</groupId>
   <artifactId>extension-jvm-parent</artifactId>
   <version>${revision}</version>
@@ -27,11 +20,12 @@
     <module>javaagent-init</module>
     <module>javaagent-main</module>
     <module>discovery-java-javaagent</module>
-    <module>discovery-springboot-javaagent</module>
     <module>attack-java-javaagent</module>
+		<module>springboot2</module>
     <module>download</module>
   </modules>
-  <packaging>pom</packaging>
+
+	<packaging>pom</packaging>
   <properties>
     <revision>1.0.0-SNAPSHOT</revision>
     <java.version>8</java.version>
@@ -40,16 +34,22 @@
     <!-- dependencies -->
     <commons-io.version>2.13.0</commons-io.version>
     <commons-net.version>3.9.0</commons-net.version>
-    <hystrix.version>1.5.18</hystrix.version>
     <jna.version>5.13.0</jna.version>
-    <junit-pioneer.version>2.0.1</junit-pioneer.version>
+		<lombok.version>1.18.32</lombok.version>
     <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
     <mapstruct.version>1.5.5.Final</mapstruct.version>
     <org-json.version>20231013</org-json.version>
-    <resilience4j.version>1.7.1</resilience4j.version>
-    <wiremock.version>2.35.1</wiremock.version>
     <ipaddress.version>5.4.0</ipaddress.version>
-    <byte-buddy.version>1.14.10</byte-buddy.version>
+		<logback-classic.version>1.4.14</logback-classic.version>
+
+    <wiremock.version>2.35.1</wiremock.version>
+    <byte-buddy.version>1.14.15</byte-buddy.version>
+		<junit.version>5.10.2</junit.version>
+    <junit-pioneer.version>2.0.1</junit-pioneer.version>
+		<assertj-core.version>3.24.2</assertj-core.version>
+		<mockito.version>5.7.0</mockito.version>
+		<awaitility.version>4.2.1</awaitility.version>
+
     <!-- plugins -->
     <exec-maven-plugin.version>3.1.0</exec-maven-plugin.version>
     <flatten-maven-plugin.version>1.5.0</flatten-maven-plugin.version>
@@ -58,7 +58,11 @@
     <maven-deploy-plugin.version>3.1.0</maven-deploy-plugin.version>
     <maven-enforcer-plugin.version>3.1.0</maven-enforcer-plugin.version>
     <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
-    <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
+    <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+		<maven-shade-plugin.version>3.5.3</maven-shade-plugin.version>
+		<maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
+		<maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+		<build-helper-maven-plugin.version>3.4.0</build-helper-maven-plugin.version>
     <!-- Sonarcloud-->
     <sonar.organization>steadybit</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
@@ -67,7 +71,7 @@
     <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
     <!--provide default empty argLine for surefire, is overridden by jacoco -->
     <argLine/>
-  </properties>
+	</properties>
   <dependencyManagement>
     <dependencies>
       <!-- our own modules -->
@@ -86,17 +90,24 @@
         <artifactId>javaagent-setup</artifactId>
         <version>${revision}</version>
       </dependency>
+			<!-- 3rd party dependencies -->
+			<dependency>
+				<groupId>net.bytebuddy</groupId>
+				<artifactId>byte-buddy-parent</artifactId>
+				<version>${byte-buddy.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
       <dependency>
         <groupId>com.github.seancfoley</groupId>
         <artifactId>ipaddress</artifactId>
         <version>${ipaddress.version}</version>
       </dependency>
-      <!-- 3rd party dependencies -->
-      <dependency>
-        <groupId>net.bytebuddy</groupId>
-        <artifactId>byte-buddy</artifactId>
-        <version>${byte-buddy.version}</version>
-      </dependency>
+			<dependency>
+				<groupId>org.json</groupId>
+				<artifactId>json</artifactId>
+				<version>${org-json.version}</version>
+			</dependency>
       <dependency>
         <groupId>net.java.dev.jna</groupId>
         <artifactId>jna</artifactId>
@@ -107,36 +118,44 @@
         <artifactId>jna-platform</artifactId>
         <version>${jna.version}</version>
       </dependency>
-
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
         <version>${commons-io.version}</version>
       </dependency>
-      <dependency>
-        <groupId>org.json</groupId>
-        <artifactId>json</artifactId>
-        <version>${org-json.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.github.resilience4j</groupId>
-        <artifactId>resilience4j-circuitbreaker</artifactId>
-        <version>${resilience4j.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.github.resilience4j</groupId>
-        <artifactId>resilience4j-reactor</artifactId>
-        <version>${resilience4j.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.netflix.hystrix</groupId>
-        <artifactId>hystrix-core</artifactId>
-        <version>${hystrix.version}</version>
-      </dependency>
-
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-classic</artifactId>
+				<version>${logback-classic.version}</version>
+			</dependency>
 
       <!-- Test -->
-      <dependency>
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-bom</artifactId>
+				<version>${mockito.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.assertj</groupId>
+				<artifactId>assertj-core</artifactId>
+				<version>${assertj-core.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.awaitility</groupId>
+				<artifactId>awaitility</artifactId>
+				<version>${awaitility.version}</version>
+			</dependency>
+			<dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>mockwebserver</artifactId>
         <version>${okhttp.version}</version>
@@ -154,14 +173,12 @@
         <version>${junit-pioneer.version}</version>
         <scope>test</scope>
       </dependency>
-
       <dependency>
         <groupId>com.github.tomakehurst</groupId>
         <artifactId>wiremock-jre8-standalone</artifactId>
         <version>${wiremock.version}</version>
         <scope>test</scope>
       </dependency>
-
     </dependencies>
   </dependencyManagement>
   <build>
@@ -190,9 +207,20 @@
             <skip>true</skip>
           </configuration>
         </plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-shade-plugin</artifactId>
+					<version>${maven-shade-plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>build-helper-maven-plugin</artifactId>
+					<version>${build-helper-maven-plugin.version}</version>
+				</plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
+					<version>${maven-jar-plugin.version}</version>
           <configuration>
             <archive>
               <manifest>

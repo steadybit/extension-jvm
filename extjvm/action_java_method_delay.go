@@ -160,7 +160,7 @@ func (l *javaMethodDelay) Prepare(_ context.Context, state *JavaMethodDelayState
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *javaMethodDelay) Start(_ context.Context, state *JavaMethodDelayState) (*action_kit_api.StartResult, error) {
-	return commonStart(state.AttackState)
+	return commonStart(state.AttackState, attackJavaJavaagentJar)
 }
 
 // Stop is called to stop the action
@@ -168,5 +168,5 @@ func (l *javaMethodDelay) Start(_ context.Context, state *JavaMethodDelayState) 
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *javaMethodDelay) Stop(_ context.Context, state *JavaMethodDelayState) (*action_kit_api.StopResult, error) {
-	return commonStop(state.AttackState)
+	return commonStop(state.AttackState, attackJavaJavaagentJar)
 }

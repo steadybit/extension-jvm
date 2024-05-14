@@ -3,6 +3,7 @@ package extjvm
 import (
 	"encoding/json"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/extension-jvm/extjvm/common"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
@@ -20,6 +21,9 @@ var (
 		Required:     extutil.Ptr(true),
 		Advanced:     extutil.Ptr(true),
 	}
+
+	attackJavaJavaagentJar        = common.GetJarPath("attack-java-javaagent.jar")
+	attackSpringBoot2JavaagentJar = common.GetJarPath("attack-springboot2-javaagent.jar")
 )
 
 type AttackState struct {
@@ -59,12 +63,12 @@ func extractPid(request action_kit_api.PrepareActionRequestBody, state *AttackSt
 	return nil
 }
 
-func commonStart(state *AttackState) (*action_kit_api.StartResult, error) {
+func commonStart(state *AttackState, pluginJar string) (*action_kit_api.StartResult, error) {
 	vm := GetTarget(state.Pid)
 	if vm == nil {
 		return nil, extension_kit.ToError("VM not found", nil)
 	}
-	err := Start(vm, state.CallbackUrl)
+	err := Start(vm, pluginJar, state.CallbackUrl)
 	if err != nil {
 		return &action_kit_api.StartResult{
 			Error: extutil.Ptr(action_kit_api.ActionKitError{
@@ -76,12 +80,12 @@ func commonStart(state *AttackState) (*action_kit_api.StartResult, error) {
 	return nil, nil
 }
 
-func commonStop(state *AttackState) (*action_kit_api.StopResult, error) {
+func commonStop(state *AttackState, pluginJar string) (*action_kit_api.StopResult, error) {
 	vm := GetTarget(state.Pid)
 	if vm == nil {
 		return nil, extension_kit.ToError("VM not found", nil)
 	}
-	success := Stop(vm)
+	success := Stop(vm, pluginJar)
 	if !success {
 		return &action_kit_api.StopResult{
 			Error: extutil.Ptr(action_kit_api.ActionKitError{
