@@ -5,41 +5,25 @@
 package extjvm
 
 import (
-	"context"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
 )
 
-type jdbcTemplateException struct{}
-
-type JdbcTemplateExceptionState struct {
-	ErroneousCallRate int
-	Operations        string
-	JdbcUrl           string
-	*AttackState
-}
-
-// Make sure action implements all required interfaces
-var (
-	_ action_kit_sdk.Action[JdbcTemplateExceptionState]         = (*jdbcTemplateException)(nil)
-	_ action_kit_sdk.ActionWithStop[JdbcTemplateExceptionState] = (*jdbcTemplateException)(nil)
-)
-
-func NewJdbcTemplateException() action_kit_sdk.Action[JdbcTemplateExceptionState] {
-	return &jdbcTemplateException{}
-}
-
-func (l *jdbcTemplateException) NewEmptyState() JdbcTemplateExceptionState {
-	return JdbcTemplateExceptionState{
-		AttackState: &AttackState{},
+func NewJdbcTemplateException(facade jvm.JavaFacade) action_kit_sdk.Action[JavaagentActionState] {
+	return &javaagentAction{
+		pluginJar:      utils.GetJarPath("attack-java-javaagent.jar"),
+		description:    jdbcTemplateExceptionDescribe(),
+		configProvider: jdbcTemplateExceptionConfigProvider,
+		facade:         facade,
 	}
 }
 
-// Describe returns the action description for the platform with all required information.
-func (l *jdbcTemplateException) Describe() action_kit_api.ActionDescription {
+func jdbcTemplateExceptionDescribe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          ActionIDPrefix + ".spring-jdbctemplate-exception-attack",
 		Label:       "JDBC Template Exception",
@@ -124,48 +108,17 @@ func (l *jdbcTemplateException) Describe() action_kit_api.ActionDescription {
 	}
 }
 
-// Prepare is called before the action is started.
-// It can be used to validate the parameters and prepare the action.
-// It must not cause any harmful effects.
-// The passed in state is included in the subsequent calls to start/status/stop.
-// So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *jdbcTemplateException) Prepare(_ context.Context, state *JdbcTemplateExceptionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	state.ErroneousCallRate = extutil.ToInt(request.Config["erroneousCallRate"])
-
-	state.JdbcUrl = extutil.ToString(request.Config["jdbcUrl"])
-	state.Operations = extutil.ToString(request.Config["operations"])
-
-	errResult := extractDuration(request, state.AttackState)
-	if errResult != nil {
-		return errResult, nil
+func jdbcTemplateExceptionConfigProvider(request action_kit_api.PrepareActionRequestBody) (map[string]interface{}, error) {
+	duration, err := extractDuration(request)
+	if err != nil {
+		return nil, err
 	}
 
-	errResult = extractPid(request, state.AttackState)
-	if errResult != nil {
-		return errResult, nil
-	}
-
-	var config = map[string]interface{}{
+	return map[string]interface{}{
 		"attack-class":      "com.steadybit.attacks.javaagent.instrumentation.SpringJdbcTemplateExceptionInstrumentation",
-		"duration":          int(state.Duration / time.Millisecond),
-		"operations":        state.Operations,
-		"erroneousCallRate": state.ErroneousCallRate,
-		"jdbc-url":          state.JdbcUrl,
-	}
-	return commonPrepareEnd(config, state.AttackState, request)
-}
-
-// Start is called to start the action
-// You can mutate the state here.
-// You can use the result to return messages/errors/metrics or artifacts
-func (l *jdbcTemplateException) Start(_ context.Context, state *JdbcTemplateExceptionState) (*action_kit_api.StartResult, error) {
-	return commonStart(state.AttackState)
-}
-
-// Stop is called to stop the action
-// It will be called even if the start method did not complete successfully.
-// It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
-// You can use the result to return messages/errors/metrics or artifacts
-func (l *jdbcTemplateException) Stop(_ context.Context, state *JdbcTemplateExceptionState) (*action_kit_api.StopResult, error) {
-	return commonStop(state.AttackState)
+		"duration":          int(duration / time.Millisecond),
+		"operations":        extutil.ToString(request.Config["operations"]),
+		"jdbc-url":          extutil.ToString(request.Config["jdbcUrl"]),
+		"erroneousCallRate": extutil.ToInt(request.Config["erroneousCallRate"]),
+	}, nil
 }

@@ -5,42 +5,25 @@
 package extjvm
 
 import (
-	"context"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
 )
 
-type controllerException struct{}
-
-type ControllerExceptionState struct {
-	ErroneousCallRate int
-	*ControllerState
-}
-
-// Make sure action implements all required interfaces
-var (
-	_ action_kit_sdk.Action[ControllerExceptionState]         = (*controllerException)(nil)
-	_ action_kit_sdk.ActionWithStop[ControllerExceptionState] = (*controllerException)(nil) // Optional, needed when the action needs a stop method
-
-)
-
-func NewControllerException() action_kit_sdk.Action[ControllerExceptionState] {
-	return &controllerException{}
-}
-
-func (l *controllerException) NewEmptyState() ControllerExceptionState {
-	return ControllerExceptionState{
-		ControllerState: &ControllerState{
-			AttackState: &AttackState{},
-		},
+func NewControllerException(facade jvm.JavaFacade, spring *SpringDiscovery) action_kit_sdk.Action[JavaagentActionState] {
+	return &javaagentAction{
+		pluginJar:      utils.GetJarPath("attack-java-javaagent.jar"),
+		description:    controllerExceptionDescribe(),
+		configProvider: controllerExceptionConfigProvider(spring),
+		facade:         facade,
 	}
 }
 
-// Describe returns the action description for the platform with all required information.
-func (l *controllerException) Describe() action_kit_api.ActionDescription {
+func controllerExceptionDescribe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          ActionIDPrefix + ".spring-mvc-exception-attack",
 		Label:       "Controller Exception",
@@ -88,60 +71,23 @@ func (l *controllerException) Describe() action_kit_api.ActionDescription {
 	}
 }
 
-// Prepare is called before the action is started.
-// It can be used to validate the parameters and prepare the action.
-// It must not cause any harmful effects.
-// The passed in state is included in the subsequent calls to start/status/stop.
-// So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *controllerException) Prepare(_ context.Context, state *ControllerExceptionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	errResult := extractPattern(request, state.ControllerState)
-	if errResult != nil {
-		return errResult, nil
+func controllerExceptionConfigProvider(spring *SpringDiscovery) func(request action_kit_api.PrepareActionRequestBody) (map[string]interface{}, error) {
+	return func(request action_kit_api.PrepareActionRequestBody) (map[string]interface{}, error) {
+		duration, err := extractDuration(request)
+		if err != nil {
+			return nil, err
+		}
+
+		handlerMethods, err := extractHandlerMethods(spring, request)
+		if err != nil {
+			return nil, err
+		}
+
+		return map[string]interface{}{
+			"attack-class":      "com.steadybit.attacks.javaagent.instrumentation.JavaMethodExceptionInstrumentation",
+			"duration":          int(duration / time.Millisecond),
+			"erroneousCallRate": extutil.ToInt(request.Config["erroneousCallRate"]),
+			"methods":           handlerMethods,
+		}, nil
 	}
-
-	errResult = extractHttpMethods(request, state.ControllerState)
-	if errResult != nil {
-		return errResult, nil
-	}
-
-	erroneousCallRate := extutil.ToInt(request.Config["erroneousCallRate"])
-	state.ErroneousCallRate = erroneousCallRate
-
-	errResult = extractDuration(request, state.AttackState)
-	if errResult != nil {
-		return errResult, nil
-	}
-
-	errResult = extractPid(request, state.AttackState)
-	if errResult != nil {
-		return errResult, nil
-	}
-
-	errResult = extractHandlerMethods(request, state.ControllerState)
-	if errResult != nil {
-		return errResult, nil
-	}
-
-	var config = map[string]interface{}{
-		"attack-class":      "com.steadybit.attacks.javaagent.instrumentation.JavaMethodExceptionInstrumentation",
-		"duration":          int(state.Duration / time.Millisecond),
-		"erroneousCallRate": state.ErroneousCallRate,
-		"methods":           state.HandlerMethods,
-	}
-	return commonPrepareEnd(config, state.AttackState, request)
-}
-
-// Start is called to start the action
-// You can mutate the state here.
-// You can use the result to return messages/errors/metrics or artifacts
-func (l *controllerException) Start(_ context.Context, state *ControllerExceptionState) (*action_kit_api.StartResult, error) {
-	return commonStart(state.AttackState)
-}
-
-// Stop is called to stop the action
-// It will be called even if the start method did not complete successfully.
-// It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
-// You can use the result to return messages/errors/metrics or artifacts
-func (l *controllerException) Stop(_ context.Context, state *ControllerExceptionState) (*action_kit_api.StopResult, error) {
-	return commonStop(state.AttackState)
 }
