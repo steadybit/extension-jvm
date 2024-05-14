@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	SpringPlugin                       = common.GetJarPath("discovery-springboot-javaagent.jar")
+	SpringPlugin                       = common.GetJarPath("discovery-springboot2-javaagent.jar")
 	SpringMarkerClass                  = "org.springframework.context.ApplicationContext"
 	SpringBootMarkerClass              = "org.springframework.boot.ApplicationRunner"
 	SpringJdbcTemplateBeanClass        = "org.springframework.jdbc.core.JdbcTemplate"

@@ -161,7 +161,7 @@ func (l *httpClientDelay) Prepare(_ context.Context, state *HttpClientDelayState
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *httpClientDelay) Start(_ context.Context, state *HttpClientDelayState) (*action_kit_api.StartResult, error) {
-	return commonStart(state.AttackState)
+	return commonStart(state.AttackState, attackSpringBoot2JavaagentJar)
 }
 
 // Stop is called to stop the action
@@ -169,5 +169,5 @@ func (l *httpClientDelay) Start(_ context.Context, state *HttpClientDelayState) 
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *httpClientDelay) Stop(_ context.Context, state *HttpClientDelayState) (*action_kit_api.StopResult, error) {
-	return commonStop(state.AttackState)
+	return commonStop(state.AttackState, attackSpringBoot2JavaagentJar)
 }

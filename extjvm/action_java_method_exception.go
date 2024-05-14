@@ -135,7 +135,7 @@ func (l *javaMethodException) Prepare(_ context.Context, state *JavaMethodExcept
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *javaMethodException) Start(_ context.Context, state *JavaMethodExceptionState) (*action_kit_api.StartResult, error) {
-	return commonStart(state.AttackState)
+	return commonStart(state.AttackState, attackJavaJavaagentJar)
 }
 
 // Stop is called to stop the action
@@ -143,5 +143,5 @@ func (l *javaMethodException) Start(_ context.Context, state *JavaMethodExceptio
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *javaMethodException) Stop(_ context.Context, state *JavaMethodExceptionState) (*action_kit_api.StopResult, error) {
-	return commonStop(state.AttackState)
+	return commonStop(state.AttackState, attackJavaJavaagentJar)
 }
