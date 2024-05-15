@@ -1,6 +1,10 @@
-package controller
+package jvmhttp
 
-import "testing"
+import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
 
 func Test_handleInternal(t *testing.T) {
 	type args struct {
@@ -10,7 +14,7 @@ func Test_handleInternal(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    uint16
+		want    int
 		wantErr bool
 	}{
 		{
@@ -19,17 +23,14 @@ func Test_handleInternal(t *testing.T) {
 				remoteAddress: "10.244.0.3:42776",
 				body:          "3681=33773",
 			},
-			want:    200,
-			wantErr: false,
+			want: http.StatusOK,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := handleInternal(tt.args.remoteAddress, tt.args.body)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("handleInternal() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			w := httptest.NewRecorder()
+			handleInternal(w, tt.args.remoteAddress, tt.args.body)
+			got := w.Result().StatusCode
 			if got != tt.want {
 				t.Errorf("handleInternal() got = %v, want %v", got, tt.want)
 			}

@@ -2,7 +2,6 @@ package extjvm
 
 import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-kit/extutil"
 )
 
@@ -33,13 +32,3 @@ var (
 		},
 	}
 )
-
-func GetTarget(pid int32) *jvm.JavaVm {
-	jvMs := GetJVMs()
-	for _, jvm := range jvMs {
-		if jvm.Pid == pid {
-			return &jvm
-		}
-	}
-	return nil
-}

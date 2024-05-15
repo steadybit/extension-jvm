@@ -1,9 +1,16 @@
 package extjvm
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/extension-jvm/extjvm/common"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-jvm/extjvm/attachment"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-jvm/extjvm/jvmhttp"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
@@ -21,12 +28,9 @@ var (
 		Required:     extutil.Ptr(true),
 		Advanced:     extutil.Ptr(true),
 	}
-
-	attackJavaJavaagentJar        = common.GetJarPath("attack-java-javaagent.jar")
-	attackSpringBoot2JavaagentJar = common.GetJarPath("attack-springboot2-javaagent.jar")
 )
 
-type AttackState struct {
+type JavaagentActionState struct {
 	Duration     time.Duration
 	Pid          int32
 	ConfigJson   string
@@ -34,45 +38,83 @@ type AttackState struct {
 	CallbackUrl  string
 }
 
-func extractDuration(request action_kit_api.PrepareActionRequestBody, state *AttackState) *action_kit_api.PrepareResult {
-	parsedDuration := extutil.ToUInt64(request.Config["duration"])
-	if parsedDuration == 0 {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Duration is required",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}
-	}
-	duration := time.Duration(parsedDuration) * time.Millisecond
-	state.Duration = duration
-	return nil
+type javaagentAction struct {
+	pluginJar      string
+	description    action_kit_api.ActionDescription
+	configProvider func(request action_kit_api.PrepareActionRequestBody) (any, error)
 }
 
-func extractPid(request action_kit_api.PrepareActionRequestBody, state *AttackState) *action_kit_api.PrepareResult {
-	pids := request.Target.Attributes["process.pid"]
-	if len(pids) == 0 {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Process pid is required",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}
-	}
-	state.Pid = extutil.ToInt32(pids[0])
-	return nil
+var (
+	_ action_kit_sdk.Action[JavaagentActionState]         = (*javaagentAction)(nil)
+	_ action_kit_sdk.ActionWithStop[JavaagentActionState] = (*javaagentAction)(nil)
+)
+
+func (j *javaagentAction) Describe() action_kit_api.ActionDescription {
+	return j.description
 }
 
-func commonStart(state *AttackState, pluginJar string) (*action_kit_api.StartResult, error) {
-	vm := GetTarget(state.Pid)
+func (j *javaagentAction) NewEmptyState() JavaagentActionState {
+	return JavaagentActionState{}
+}
+
+func (j *javaagentAction) Prepare(_ context.Context, state *JavaagentActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+	if duration, err := extractDuration(request); err == nil {
+		state.Duration = duration
+	} else {
+		return nil, err
+	}
+
+	if pid, err := extractPid(request); err == nil {
+		state.Pid = pid
+	} else {
+		return nil, err
+	}
+
+	if request.ExecutionContext != nil && request.ExecutionContext.AgentPid != nil && int(state.Pid) == *request.ExecutionContext.AgentPid {
+		return nil, errors.New("can't attack the agent process")
+	}
+
+	config, err := j.configProvider(request)
+	if err != nil {
+		return nil, err
+	}
+
+	configJson, err := json.Marshal(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	state.ConfigJson = string(configJson)
+	javaVm := getJvm(state.Pid)
+	if javaVm == nil {
+		return nil, fmt.Errorf("jvm with pid %d not found", state.Pid)
+	}
+
+	callbackUrl, attackEndpointPort := startAttackEndpoint(javaVm, state.ConfigJson)
+	state.EndpointPort = attackEndpointPort
+	state.CallbackUrl = callbackUrl
+	return nil, nil
+}
+
+func startAttackEndpoint(jvm *jvm.JavaVm, configJson string) (string, int) {
+	attackEndpointPort := jvmhttp.StartAttackHttpServer(jvm.Pid, configJson)
+	// The callback URL is used to send the attack results back to the agent.
+	host := attachment.GetAttachment(jvm).GetAgentHost()
+	callbackUrl := fmt.Sprintf("http://%s:%d", host, attackEndpointPort)
+	log.Debug().Msgf("Callback URL: %s", callbackUrl)
+	return callbackUrl, attackEndpointPort
+}
+
+func (j *javaagentAction) Start(_ context.Context, state *JavaagentActionState) (*action_kit_api.StartResult, error) {
+	vm := getJvm(state.Pid)
 	if vm == nil {
 		return nil, extension_kit.ToError("VM not found", nil)
 	}
-	err := Start(vm, pluginJar, state.CallbackUrl)
-	if err != nil {
+
+	if err := start(vm, j.pluginJar, state.CallbackUrl); err != nil {
 		return &action_kit_api.StartResult{
 			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Failed to start attack",
+				Title:  "Failed to start action",
 				Status: extutil.Ptr(action_kit_api.Errored),
 			}),
 		}, err
@@ -80,16 +122,16 @@ func commonStart(state *AttackState, pluginJar string) (*action_kit_api.StartRes
 	return nil, nil
 }
 
-func commonStop(state *AttackState, pluginJar string) (*action_kit_api.StopResult, error) {
-	vm := GetTarget(state.Pid)
+func (j *javaagentAction) Stop(ctx context.Context, state *JavaagentActionState) (*action_kit_api.StopResult, error) {
+	vm := getJvm(state.Pid)
 	if vm == nil {
 		return nil, extension_kit.ToError("VM not found", nil)
 	}
-	success := Stop(vm, pluginJar)
+	success := stop(vm, j.pluginJar)
 	if !success {
 		return &action_kit_api.StopResult{
 			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Failed to stop attack",
+				Title:  "Failed to stop action",
 				Status: extutil.Ptr(action_kit_api.Errored),
 			}),
 		}, nil
@@ -97,32 +139,18 @@ func commonStop(state *AttackState, pluginJar string) (*action_kit_api.StopResul
 	return nil, nil
 }
 
-func commonPrepareEnd(config map[string]interface{}, state *AttackState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	if request.ExecutionContext != nil && request.ExecutionContext.AgentPid != nil && int(state.Pid) == *request.ExecutionContext.AgentPid {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Can't attack the agent process",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}, nil
+func extractDuration(request action_kit_api.PrepareActionRequestBody) (time.Duration, error) {
+	parsedDuration := extutil.ToUInt64(request.Config["duration"])
+	if parsedDuration == 0 {
+		return 0, errors.New("duration is required")
 	}
-	configJson, err := json.Marshal(config)
-	if err != nil {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Failed to marshal config",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}, err
-	}
-	state.ConfigJson = string(configJson)
-	vm := GetTarget(state.Pid)
-	if vm == nil {
-		return nil, extension_kit.ToError("VM not found", nil)
-	}
-	callbackUrl, attackEndpointPort := Prepare(vm, string(configJson))
-	state.EndpointPort = attackEndpointPort
-	state.CallbackUrl = callbackUrl
+	return time.Duration(parsedDuration) * time.Millisecond, nil
+}
 
-	return nil, nil
+func extractPid(request action_kit_api.PrepareActionRequestBody) (int32, error) {
+	pids := request.Target.Attributes["process.pid"]
+	if len(pids) == 0 {
+		return 0, errors.New("attribute 'process.pid' is required")
+	}
+	return extutil.ToInt32(pids[0]), nil
 }

@@ -5,43 +5,23 @@
 package extjvm
 
 import (
-	"context"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
 )
 
-type httpClientStatus struct{}
-
-type HttpClientStatusState struct {
-	ErroneousCallRate int
-	HttpMethods       []string
-	HostAddress       string
-	UrlPath           string
-	FailureCauses     []string
-	*AttackState
-}
-
-// Make sure action implements all required interfaces
-var (
-	_ action_kit_sdk.Action[HttpClientStatusState]         = (*httpClientStatus)(nil)
-	_ action_kit_sdk.ActionWithStop[HttpClientStatusState] = (*httpClientStatus)(nil)
-)
-
-func NewHttpClientStatus() action_kit_sdk.Action[HttpClientStatusState] {
-	return &httpClientStatus{}
-}
-
-func (l *httpClientStatus) NewEmptyState() HttpClientStatusState {
-	return HttpClientStatusState{
-		AttackState: &AttackState{},
+func NewHttpClientStatus() action_kit_sdk.Action[JavaagentActionState] {
+	return &javaagentAction{
+		pluginJar:      utils.GetJarPath("attack-springboot2-javaagent.jar"),
+		description:    httpClientStatusDescribe(),
+		configProvider: httpClientStatusConfigProvider,
 	}
 }
 
-// Describe returns the action description for the platform with all required information.
-func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
+func httpClientStatusDescribe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          ActionIDPrefix + ".spring-httpclient-status-attack",
 		Label:       "Http Client Status",
@@ -187,52 +167,19 @@ func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
 	}
 }
 
-// Prepare is called before the action is started.
-// It can be used to validate the parameters and prepare the action.
-// It must not cause any harmful effects.
-// The passed in state is included in the subsequent calls to start/status/stop.
-// So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *httpClientStatus) Prepare(_ context.Context, state *HttpClientStatusState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-
-	errResult := extractDuration(request, state.AttackState)
-	if errResult != nil {
-		return errResult, nil
-	}
-	state.ErroneousCallRate = extutil.ToInt(request.Config["erroneousCallRate"])
-
-	state.HttpMethods = extutil.ToStringArray(request.Config["httpMethods"])
-	state.HostAddress = extutil.ToString(request.Config["hostAddress"])
-	state.UrlPath = extutil.ToString(request.Config["urlPath"])
-	state.FailureCauses = extutil.ToStringArray(request.Config["failureCauses"])
-
-	errResult = extractPid(request, state.AttackState)
-	if errResult != nil {
-		return errResult, nil
+func httpClientStatusConfigProvider(request action_kit_api.PrepareActionRequestBody) (any, error) {
+	duration, err := extractDuration(request)
+	if err != nil {
+		return nil, err
 	}
 
-	var config = map[string]interface{}{
-		"attack-class":      "com.steadybit.attacks.javaagent.instrumentation.SpringHttpClientStatusInstrumentation",
-		"duration":          int(state.Duration / time.Millisecond),
-		"erroneousCallRate": state.ErroneousCallRate,
-		"httpMethods":       state.HttpMethods,
-		"hostAddress":       state.HostAddress,
-		"urlPath":           state.UrlPath,
-		"failureCauses":     state.FailureCauses,
-	}
-	return commonPrepareEnd(config, state.AttackState, request)
-}
-
-// Start is called to start the action
-// You can mutate the state here.
-// You can use the result to return messages/errors/metrics or artifacts
-func (l *httpClientStatus) Start(_ context.Context, state *HttpClientStatusState) (*action_kit_api.StartResult, error) {
-	return commonStart(state.AttackState, attackSpringBoot2JavaagentJar)
-}
-
-// Stop is called to stop the action
-// It will be called even if the start method did not complete successfully.
-// It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
-// You can use the result to return messages/errors/metrics or artifacts
-func (l *httpClientStatus) Stop(_ context.Context, state *HttpClientStatusState) (*action_kit_api.StopResult, error) {
-	return commonStop(state.AttackState, attackSpringBoot2JavaagentJar)
+	return map[string]interface{}{
+		"attack-class":      "com.steadybit.attacks.springboot2.instrumentation.SpringHttpClientStatusInstrumentation",
+		"duration":          int(duration / time.Millisecond),
+		"erroneousCallRate": extutil.ToInt(request.Config["erroneousCallRate"]),
+		"httpMethods":       extutil.ToStringArray(request.Config["httpMethods"]),
+		"hostAddress":       extutil.ToString(request.Config["hostAddress"]),
+		"urlPath":           extutil.ToString(request.Config["urlPath"]),
+		"failureCauses":     extutil.ToStringArray(request.Config["failureCauses"]),
+	}, nil
 }

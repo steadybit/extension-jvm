@@ -38,20 +38,20 @@ var (
 )
 
 type Listener interface {
-	AddedJvm(jvm *jvm.JavaVm)
-	RemovedJvm(jvm *jvm.JavaVm)
+	addedJvm(jvm *jvm.JavaVm)
+	removedJvm(jvm *jvm.JavaVm)
 }
 
 type JavaVMS struct{}
 
-func AddListener(listener Listener) {
+func addListener(listener Listener) {
 	listeners = append(listeners, listener)
-	for _, vm := range GetJVMs() {
-		listener.AddedJvm(&vm)
+	for _, vm := range getJvms() {
+		listener.addedJvm(&vm)
 	}
 }
 
-func RemoveListener(listener Listener) {
+func removeListener(listener Listener) {
 	for i, l := range listeners {
 		if l == listener {
 			listeners = append(listeners[:i], listeners[i+1:]...)
@@ -105,11 +105,11 @@ func addJvm(jvm *jvm.JavaVm) {
 	log.Debug().Msgf("Discovered JVM %s", jvm.ToDebugString())
 	jvms.Store(jvm.Pid, *jvm)
 	for _, listener := range listeners {
-		listener.AddedJvm(jvm)
+		listener.addedJvm(jvm)
 	}
 }
 
-func GetJVMs() []jvm.JavaVm {
+func getJvms() []jvm.JavaVm {
 	removeStoppedJvms()
 	result := make([]jvm.JavaVm, 0)
 	jvms.Range(func(key, value interface{}) bool {
@@ -119,17 +119,26 @@ func GetJVMs() []jvm.JavaVm {
 	return result
 }
 
+func getJvm(pid int32) *jvm.JavaVm {
+	for _, javaVm := range getJvms() {
+		if javaVm.Pid == pid {
+			return &javaVm
+		}
+	}
+	return nil
+}
+
 func removeStoppedJvms() {
 	jvms.Range(func(key, value interface{}) bool {
 		vm := value.(jvm.JavaVm)
 		p, err := process.NewProcess(vm.Pid)
 		if err != nil {
-			log.Trace().Err(err).Msg("Process not found: " + strconv.Itoa(int(vm.Pid)) + " - removing from JVMs. Error: " + err.Error())
+			log.Trace().Err(err).Msgf("Process not found: %d - removing from JVMs.", vm.Pid)
 			removeJVM(key, vm)
 			return true
 		}
 		if !java_process.IsRunning(p) {
-			log.Trace().Msgf("Process not running: %s: %s - removing from JVMs ", strconv.Itoa(int(vm.Pid)), vm.MainClass)
+			log.Trace().Msgf("Process not running: %d: %s - removing from JVMs ", vm.Pid, vm.MainClass)
 			removeJVM(key, vm)
 		}
 		return true
@@ -141,7 +150,7 @@ func removeJVM(key interface{}, vm jvm.JavaVm) {
 	java_process.RemovePidFromDiscoveredPids(vm.Pid)
 	log.Debug().Msgf("Removing JVM %s", vm.ToDebugString())
 	for _, listener := range listeners {
-		listener.RemovedJvm(&vm)
+		listener.removedJvm(&vm)
 	}
 }
 func createJvm(p *process.Process) *jvm.JavaVm {
@@ -375,8 +384,8 @@ func installSignalHandler() {
 			signalName := unix.SignalName(s.(syscall.Signal))
 
 			log.Info().Str("signal", signalName).Msg("received signal - stopping all active discoveries")
-			DeactivateDataSourceDiscovery()
-			DeactivateSpringDiscovery()
+			deactivateDataSourceDiscovery()
+			deactivateSpringDiscovery()
 
 			switch s {
 			case syscall.SIGINT:

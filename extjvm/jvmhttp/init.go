@@ -1,4 +1,4 @@
-package controller
+package jvmhttp
 
 import (
 	"fmt"
@@ -13,8 +13,7 @@ func Start(port uint16) {
 
 	go func() {
 		log.Info().Msgf("Starting HTTP server for java agent communication on port %d", port)
-		err := http.ListenAndServe(fmt.Sprintf(":%d", port), serverMuxProbes)
-		if err != nil {
+		if err := http.ListenAndServe(fmt.Sprintf(":%d", port), serverMuxProbes); err != nil {
 			log.Err(err).Msg("Failed to start HTTP server.")
 			return
 		}

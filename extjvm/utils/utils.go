@@ -5,9 +5,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
-	"sync"
 	"syscall"
-	"time"
 )
 
 func Contains(s []int32, str int32) bool {
@@ -35,22 +33,6 @@ func ContainsPartOfString(s []string, str string) bool {
 		}
 	}
 	return false
-}
-
-// WaitTimeout waits for the waitgroup for the specified max timeout.
-// Returns true if waiting timed out.
-func WaitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
-	c := make(chan struct{})
-	go func() {
-		defer close(c)
-		wg.Wait()
-	}()
-	select {
-	case <-c:
-		return false // completed normally
-	case <-time.After(timeout):
-		return true // timed out
-	}
 }
 
 func RootCommandContext(ctx context.Context, name string, arg ...string) *exec.Cmd {
