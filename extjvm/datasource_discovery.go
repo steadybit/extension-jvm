@@ -1,20 +1,20 @@
 package extjvm
 
 import (
-	"bufio"
-	"codnect.io/chrono"
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/procyon-projects/chrono"
 	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-jvm/extjvm/common"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"io"
 	"sync"
 	"time"
 )
 
 var (
-	DataSourcePlugin                        = common.GetJarPath("discovery-java-javaagent.jar")
+	DataSourcePlugin                        = utils.GetJarPath("discovery-java-javaagent.jar")
 	DataSourceMarkerClass                   = "javax.sql.DataSource"
 	DataSourceApplications                  = sync.Map{} // map[Pid int32]DataSourceApplication
 	datasourceVMDiscoverySchedulerHolderMap = sync.Map{} // map[Pid int32]DataSourceDiscoverySchedulerHolder
@@ -57,24 +57,23 @@ func GetDataSourceApplications() []DataSourceApplication {
 
 func initDataSourceDiscovery() {
 	log.Info().Msg("Init DataSource Plugin")
-	AddAutoloadAgentPlugin(DataSourcePlugin, DataSourceMarkerClass)
-	AddAttachedListener(DataSourceDiscovery{})
+	addAutoloadAgentPlugin(DataSourcePlugin, DataSourceMarkerClass)
+	addAttachedListener(DataSourceDiscovery{})
 }
-func DeactivateDataSourceDiscovery() {
-	RemoveAutoloadAgentPlugin(DataSourcePlugin, DataSourceMarkerClass)
+func deactivateDataSourceDiscovery() {
+	removeAutoloadAgentPlugin(DataSourcePlugin, DataSourceMarkerClass)
 }
 
 func stopScheduledDatasourceDiscoveryForVM(vm *jvm.JavaVm) {
-	datasourceVMDiscoverySchedulerHolder, ok := datasourceVMDiscoverySchedulerHolderMap.Load(vm.Pid)
-	if ok {
-		if datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask30s != nil {
-			datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask30s.Cancel()
+	if holder, ok := datasourceVMDiscoverySchedulerHolderMap.Load(vm.Pid); ok {
+		if holder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask30s != nil {
+			holder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask30s.Cancel()
 		}
-		if datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask60s != nil {
-			datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask60s.Cancel()
+		if holder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask60s != nil {
+			holder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask60s.Cancel()
 		}
-		if datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask15m != nil {
-			datasourceVMDiscoverySchedulerHolder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask15m.Cancel()
+		if holder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask15m != nil {
+			holder.(*DataSourceDiscoverySchedulerHolder).scheduledDatasourceDiscoveryTask15m.Cancel()
 		}
 	}
 }
@@ -129,49 +128,39 @@ func scheduleDataSourceDiscoveryForVM(interval time.Duration, vm *jvm.JavaVm) (c
 }
 
 func dataSourceDiscover(jvm *jvm.JavaVm) {
-	if hasDataSourcePlugin(jvm) {
-		dataSourceApplication := createDataSourceApplication(jvm)
-		if dataSourceApplication != nil {
-			DataSourceApplications.Store(jvm.Pid, *dataSourceApplication)
-			log.Info().Msgf("DataSource discovered on PID %d: %+v", jvm.Pid, dataSourceApplication)
-		}
+	if !hasAgentPlugin(jvm, DataSourcePlugin) {
+		return
+	}
+
+	if dataSourceApplication := createDataSourceApplication(jvm); dataSourceApplication != nil {
+		DataSourceApplications.Store(jvm.Pid, *dataSourceApplication)
+		log.Info().Msgf("DataSource discovered on PID %d: %+v", jvm.Pid, dataSourceApplication)
 	}
 }
 
 func createDataSourceApplication(vm *jvm.JavaVm) *DataSourceApplication {
-	dataSourceConnections := readDataSourceConnections(vm)
-	if dataSourceConnections != nil && len(*dataSourceConnections) > 0 {
+	if dataSourceConnections := readDataSourceConnections(vm); len(dataSourceConnections) > 0 {
 		return &DataSourceApplication{
 			Pid:                   vm.Pid,
-			DataSourceConnections: *dataSourceConnections,
+			DataSourceConnections: dataSourceConnections,
 		}
 	}
 	return nil
 }
 
-func readDataSourceConnections(vm *jvm.JavaVm) *[]DataSourceConnection {
-	return SendCommandToAgentViaSocket(vm, "java-datasource-connection", "", func(rc string, response io.Reader) []DataSourceConnection {
-
-		if rc == "OK" {
-			connections := make([]DataSourceConnection, 0)
-			err := json.NewDecoder(response).Decode(&connections)
-			if err != nil {
-				log.Error().Err(err).Msgf("Failed to read response from agent on PID %d", vm.Pid)
-				resultMessage, _ := bufio.NewReader(response).ReadString('\n')
-				log.Error().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
-				return make([]DataSourceConnection, 0)
-			}
-
-			log.Debug().Msgf("Command '%s:%s' to agent on PID %d returned: %+v", "DataSource-connections", "", vm.Pid, connections)
-			return connections
-		} else {
-			resultMessage, _ := bufio.NewReader(response).ReadString('\n')
-			log.Debug().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "DataSource-connections", "", vm.Pid, resultMessage)
-			return make([]DataSourceConnection, 0)
+func readDataSourceConnections(vm *jvm.JavaVm) []DataSourceConnection {
+	connections, err := SendCommandToAgentViaSocket(vm, "java-datasource-connection", "", func(response io.Reader) (*[]DataSourceConnection, error) {
+		connections := make([]DataSourceConnection, 0)
+		if err := json.NewDecoder(response).Decode(&connections); err != nil {
+			return nil, fmt.Errorf("failed to decode response: %w", err)
 		}
-
+		return &connections, nil
 	})
-}
-func hasDataSourcePlugin(vm *jvm.JavaVm) bool {
-	return HasAgentPlugin(vm, DataSourcePlugin)
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to read DataSource connections on PID %d", vm.Pid)
+		return nil
+	}
+
+	log.Debug().Msgf("Command '%s:%s' to agent on PID %d returned: %+v", "DataSource-connections", "", vm.Pid, connections)
+	return *connections
 }

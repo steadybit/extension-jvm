@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"runtime"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -51,8 +50,8 @@ func TestWithMinikube(t *testing.T) {
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
 		{
-				Name: "validate discovery",
-				Test: validateDiscovery,
+			Name: "validate discovery",
+			Test: validateDiscovery,
 		},
 		{
 			Name: "discover spring boot sample",
@@ -117,7 +116,6 @@ func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.jvm-instance")
 
 	targetFashion, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.jvm-instance", func(target discovery_kit_api.Target) bool {
-		log.Debug().Msgf("targetApplications: %+v", target.Attributes)
 		return e2e.HasAttribute(target, "jvm-instance.name", "fashion-bestseller")
 	})
 	require.NoError(t, err)
@@ -150,7 +148,6 @@ func testSpringDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extension) discovery_kit_api.Target {
 	target, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.jvm-instance", func(target discovery_kit_api.Target) bool {
-		log.Debug().Msgf("targetApplications: %+v", target.Attributes)
 		return e2e.HasAttribute(target, "jvm-instance.name", "app") &&
 			e2e.HasAttribute(target, "instance.type", "spring-boot") &&
 			e2e.HasAttribute(target, "spring-instance.name", "spring-boot-sample") &&
@@ -430,7 +427,7 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			if tt.erroneousCallRate > 0 {
 				springBootSample.AssertStatusOnPath(t, tt.expectedHttpStatus, "/remote/blocking?url=https://www.github.com")
 				if tt.expectedLogStatus != 200 {
-					e2e.AssertLogContains(t, m, springBootSample.Pod, strconv.Itoa(tt.expectedLogStatus)+" Injected by steadybit")
+					e2e.AssertLogContains(t, m, springBootSample.Pod, fmt.Sprintf("%d Injected by steadybit", tt.expectedLogStatus))
 				}
 			} else {
 				springBootSample.AssertStatusOnPath(t, tt.expectedHttpStatus, "/remote/blocking?url=https://www.github.com")

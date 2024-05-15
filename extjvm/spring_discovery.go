@@ -1,13 +1,13 @@
 package extjvm
 
 import (
-	"bufio"
-	"codnect.io/chrono"
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/procyon-projects/chrono"
 	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-jvm/extjvm/common"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extutil"
 	"io"
 	"strconv"
@@ -16,20 +16,20 @@ import (
 )
 
 var (
-	SpringPlugin                       = common.GetJarPath("discovery-springboot2-javaagent.jar")
-	SpringMarkerClass                  = "org.springframework.context.ApplicationContext"
-	SpringBootMarkerClass              = "org.springframework.boot.ApplicationRunner"
-	SpringJdbcTemplateBeanClass        = "org.springframework.jdbc.core.JdbcTemplate"
-	SpringResttemplateBeanClass        = "org.springframework.web.client.RestTemplate"
-	SpringResttemplateBuilderBeanClass = "org.springframework.boot.web.client.RestTemplateBuilder"
-	SpringWebclientBeanClass           = "org.springframework.web.reactive.function.client.WebClient"
-	SpringWebclientBuilderBeanClass    = "org.springframework.web.reactive.function.client.WebClient$Builder"
+	springPlugin                       = utils.GetJarPath("discovery-springboot2-javaagent.jar")
+	springMarkerClass                  = "org.springframework.context.ApplicationContext"
+	springBootMarkerClass              = "org.springframework.boot.ApplicationRunner"
+	springJdbcTemplateBeanClass        = "org.springframework.jdbc.core.JdbcTemplate"
+	springRestTemplateBeanClass        = "org.springframework.web.client.RestTemplate"
+	springResttemplateBuilderBeanClass = "org.springframework.boot.web.client.RestTemplateBuilder"
+	springWebclientBeanClass           = "org.springframework.web.reactive.function.client.WebClient"
+	springWebclientBuilderBeanClass    = "org.springframework.web.reactive.function.client.WebClient$Builder"
 
-	SpringApplications                  = sync.Map{} // map[Pid int32]SpringApplication
-	springVMDiscoverySchedulerHolderMap = sync.Map{} // map[Pid int32]SpringVMDiscoverySchedulerHolder
+	springApplications                  = sync.Map{} // map[Pid int32]SpringApplication
+	springVMDiscoverySchedulerHolderMap = sync.Map{} // map[Pid int32]springVMDiscoverySchedulerHolder
 )
 
-type SpringVMDiscoverySchedulerHolder struct {
+type springVMDiscoverySchedulerHolder struct {
 	scheduledSpringDiscoveryTask30s chrono.ScheduledTask
 	scheduledSpringDiscoveryTask60s chrono.ScheduledTask
 	scheduledSpringDiscoveryTask15m chrono.ScheduledTask
@@ -46,6 +46,7 @@ type SpringMvcMapping struct {
 	HandlerName       string   `json:"handlerName"`
 	HandlerDescriptor string   `json:"handlerDescriptor"`
 }
+
 type HttpRequest struct {
 	Address        string `json:"address"`
 	Scheme         string `json:"scheme"`
@@ -70,19 +71,19 @@ func (s SpringDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
 }
 func (s SpringDiscovery) AttachedProcessStopped(jvm *jvm.JavaVm) {
 	stopScheduledSpringDiscoveryForVM(jvm)
-	SpringApplications.Delete(jvm.Pid)
+	springApplications.Delete(jvm.Pid)
 }
 
 func GetSpringApplications() []SpringApplication {
 	var result []SpringApplication
-	SpringApplications.Range(func(key, value interface{}) bool {
+	springApplications.Range(func(key, value interface{}) bool {
 		result = append(result, value.(SpringApplication))
 		return true
 	})
 	return result
 }
 
-func FindSpringApplication(pid int32) *SpringApplication {
+func findSpringApplication(pid int32) *SpringApplication {
 	applications := GetSpringApplications()
 	for _, application := range applications {
 		if application.Pid == pid {
@@ -94,26 +95,26 @@ func FindSpringApplication(pid int32) *SpringApplication {
 
 func initSpringDiscovery() {
 	log.Info().Msg("Init Spring Plugin")
-	AddAutoloadAgentPlugin(SpringPlugin, SpringMarkerClass)
-	AddAttachedListener(SpringDiscovery{})
+	addAutoloadAgentPlugin(springPlugin, springMarkerClass)
+	addAttachedListener(SpringDiscovery{})
 }
+
 func stopScheduledSpringDiscoveryForVM(vm *jvm.JavaVm) {
-	springVMDiscoverySchedulerHolder, ok := springVMDiscoverySchedulerHolderMap.Load(vm.Pid)
-	if ok {
-		if springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask30s != nil {
-			springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask30s.Cancel()
+	if holder, ok := springVMDiscoverySchedulerHolderMap.Load(vm.Pid); ok {
+		if holder.(*springVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask30s != nil {
+			holder.(*springVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask30s.Cancel()
 		}
-		if springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60s != nil {
-			springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60s.Cancel()
+		if holder.(*springVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60s != nil {
+			holder.(*springVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60s.Cancel()
 		}
-		if springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask15m != nil {
-			springVMDiscoverySchedulerHolder.(*SpringVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask15m.Cancel()
+		if holder.(*springVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask15m != nil {
+			holder.(*springVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask15m.Cancel()
 		}
 	}
 }
 
 func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
-	schedulerHolder := &SpringVMDiscoverySchedulerHolder{}
+	schedulerHolder := &springVMDiscoverySchedulerHolder{}
 	springVMDiscoverySchedulerHolderMap.Store(vm.Pid, schedulerHolder)
 
 	task30s, err := scheduleSpringDiscoveryForVM(30*time.Second, vm)
@@ -155,8 +156,8 @@ func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
 	}()
 }
 
-func DeactivateSpringDiscovery() {
-	RemoveAutoloadAgentPlugin(SpringPlugin, SpringMarkerClass)
+func deactivateSpringDiscovery() {
+	removeAutoloadAgentPlugin(springPlugin, springMarkerClass)
 }
 func scheduleSpringDiscoveryForVM(interval time.Duration, vm *jvm.JavaVm) (chrono.ScheduledTask, error) {
 	taskScheduler := chrono.NewDefaultTaskScheduler()
@@ -168,7 +169,7 @@ func scheduleSpringDiscoveryForVM(interval time.Duration, vm *jvm.JavaVm) (chron
 func springDiscover(jvm *jvm.JavaVm) {
 	if hasSpringPlugin(jvm) {
 		springApplication := createSpringApplication(jvm)
-		SpringApplications.Store(jvm.Pid, springApplication)
+		springApplications.Store(jvm.Pid, springApplication)
 		log.Trace().Msgf("Spring Instance '%s' on PID %d has been discovered: %+v", springApplication.Name, jvm.Pid, springApplication)
 	}
 }
@@ -188,87 +189,64 @@ func createSpringApplication(vm *jvm.JavaVm) SpringApplication {
 }
 
 func readHttpClientRequest(vm *jvm.JavaVm) *[]HttpRequest {
-	return SendCommandToAgentViaSocket(vm, "spring-httpclient-requests", "", func(rc string, response io.Reader) []HttpRequest {
-		if rc == "OK" {
-			requests := make([]HttpRequest, 0)
-			err := json.NewDecoder(response).Decode(&requests)
-			if err != nil {
-				resultMessage, _ := bufio.NewReader(response).ReadString('\n')
-				log.Debug().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-httpclient-requests", "", vm.Pid, resultMessage)
-				return make([]HttpRequest, 0)
-			}
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned: %+v", "spring-httpclient-requests", "", vm.Pid, requests)
-			return requests
-		} else {
-			resultMessage, _ := bufio.NewReader(response).ReadString('\n')
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-httpclient-requests", "", vm.Pid, resultMessage)
-			return make([]HttpRequest, 0)
+	requests, err := SendCommandToAgentViaSocket(vm, "spring-httpclient-requests", "", func(response io.Reader) (*[]HttpRequest, error) {
+		requests := make([]HttpRequest, 0)
+		if err := json.NewDecoder(response).Decode(&requests); err != nil {
+			return nil, fmt.Errorf("failed to decode response: %w", err)
 		}
+		return &requests, nil
 	})
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to read HttpClient requests on PID %d", vm.Pid)
+		return nil
+	}
+	return requests
 }
 
 func readRequestMappings(vm *jvm.JavaVm) *[]SpringMvcMapping {
-	return SendCommandToAgentViaSocket(vm, "spring-mvc-mappings", "", func(rc string, response io.Reader) []SpringMvcMapping {
-		if rc == "OK" {
-			mappings := make([]SpringMvcMapping, 0)
-			err := json.NewDecoder(response).Decode(&mappings)
-			if err != nil {
-				resultMessage, _ := bufio.NewReader(response).ReadString('\n')
-				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-mvc-mappings", "", vm.Pid, resultMessage)
-				return make([]SpringMvcMapping, 0)
-			}
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned: %+v", "spring-mvc-mappings", "", vm.Pid, mappings)
-			return mappings
-		} else {
-			resultMessage, _ := bufio.NewReader(response).ReadString('\n')
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-mvc-mappings", "", vm.Pid, resultMessage)
-			return make([]SpringMvcMapping, 0)
+	mappings, err := SendCommandToAgentViaSocket(vm, "spring-mvc-mappings", "", func(response io.Reader) (*[]SpringMvcMapping, error) {
+		mappings := make([]SpringMvcMapping, 0)
+		if err := json.NewDecoder(response).Decode(&mappings); err != nil {
+			return nil, fmt.Errorf("failed to decode response: %w", err)
+
 		}
+		return &mappings, nil
 	})
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to read Sping MVC mappings on PID %d", vm.Pid)
+		return nil
+	}
+	return mappings
 }
 
 func hasWebClient(vm *jvm.JavaVm) bool {
-	return SendCommandToAgent(vm, "spring-bean", SpringWebclientBeanClass) || SendCommandToAgent(vm,
-		"spring-bean", SpringWebclientBuilderBeanClass)
+	return SendCommandToAgent(vm, "spring-bean", springWebclientBeanClass) || SendCommandToAgent(vm, "spring-bean", springWebclientBuilderBeanClass)
 }
 
 func hasRestTemplate(vm *jvm.JavaVm) bool {
-	return SendCommandToAgent(vm, "spring-bean", SpringResttemplateBeanClass) || SendCommandToAgent(
-		vm, "spring-bean", SpringResttemplateBuilderBeanClass)
+	return SendCommandToAgent(vm, "spring-bean", springRestTemplateBeanClass) || SendCommandToAgent(vm, "spring-bean", springResttemplateBuilderBeanClass)
 }
 
 func hasJdbcTemplate(vm *jvm.JavaVm) bool {
-	return SendCommandToAgent(vm, "spring-bean", SpringJdbcTemplateBeanClass)
+	return SendCommandToAgent(vm, "spring-bean", springJdbcTemplateBeanClass)
 }
 
 func isSpringBootApplication(vm *jvm.JavaVm) bool {
-	return HasClassLoaded(vm, SpringBootMarkerClass)
+	return hasClassLoaded(vm, springBootMarkerClass)
 }
 
 func readSpringApplicationName(vm *jvm.JavaVm) string {
-	result := SendCommandToAgentViaSocket(vm, "spring-env", "spring.application.name", func(rc string, response io.Reader) string {
-		if rc == "OK" {
-			resultMessage, _ := GetCleanSocketCommandResult(response)
-			if resultMessage == "" {
-				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-env", "spring.application.name", vm.Pid, resultMessage)
-
-				return ""
-			} else {
-				log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned : %s", "spring-env", "spring.application.name", vm.Pid, resultMessage)
-				return resultMessage
-			}
-		} else {
-			log.Trace().Msgf("Command '%s:%s' to agent on PID %d returned error: %s", "spring-env", "spring.application.name", vm.Pid, rc)
-			return ""
-		}
-
+	name, err := SendCommandToAgentViaSocket(vm, "spring-env", "spring.application.name", func(response io.Reader) (*string, error) {
+		s, err := GetCleanSocketCommandResult(response)
+		return &s, err
 	})
-	if result == nil {
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to read Spring Application Name on PID %d", vm.Pid)
 		return ""
 	}
-	return *result
+	return *name
 }
 
 func hasSpringPlugin(vm *jvm.JavaVm) bool {
-	return HasAgentPlugin(vm, SpringPlugin)
+	return hasAgentPlugin(vm, springPlugin)
 }

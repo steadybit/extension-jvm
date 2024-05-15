@@ -5,42 +5,24 @@
 package extjvm
 
 import (
-	"context"
+	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
 )
 
-type javaMethodDelay struct{}
-
-type JavaMethodDelayState struct {
-	Delay       time.Duration
-	DelayJitter bool
-	ClassName   string
-	MethodName  string
-	*AttackState
-}
-
-// Make sure action implements all required interfaces
-var (
-	_ action_kit_sdk.Action[JavaMethodDelayState]         = (*javaMethodDelay)(nil)
-	_ action_kit_sdk.ActionWithStop[JavaMethodDelayState] = (*javaMethodDelay)(nil)
-)
-
-func NewJavaMethodDelay() action_kit_sdk.Action[JavaMethodDelayState] {
-	return &javaMethodDelay{}
-}
-
-func (l *javaMethodDelay) NewEmptyState() JavaMethodDelayState {
-	return JavaMethodDelayState{
-		AttackState: &AttackState{},
+func NewJavaMethodDelay() action_kit_sdk.Action[JavaagentActionState] {
+	return &javaagentAction{
+		pluginJar:      utils.GetJarPath("attack-java-javaagent.jar"),
+		description:    methodDelayDescribe(),
+		configProvider: methodDelayConfigProvider,
 	}
 }
 
-// Describe returns the action description for the platform with all required information.
-func (l *javaMethodDelay) Describe() action_kit_api.ActionDescription {
+func methodDelayDescribe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          ActionIDPrefix + ".java-method-delay-attack",
 		Label:       "Java Method Delay",
@@ -116,57 +98,20 @@ func (l *javaMethodDelay) Describe() action_kit_api.ActionDescription {
 	}
 }
 
-// Prepare is called before the action is started.
-// It can be used to validate the parameters and prepare the action.
-// It must not cause any harmful effects.
-// The passed in state is included in the subsequent calls to start/status/stop.
-// So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *javaMethodDelay) Prepare(_ context.Context, state *JavaMethodDelayState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-
-	errResult := extractDuration(request, state.AttackState)
-	if errResult != nil {
-		return errResult, nil
-	}
-	parsedDelay := extutil.ToUInt64(request.Config["delay"])
-	var delay time.Duration
-	if parsedDelay == 0 {
-		delay = 0
-	} else {
-		delay = time.Duration(parsedDelay) * time.Millisecond
-	}
-	state.Delay = delay
-
-	delayJitter := extutil.ToBool(request.Config["delayJitter"])
-	state.DelayJitter = delayJitter
-	state.ClassName = extutil.ToString(request.Config["className"])
-	state.MethodName = extutil.ToString(request.Config["methodName"])
-
-	errResult = extractPid(request, state.AttackState)
-	if errResult != nil {
-		return errResult, nil
+func methodDelayConfigProvider(request action_kit_api.PrepareActionRequestBody) (any, error) {
+	duration, err := extractDuration(request)
+	if err != nil {
+		return nil, err
 	}
 
-	var config = map[string]interface{}{
+	className := extutil.ToString(request.Config["className"])
+	methodName := extutil.ToString(request.Config["methodName"])
+
+	return map[string]interface{}{
 		"attack-class": "com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation",
-		"duration":     int(state.Duration / time.Millisecond),
-		"delay":        int(state.Delay / time.Millisecond),
-		"delayJitter":  state.DelayJitter,
-		"methods":      []string{state.ClassName + "#" + state.MethodName},
-	}
-	return commonPrepareEnd(config, state.AttackState, request)
-}
-
-// Start is called to start the action
-// You can mutate the state here.
-// You can use the result to return messages/errors/metrics or artifacts
-func (l *javaMethodDelay) Start(_ context.Context, state *JavaMethodDelayState) (*action_kit_api.StartResult, error) {
-	return commonStart(state.AttackState, attackJavaJavaagentJar)
-}
-
-// Stop is called to stop the action
-// It will be called even if the start method did not complete successfully.
-// It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
-// You can use the result to return messages/errors/metrics or artifacts
-func (l *javaMethodDelay) Stop(_ context.Context, state *JavaMethodDelayState) (*action_kit_api.StopResult, error) {
-	return commonStop(state.AttackState, attackJavaJavaagentJar)
+		"duration":     int(duration / time.Millisecond),
+		"delay":        extutil.ToUInt64(request.Config["delay"]),
+		"delayJitter":  extutil.ToBool(request.Config["delayJitter"]),
+		"methods":      []string{fmt.Sprintf("%s#%s", className, methodName)},
+	}, nil
 }

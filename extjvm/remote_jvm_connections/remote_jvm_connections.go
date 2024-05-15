@@ -1,8 +1,8 @@
 package remote_jvm_connections
 
 import (
+	"context"
 	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"strconv"
 	"sync"
 	"time"
@@ -23,21 +23,18 @@ var (
 )
 
 func WaitForConnection(pid int32, timeout time.Duration) bool {
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		for {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return false
+		case <-time.After(100 * time.Millisecond):
 			if GetConnection(pid) != nil {
-				wg.Done()
-				return
+				return true
 			}
-			time.Sleep(100 * time.Millisecond)
 		}
-	}()
-	if utils.WaitTimeout(&wg, timeout) {
-		return false
-	} else {
-		return true
 	}
 }
 
@@ -78,13 +75,4 @@ func RemoveConnection(pid int32) {
 func ClearConnections() {
 	connections = sync.Map{}
 	log.Debug().Msg("All JVM connections removed")
-}
-
-func Size() int {
-	size := 0
-	connections.Range(func(key, value interface{}) bool {
-		size++
-		return true
-	})
-	return size
 }

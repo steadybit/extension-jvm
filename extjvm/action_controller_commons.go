@@ -1,6 +1,7 @@
 package extjvm
 
 import (
+	"errors"
 	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
@@ -69,75 +70,60 @@ var (
 	})
 )
 
-type ControllerState struct {
-	Pattern        string
-	Method         string
-	HandlerMethods []string
-	*AttackState
-}
-
-func extractPattern(request action_kit_api.PrepareActionRequestBody, state *ControllerState) *action_kit_api.PrepareResult {
+func extractPattern(request action_kit_api.PrepareActionRequestBody) (string, error) {
 	pattern := extutil.ToString(request.Config["pattern"])
 	if pattern == "" {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Pattern is required",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}
+		return "", errors.New("pattern is required")
 	}
-	state.Pattern = pattern
-	return nil
+	return pattern, nil
 }
 
-func extractMethod(request action_kit_api.PrepareActionRequestBody, state *ControllerState) *action_kit_api.PrepareResult {
-	method := extutil.ToString(request.Config["method"])
-	if method == "" {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Method is required",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}
+func extractMethod(request action_kit_api.PrepareActionRequestBody) (string, error) {
+	pattern := extutil.ToString(request.Config["method"])
+	if pattern == "" {
+		return "", errors.New("method is required")
 	}
-	state.Method = method
-	return nil
+	return pattern, nil
 }
 
-func extractHandlerMethods(_ action_kit_api.PrepareActionRequestBody, state *ControllerState) *action_kit_api.PrepareResult {
-	application := FindSpringApplication(state.Pid)
+func extractHandlerMethods(request action_kit_api.PrepareActionRequestBody) ([]string, error) {
+	pattern, err := extractPattern(request)
+	if err != nil {
+		return nil, err
+	}
+
+	method, err := extractMethod(request)
+	if err != nil {
+		return nil, err
+	}
+
+	pid, err := extractPid(request)
+	if err != nil {
+		return nil, err
+	}
+
+	application := findSpringApplication(pid)
 	if application == nil {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Spring instance not found",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}
+		return nil, errors.New("spring instance not found")
 	}
 
 	if application.MvcMappings == nil {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Spring MVC mappings not found",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}
+		return nil, errors.New("spring MVC mappings not found")
 	}
+
 	relevantMappings := make([]SpringMvcMapping, 0)
 	for _, m := range *application.MvcMappings {
-		if utils.ContainsString(m.Patterns, state.Pattern) {
-			if state.Method == "*" || (len(m.Methods) == 0 && state.Method == "GET") {
-				relevantMappings = append(relevantMappings, m)
-			} else if utils.ContainsString(m.Methods, state.Method) {
-				relevantMappings = append(relevantMappings, m)
-			}
+		if !utils.ContainsString(m.Patterns, pattern) {
+			continue
+		}
+		if method == "*" || (len(m.Methods) == 0 && method == "GET") || utils.ContainsString(m.Methods, method) {
+			relevantMappings = append(relevantMappings, m)
 		}
 	}
+
 	configMethods := make([]string, 0)
 	for _, m := range relevantMappings {
-		method := fmt.Sprintf("%s#%s", m.HandlerClass, m.HandlerName)
-		configMethods = append(configMethods, method)
+		configMethods = append(configMethods, fmt.Sprintf("%s#%s", m.HandlerClass, m.HandlerName))
 	}
-	state.HandlerMethods = configMethods
-	return nil
+	return configMethods, nil
 }

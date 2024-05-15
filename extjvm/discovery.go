@@ -12,10 +12,10 @@ import (
 	"github.com/steadybit/discovery-kit/go/discovery_kit_commons"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_sdk"
 	"github.com/steadybit/extension-jvm/config"
-	"github.com/steadybit/extension-jvm/extjvm/controller"
 	"github.com/steadybit/extension-jvm/extjvm/hotspot"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-jvm/extjvm/jvmhttp"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
@@ -44,7 +44,7 @@ func NewJvmDiscovery() discovery_kit_sdk.TargetDiscovery {
 func StartJvmInfrastructure() {
 	installSignalHandler()
 
-	controller.Start(config.Config.JavaAgentAttachmentPort)
+	jvmhttp.Start(config.Config.JavaAgentAttachmentPort)
 
 	initDataSourceDiscovery()
 	initSpringDiscovery()
@@ -52,9 +52,7 @@ func StartJvmInfrastructure() {
 
 	startAttachment()
 
-	// Start JVM Watcher
 	java_process.Start()
-	// Start Hotspot JVM Watcher
 	hotspot.Start()
 }
 
@@ -325,7 +323,7 @@ func (j *jvmDiscovery) DescribeAttributes() []discovery_kit_api.AttributeDescrip
 }
 
 func (j *jvmDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.Target, error) {
-	vms := GetJVMs()
+	vms := getJvms()
 	targets := make([]discovery_kit_api.Target, 0, len(vms))
 	for _, vm := range vms {
 		targets = append(targets, discovery_kit_api.Target{
@@ -430,6 +428,5 @@ func getApplicationName(jvm jvm.JavaVm, defaultIfEmpty string) string {
 	if name == "" {
 		name = defaultIfEmpty
 	}
-	name = strings.TrimPrefix(name, "/")
-	return name
+	return strings.TrimPrefix(name, "/")
 }
