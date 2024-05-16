@@ -1,4 +1,4 @@
-package attachment
+package jvm
 
 import (
 	"testing"

@@ -1,4 +1,4 @@
-package extjvm
+package jvm
 
 import (
 	"context"
@@ -8,21 +8,17 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm/hotspot"
 	"github.com/steadybit/extension-jvm/extjvm/hsperf"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
-	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/procfs"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extruntime"
 	"github.com/xin053/hsperfdata"
-	"golang.org/x/sys/unix"
 	"math"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 )
 
 var (
@@ -38,15 +34,15 @@ var (
 )
 
 type Listener interface {
-	addedJvm(jvm *jvm.JavaVm)
-	removedJvm(jvm *jvm.JavaVm)
+	addedJvm(jvm *JavaVm)
+	removedJvm(jvm *JavaVm)
 }
 
 type JavaVMS struct{}
 
 func addListener(listener Listener) {
 	listeners = append(listeners, listener)
-	for _, vm := range getJvms() {
+	for _, vm := range GetJvms() {
 		listener.addedJvm(&vm)
 	}
 }
@@ -60,7 +56,7 @@ func removeListener(listener Listener) {
 	}
 }
 
-func addJVMListener() {
+func AddJVMListener() {
 	java_process.AddListener(&JavaVMS{})
 	hotspot.AddListener(&JavaVMS{})
 }
@@ -72,7 +68,7 @@ func (j *JavaVMS) NewJavaProcess(p *process.Process) bool {
 			vm := createJvm(p)
 			if vm != nil {
 				log.Info().Msgf("Discovered JVM %s via process with pid %d", vm.VmName, p.Pid)
-				addJvm(vm)
+				AddJvm(vm)
 				return true
 			}
 			return false
@@ -90,7 +86,7 @@ func (j *JavaVMS) NewHotspotProcess(p *process.Process) bool {
 		vm := createJvm(p)
 		if vm != nil {
 			log.Info().Msgf("Discovered JVM %s via hotspot with pid %d", vm.VmName, p.Pid)
-			addJvm(vm)
+			AddJvm(vm)
 			return true
 		}
 		return false
@@ -98,7 +94,7 @@ func (j *JavaVMS) NewHotspotProcess(p *process.Process) bool {
 	return true
 }
 
-func addJvm(jvm *jvm.JavaVm) {
+func AddJvm(jvm *JavaVm) {
 	if jvm == nil || isExcluded(jvm) {
 		return
 	}
@@ -109,18 +105,18 @@ func addJvm(jvm *jvm.JavaVm) {
 	}
 }
 
-func getJvms() []jvm.JavaVm {
+func GetJvms() []JavaVm {
 	removeStoppedJvms()
-	result := make([]jvm.JavaVm, 0)
+	result := make([]JavaVm, 0)
 	jvms.Range(func(key, value interface{}) bool {
-		result = append(result, value.(jvm.JavaVm))
+		result = append(result, value.(JavaVm))
 		return true
 	})
 	return result
 }
 
-func getJvm(pid int32) *jvm.JavaVm {
-	for _, javaVm := range getJvms() {
+func GetJvm(pid int32) *JavaVm {
+	for _, javaVm := range GetJvms() {
 		if javaVm.Pid == pid {
 			return &javaVm
 		}
@@ -130,7 +126,7 @@ func getJvm(pid int32) *jvm.JavaVm {
 
 func removeStoppedJvms() {
 	jvms.Range(func(key, value interface{}) bool {
-		vm := value.(jvm.JavaVm)
+		vm := value.(JavaVm)
 		p, err := process.NewProcess(vm.Pid)
 		if err != nil {
 			log.Trace().Err(err).Msgf("Process not found: %d - removing from JVMs.", vm.Pid)
@@ -145,7 +141,7 @@ func removeStoppedJvms() {
 	})
 }
 
-func removeJVM(key interface{}, vm jvm.JavaVm) {
+func removeJVM(key interface{}, vm JavaVm) {
 	jvms.Delete(key)
 	java_process.RemovePidFromDiscoveredPids(vm.Pid)
 	log.Debug().Msgf("Removing JVM %s", vm.ToDebugString())
@@ -153,7 +149,7 @@ func removeJVM(key interface{}, vm jvm.JavaVm) {
 		listener.removedJvm(&vm)
 	}
 }
-func createJvm(p *process.Process) *jvm.JavaVm {
+func createJvm(p *process.Process) *JavaVm {
 	containerId := procfs.GetContainerIdForProcess(p)
 	if containerId == "" {
 		return createHostJvm(p)
@@ -166,7 +162,7 @@ func createJvm(p *process.Process) *jvm.JavaVm {
 	return nil
 }
 
-func createContainerizedJvm(p *process.Process, containerId string, containerPid int32, containerFs string) *jvm.JavaVm {
+func createContainerizedJvm(p *process.Process, containerId string, containerPid int32, containerFs string) *JavaVm {
 	log.Debug().Msgf("Found containerized JVM %s with containerPid %d on FS %s", containerId, containerPid, containerFs)
 	filePaths := hotspot.GetRootHsPerfPaths(p.Pid, containerFs)
 	if len(filePaths) == 0 {
@@ -188,7 +184,7 @@ func createContainerizedJvm(p *process.Process, containerId string, containerPid
 	return javaVm
 }
 
-func createHostJvm(p *process.Process) *jvm.JavaVm {
+func createHostJvm(p *process.Process) *JavaVm {
 	if runtime.GOOS != "windows" {
 		rootPath := procfs.GetProcessRoot(p.Pid)
 		dirsGlob := filepath.Join(rootPath, os.TempDir())
@@ -226,13 +222,13 @@ func createHostJvm(p *process.Process) *jvm.JavaVm {
 	return createJvmFromProcess(p)
 }
 
-func createJvmFromProcess(p *process.Process) *jvm.JavaVm {
+func createJvmFromProcess(p *process.Process) *JavaVm {
 	cmdline, _ := p.Cmdline()
 	path, _ := p.Exe()
 
 	hostname, fqdn, _ := extruntime.GetHostname()
 
-	vm := &jvm.JavaVm{
+	vm := &JavaVm{
 		Pid:           p.Pid,
 		DiscoveredVia: "os-process",
 		CommandLine:   cmdline,
@@ -252,13 +248,13 @@ func createJvmFromProcess(p *process.Process) *jvm.JavaVm {
 	return vm
 }
 
-func findJvmOnPath(p *process.Process, dirsGlob string) *jvm.JavaVm {
+func findJvmOnPath(p *process.Process, dirsGlob string) *JavaVm {
 	filePaths := hsperf.FindHsPerfDataDirs(dirsGlob)
 	vm := findJvm(p, filePaths)
 	return vm
 }
 
-func findJvm(p *process.Process, paths map[string]string) *jvm.JavaVm {
+func findJvm(p *process.Process, paths map[string]string) *JavaVm {
 	path := paths[strconv.Itoa(int(p.Pid))]
 	if path == "" {
 		return nil
@@ -266,7 +262,7 @@ func findJvm(p *process.Process, paths map[string]string) *jvm.JavaVm {
 	return parsePerfDataBuffer(p, path)
 }
 
-func parsePerfDataBuffer(p *process.Process, path string) *jvm.JavaVm {
+func parsePerfDataBuffer(p *process.Process, path string) *JavaVm {
 	tempFile := os.TempDir() + "/hsperfdata" + strconv.Itoa(int(p.Pid))
 	cmd := utils.RootCommandContext(context.Background(), "cp", path, tempFile)
 	err := cmd.Run()
@@ -291,7 +287,7 @@ func parsePerfDataBuffer(p *process.Process, path string) *jvm.JavaVm {
 	}
 	commandLine := hsperf.GetStringProperty(entryMap, "sun.rt.javaCommand")
 	hostname, fqdn, _ := extruntime.GetHostname()
-	vm := &jvm.JavaVm{
+	vm := &JavaVm{
 		Pid:           p.Pid,
 		DiscoveredVia: "hsperfdata",
 		CommandLine:   commandLine,
@@ -364,7 +360,7 @@ func getMainClass(commandLine string) string {
 	return cmdLine
 }
 
-func isExcluded(vm *jvm.JavaVm) bool {
+func isExcluded(vm *JavaVm) bool {
 	if utils.ContainsPartOfString(ClasspathExcludes, vm.ClassPath) {
 		log.Debug().Msgf("%s is excluded by classpath", vm.ToDebugString())
 		return true
@@ -374,28 +370,4 @@ func isExcluded(vm *jvm.JavaVm) bool {
 		return true
 	}
 	return false
-}
-
-func installSignalHandler() {
-	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
-	go func(signals <-chan os.Signal) {
-		for s := range signals {
-			signalName := unix.SignalName(s.(syscall.Signal))
-
-			log.Info().Str("signal", signalName).Msg("received signal - stopping all active discoveries")
-			deactivateDataSourceDiscovery()
-			deactivateSpringDiscovery()
-
-			switch s {
-			case syscall.SIGINT:
-				fmt.Println()
-				os.Exit(128 + int(s.(syscall.Signal)))
-
-			case syscall.SIGTERM:
-				fmt.Printf("Terminated: %d\n", int(s.(syscall.Signal)))
-				os.Exit(128 + int(s.(syscall.Signal)))
-			}
-		}
-	}(signalChannel)
 }

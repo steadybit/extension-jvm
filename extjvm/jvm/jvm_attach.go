@@ -1,22 +1,37 @@
-package attachment
+package jvm
 
 import (
 	"bytes"
 	"context"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/extjvm/container"
-	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"os"
 	"os/user"
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
 )
 
-func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPPort int, host string, addRuncExec bool, pid string, hostpid string) bool {
+type JvmAttachment interface {
+	attach(agentJar string, initJar string, port int) bool
+	copyFiles(dstPath string, files map[string]string) (map[string]string, error)
+	GetHostAddress() string
+}
+
+func GetAttachment(jvm *JavaVm) JvmAttachment {
+	if jvm.IsRunningInContainer() {
+		return containerJvmAttachment{
+			jvm: jvm,
+		}
+	}
+	return hostJvmAttachment{
+		jvm: jvm,
+	}
+}
+
+func externalAttach(jvm *JavaVm, agentJar string, initJar string, agentHTTPPort int, host string, addRuncExec bool, pid string, hostpid string) bool {
 	initJarAbsPath, err := filepath.Abs(initJar)
 	if err != nil {
 		log.Error().Err(err).Msgf("Could not determine absolute path of init jar %s", initJar)
@@ -64,9 +79,9 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
 	cmd.Stdout = &outb
 	cmd.Stderr = &errb
 	err = cmd.Run()
-	log.Debug().Msgf("Attach command output: %s", outb.String())
+	log.Debug().Msgf("attach command output: %s", outb.String())
 	if errb.String() != "" {
-		log.Error().Msgf("Attach command error: %s", errb.String())
+		log.Error().Msgf("attach command error: %s", errb.String())
 	}
 	if err != nil {
 		log.Error().Err(err).Msgf("Error attaching to JVM %+v: %s", jvm, err)
@@ -75,14 +90,14 @@ func externalAttach(jvm *jvm.JavaVm, agentJar string, initJar string, agentHTTPP
 	return true
 }
 
-func addUserIdAndGroupId(vm *jvm.JavaVm, attachCommand []string) []string {
+func addUserIdAndGroupId(vm *JavaVm, attachCommand []string) []string {
 	if vm.GroupId != "" && vm.UserId != "" {
 		return append(attachCommand, "uid="+vm.UserId, "gid="+vm.GroupId)
 	}
 	return attachCommand
 }
 
-func needsUserSwitch(jvm *jvm.JavaVm) bool {
+func needsUserSwitch(jvm *JavaVm) bool {
 	current, err := user.Current()
 	if err != nil {
 		log.Warn().Err(err).Msg("Could not determine current user")
@@ -91,7 +106,7 @@ func needsUserSwitch(jvm *jvm.JavaVm) bool {
 	return !(jvm.UserId == current.Uid && jvm.GroupId == current.Gid)
 }
 
-func getJavaExecutable(jvm *jvm.JavaVm) string {
+func getJavaExecutable(jvm *JavaVm) string {
 	if jvm.ContainerId != "" {
 		return jvm.Path
 	}
@@ -103,26 +118,6 @@ func getJavaExecutable(jvm *jvm.JavaVm) string {
 		}
 		return "java"
 	}
-}
-
-func checkPathExecutable(pid int32, path string) bool {
-	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
-	defer cancelFunc()
-	command := []string{"nsenter", "-t", strconv.Itoa(int(pid)), "-m", "-u", "-i", "-n", "-p", "-r", "--", "ls", "-la", path}
-	log.Info().Msgf("Checking path is executable with nsenter: %s", command)
-	cmd := utils.RootCommandContext(ctx, command[0], command[1:]...)
-	var outb, errb bytes.Buffer
-	cmd.Stdout = &outb
-	cmd.Stderr = &errb
-	err := cmd.Run()
-	log.Info().Msgf("Check path is executable with nsenter output: %s", outb.String())
-	log.Info().Msgf("Check path is executable with nsenter error: %s", errb.String())
-
-	if err != nil {
-		log.Error().Err(err).Msgf("Error checking path %s", path)
-		return false
-	}
-	return strings.HasPrefix(outb.String(), "-rwx") || strings.HasPrefix(outb.String(), "-r-x")
 }
 
 func isExecAny(path string) bool {

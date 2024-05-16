@@ -31,7 +31,7 @@ func TestWithMinikube(t *testing.T) {
 			return []string{
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
 				"--set", "discovery.attributes.excludes.jvm={spring-instance.http-client}",
-				"--set", "logging.level=INFO",
+				"--set", "logging.level=DEBUG",
 			}
 		},
 	}

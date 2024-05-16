@@ -1,10 +1,9 @@
-package attachment
+package jvm
 
 import (
 	"context"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
-	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/procfs"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"net"
@@ -14,16 +13,16 @@ import (
 )
 
 var (
-	PublicAddress string
+	publicAddress string
 )
 
-type ContainerJvmAttachment struct {
-	Jvm *jvm.JavaVm
+type containerJvmAttachment struct {
+	jvm *JavaVm
 }
 
-func (attachment ContainerJvmAttachment) Attach(agentJar string, initJar string, agentHTTPPort int) bool {
-	if !java_process.IsRunningProcess(attachment.Jvm.Pid) {
-		log.Debug().Msgf("Process not running. Skipping attachment to JVM %+v", attachment.Jvm)
+func (a containerJvmAttachment) attach(agentJar string, initJar string, agentHTTPPort int) bool {
+	if !java_process.IsRunningProcess(a.jvm.Pid) {
+		log.Debug().Msgf("Process not running. Skipping a to JVM %+v", a.jvm)
 		return false
 	}
 
@@ -31,16 +30,16 @@ func (attachment ContainerJvmAttachment) Attach(agentJar string, initJar string,
 		"steadybit-javaagent-main.jar": agentJar,
 		"steadybit-javaagent-init.jar": initJar,
 	}
-	copiedFiles, err := attachment.CopyFiles("/tmp", files)
+	copiedFiles, err := a.copyFiles("/tmp", files)
 	if err != nil {
 		log.Error().Err(err).Msgf("Error copying files to container")
 		return false
 	}
-	return externalAttach(attachment.Jvm, copiedFiles["steadybit-javaagent-main.jar"], copiedFiles["steadybit-javaagent-init.jar"], agentHTTPPort, attachment.GetAgentHost(), true, strconv.Itoa(attachment.Jvm.InContainerPid), strconv.Itoa(int(attachment.Jvm.Pid)))
+	return externalAttach(a.jvm, copiedFiles["steadybit-javaagent-main.jar"], copiedFiles["steadybit-javaagent-init.jar"], agentHTTPPort, a.GetHostAddress(), true, strconv.Itoa(a.jvm.InContainerPid), strconv.Itoa(int(a.jvm.Pid)))
 }
 
-func (attachment ContainerJvmAttachment) CopyFiles(dstPath string, files map[string]string) (map[string]string, error) {
-	processRoot := procfs.GetProcessRoot(attachment.Jvm.Pid)
+func (a containerJvmAttachment) copyFiles(dstPath string, files map[string]string) (map[string]string, error) {
+	processRoot := procfs.GetProcessRoot(a.jvm.Pid)
 
 	result := make(map[string]string)
 
@@ -81,27 +80,27 @@ func (attachment ContainerJvmAttachment) CopyFiles(dstPath string, files map[str
 	return result, nil
 }
 
-func (attachment ContainerJvmAttachment) GetAgentHost() string {
-	if PublicAddress != "" {
-		return PublicAddress
+func (a containerJvmAttachment) GetHostAddress() string {
+	if publicAddress != "" {
+		return publicAddress
 	}
 	address := os.Getenv("POD_IP")
 	if address != "" {
-		PublicAddress = address
+		publicAddress = address
 		return address
 	}
 	address = os.Getenv("STEADYBIT_EXTENSION_CONTAINER_ADDRESS")
 	if address != "" {
-		PublicAddress = address
+		publicAddress = address
 		return address
 	}
 
 	ip := getOutboundIP()
 	if ip != nil {
-		PublicAddress = ip.String()
+		publicAddress = ip.String()
 		return ip.String()
 	}
-	return PublicAddress
+	return publicAddress
 }
 
 // Get preferred outbound ip of this machine
@@ -110,9 +109,8 @@ func getOutboundIP() net.IP {
 	if err != nil {
 		log.Error().Err(err).Msgf("Error getting outbound IP")
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
 	return localAddr.IP
 }

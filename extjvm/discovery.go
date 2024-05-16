@@ -19,8 +19,12 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
+	"golang.org/x/sys/unix"
+	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -44,16 +48,38 @@ func NewJvmDiscovery() discovery_kit_sdk.TargetDiscovery {
 func StartJvmInfrastructure() {
 	installSignalHandler()
 
-	jvmhttp.Start(config.Config.JavaAgentAttachmentPort)
-
 	initDataSourceDiscovery()
 	initSpringDiscovery()
-	addJVMListener()
 
-	startAttachment()
-
+	jvmhttp.Start(config.Config.JavaAgentAttachmentPort)
+	jvm.AddJVMListener()
+	jvm.StartAttachment()
 	java_process.Start()
 	hotspot.Start()
+}
+
+func installSignalHandler() {
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
+	go func(signals <-chan os.Signal) {
+		for s := range signals {
+			signalName := unix.SignalName(s.(syscall.Signal))
+
+			log.Info().Str("signal", signalName).Msg("received signal - stopping all active discoveries")
+			deactivateDataSourceDiscovery()
+			deactivateSpringDiscovery()
+
+			switch s {
+			case syscall.SIGINT:
+				fmt.Println()
+				os.Exit(128 + int(s.(syscall.Signal)))
+
+			case syscall.SIGTERM:
+				fmt.Printf("Terminated: %d\n", int(s.(syscall.Signal)))
+				os.Exit(128 + int(s.(syscall.Signal)))
+			}
+		}
+	}(signalChannel)
 }
 
 func (j *jvmDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
@@ -323,21 +349,21 @@ func (j *jvmDiscovery) DescribeAttributes() []discovery_kit_api.AttributeDescrip
 }
 
 func (j *jvmDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.Target, error) {
-	vms := getJvms()
-	targets := make([]discovery_kit_api.Target, 0, len(vms))
-	for _, vm := range vms {
+	javaVms := jvm.GetJvms()
+	targets := make([]discovery_kit_api.Target, 0, len(javaVms))
+	for _, javaVm := range javaVms {
 		targets = append(targets, discovery_kit_api.Target{
-			Id:         fmt.Sprintf("%s/%d", vm.Hostname, vm.Pid),
+			Id:         fmt.Sprintf("%s/%d", javaVm.Hostname, javaVm.Pid),
 			TargetType: targetID,
-			Label:      getApplicationName(vm, "?"),
+			Label:      getApplicationName(javaVm, "?"),
 			Attributes: map[string][]string{
 				"instance.type":         {"java"},
-				"jvm-instance.name":     {getApplicationName(vm, "")},
-				"container.id.stripped": {vm.ContainerId},
-				"process.pid":           {strconv.Itoa(int(vm.Pid))},
-				"instance.hostname":     {vm.Hostname},
-				"host.hostname":         {vm.Hostname},
-				"host.domainname":       {vm.HostFQDN},
+				"jvm-instance.name":     {getApplicationName(javaVm, "")},
+				"container.id.stripped": {javaVm.ContainerId},
+				"process.pid":           {strconv.Itoa(int(javaVm.Pid))},
+				"instance.hostname":     {javaVm.Hostname},
+				"host.hostname":         {javaVm.Hostname},
+				"host.domainname":       {javaVm.HostFQDN},
 			},
 		})
 	}

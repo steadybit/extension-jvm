@@ -17,7 +17,7 @@ func startFakeJvm() (fakeJvm, error) {
 		return fakeJvm{}, err
 	}
 
-	addJvm(&jvm.JavaVm{
+	jvm.AddJvm(&jvm.JavaVm{
 		Pid: int32(cmd.Process.Pid),
 	})
 
