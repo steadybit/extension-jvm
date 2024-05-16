@@ -7,17 +7,19 @@ package config
 import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
+	"time"
 )
 
 // Specification is the configuration specification for the extension. Configuration values can be applied
 // through environment variables. Learn more through the documentation of the envconfig package.
 // https://github.com/kelseyhightower/envconfig
 type Specification struct {
-	DiscoveryCallInterval          string   `json:"discoveryCallInterval" split_words:"true" required:"false" default:"30s"`
-	Port                           uint16   `json:"port" split_words:"true" required:"false" default:"8087"`
-	HealthPort                     uint16   `json:"healthPort" split_words:"true" required:"false" default:"8083"`
-	JavaAgentAttachmentPort        uint16   `json:"javaAgentAttachmentPort" split_words:"true" required:"false" default:"8095"`
-	DiscoveryAttributesExcludesJVM []string `json:"discoveryAttributesExcludesJVM" split_words:"true" required:"false"`
+	DiscoveryCallInterval          string        `json:"discoveryCallInterval" split_words:"true" required:"false" default:"30s"`
+	Port                           uint16        `json:"port" split_words:"true" required:"false" default:"8087"`
+	HealthPort                     uint16        `json:"healthPort" split_words:"true" required:"false" default:"8083"`
+	DiscoveryAttributesExcludesJVM []string      `json:"discoveryAttributesExcludesJVM" split_words:"true" required:"false"`
+	MinProcessAgeBeforeAttach      time.Duration `json:"minProcessAgeBeforeAttach" split_words:"true" required:"false" default:"15s"`
+	JvmAttachmentEnabled           bool          `json:"jvmAttachmentEnabled" split_words:"true" required:"false" default:"true"`
 }
 
 var (

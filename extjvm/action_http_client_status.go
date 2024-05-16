@@ -7,17 +7,19 @@ package extjvm
 import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
 )
 
-func NewHttpClientStatus() action_kit_sdk.Action[JavaagentActionState] {
+func NewHttpClientStatus(facade jvm.JavaFacade) action_kit_sdk.Action[JavaagentActionState] {
 	return &javaagentAction{
 		pluginJar:      utils.GetJarPath("attack-springboot2-javaagent.jar"),
 		description:    httpClientStatusDescribe(),
 		configProvider: httpClientStatusConfigProvider,
+		facade:         facade,
 	}
 }
 

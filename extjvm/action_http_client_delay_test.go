@@ -11,11 +11,12 @@ import (
 )
 
 func Test_http_Client_Delay_Prepare(t *testing.T) {
-	fake, err := startFakeJvm()
+	facade := &mockJavaFacade{}
+	fake, err := facade.startFakeJvm()
 	require.NoError(t, err)
-	defer func(fake *fakeJvm) {
+	defer func(fake *FakeJvm) {
 		_ = fake.stop()
-	}(&fake)
+	}(fake)
 
 	tests := []struct {
 		name        string
@@ -41,7 +42,7 @@ func Test_http_Client_Delay_Prepare(t *testing.T) {
 			},
 		},
 	}
-	action := NewHttpClientDelay()
+	action := NewHttpClientDelay(facade)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//Given

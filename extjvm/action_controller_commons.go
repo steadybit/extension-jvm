@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extutil"
+	"slices"
 )
 
 var (
@@ -86,7 +86,7 @@ func extractMethod(request action_kit_api.PrepareActionRequestBody) (string, err
 	return pattern, nil
 }
 
-func extractHandlerMethods(request action_kit_api.PrepareActionRequestBody) ([]string, error) {
+func extractHandlerMethods(spring *SpringDiscovery, request action_kit_api.PrepareActionRequestBody) ([]string, error) {
 	pattern, err := extractPattern(request)
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func extractHandlerMethods(request action_kit_api.PrepareActionRequestBody) ([]s
 		return nil, err
 	}
 
-	application := findSpringApplication(pid)
+	application := spring.findApplication(pid)
 	if application == nil {
 		return nil, errors.New("spring instance not found")
 	}
@@ -112,11 +112,11 @@ func extractHandlerMethods(request action_kit_api.PrepareActionRequestBody) ([]s
 	}
 
 	relevantMappings := make([]SpringMvcMapping, 0)
-	for _, m := range *application.MvcMappings {
-		if !utils.ContainsString(m.Patterns, pattern) {
+	for _, m := range application.MvcMappings {
+		if !slices.Contains(m.Patterns, pattern) {
 			continue
 		}
-		if method == "*" || (len(m.Methods) == 0 && method == "GET") || utils.ContainsString(m.Methods, method) {
+		if method == "*" || (len(m.Methods) == 0 && method == "GET") || slices.Contains(m.Methods, method) {
 			relevantMappings = append(relevantMappings, m)
 		}
 	}

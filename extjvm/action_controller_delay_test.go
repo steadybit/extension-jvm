@@ -11,11 +11,27 @@ import (
 )
 
 func Test_controllerDelay_Prepare(t *testing.T) {
-	fake, err := startFakeJvm()
+	facade := &mockJavaFacade{}
+	spring := &SpringDiscovery{}
+
+	fake, err := facade.startFakeJvm()
 	require.NoError(t, err)
-	defer func(fake *fakeJvm) {
+	defer func(fake *FakeJvm) {
 		_ = fake.stop()
-	}(&fake)
+	}(fake)
+
+	spring.applications.Store(fake.Pid(), SpringApplication{
+		Name: "customers",
+		Pid:  fake.Pid(),
+		MvcMappings: []SpringMvcMapping{
+			{
+				Methods:      []string{"GET"},
+				Patterns:     []string{"/customers"},
+				HandlerClass: "com.steadybit.demo.CustomerController",
+				HandlerName:  "customers",
+			},
+		},
+	})
 
 	tests := []struct {
 		name        string
@@ -43,7 +59,7 @@ func Test_controllerDelay_Prepare(t *testing.T) {
 			},
 		},
 	}
-	action := NewControllerDelay()
+	action := NewControllerDelay(facade, spring)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

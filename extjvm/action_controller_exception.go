@@ -7,17 +7,19 @@ package extjvm
 import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
 )
 
-func NewControllerException() action_kit_sdk.Action[JavaagentActionState] {
+func NewControllerException(facade jvm.JavaFacade, spring *SpringDiscovery) action_kit_sdk.Action[JavaagentActionState] {
 	return &javaagentAction{
 		pluginJar:      utils.GetJarPath("attack-java-javaagent.jar"),
 		description:    controllerExceptionDescribe(),
-		configProvider: controllerExceptionConfigProvider,
+		configProvider: controllerExceptionConfigProvider(spring),
+		facade:         facade,
 	}
 }
 
@@ -69,21 +71,23 @@ func controllerExceptionDescribe() action_kit_api.ActionDescription {
 	}
 }
 
-func controllerExceptionConfigProvider(request action_kit_api.PrepareActionRequestBody) (any, error) {
-	duration, err := extractDuration(request)
-	if err != nil {
-		return nil, err
-	}
+func controllerExceptionConfigProvider(spring *SpringDiscovery) func(request action_kit_api.PrepareActionRequestBody) (any, error) {
+	return func(request action_kit_api.PrepareActionRequestBody) (any, error) {
+		duration, err := extractDuration(request)
+		if err != nil {
+			return nil, err
+		}
 
-	handlerMethods, err := extractHandlerMethods(request)
-	if err != nil {
-		return nil, err
-	}
+		handlerMethods, err := extractHandlerMethods(spring, request)
+		if err != nil {
+			return nil, err
+		}
 
-	return map[string]interface{}{
-		"attack-class":      "com.steadybit.attacks.javaagent.instrumentation.JavaMethodExceptionInstrumentation",
-		"duration":          int(duration / time.Millisecond),
-		"erroneousCallRate": extutil.ToInt(request.Config["erroneousCallRate"]),
-		"methods":           handlerMethods,
-	}, nil
+		return map[string]interface{}{
+			"attack-class":      "com.steadybit.attacks.javaagent.instrumentation.JavaMethodExceptionInstrumentation",
+			"duration":          int(duration / time.Millisecond),
+			"erroneousCallRate": extutil.ToInt(request.Config["erroneousCallRate"]),
+			"methods":           handlerMethods,
+		}, nil
+	}
 }

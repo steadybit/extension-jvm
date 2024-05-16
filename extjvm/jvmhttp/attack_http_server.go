@@ -59,11 +59,11 @@ func StopAttackHttpServer(pid int32) {
 	status := GetAttackStatus(pid)
 	if status.listener != nil {
 		if err := (*status.listener).Close(); err != nil {
-			log.Err(err).Msg("Failed to close listener.")
+			log.Err(err).Msgf("Failed to close listener on port %d.", status.port)
 			return
 		}
 	}
-	attackStatus.Delete(strconv.Itoa(status.port))
+	attackStatus.Delete(status.port)
 }
 
 func handler(handler func(Status, string, http.ResponseWriter) Status) http.HandlerFunc {

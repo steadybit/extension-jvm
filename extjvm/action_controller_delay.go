@@ -7,17 +7,19 @@ package extjvm
 import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
 )
 
-func NewControllerDelay() action_kit_sdk.Action[JavaagentActionState] {
+func NewControllerDelay(facade jvm.JavaFacade, spring *SpringDiscovery) action_kit_sdk.Action[JavaagentActionState] {
 	return &javaagentAction{
 		pluginJar:      utils.GetJarPath("attack-java-javaagent.jar"),
 		description:    controllerDelayDescribe(),
-		configProvider: controllerDelayConfigProvider,
+		configProvider: controllerDelayConfigProvider(spring),
+		facade:         facade,
 	}
 }
 
@@ -84,22 +86,24 @@ func controllerDelayDescribe() action_kit_api.ActionDescription {
 	}
 }
 
-func controllerDelayConfigProvider(request action_kit_api.PrepareActionRequestBody) (any, error) {
-	duration, err := extractDuration(request)
-	if err != nil {
-		return nil, err
-	}
+func controllerDelayConfigProvider(s *SpringDiscovery) func(request action_kit_api.PrepareActionRequestBody) (any, error) {
+	return func(request action_kit_api.PrepareActionRequestBody) (any, error) {
+		duration, err := extractDuration(request)
+		if err != nil {
+			return nil, err
+		}
 
-	handlerMethods, err := extractHandlerMethods(request)
-	if err != nil {
-		return nil, err
-	}
+		handlerMethods, err := extractHandlerMethods(s, request)
+		if err != nil {
+			return nil, err
+		}
 
-	return map[string]interface{}{
-		"attack-class": "com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation",
-		"duration":     int(duration / time.Millisecond),
-		"delay":        extutil.ToUInt64(request.Config["delay"]),
-		"delayJitter":  extutil.ToBool(request.Config["delayJitter"]),
-		"methods":      handlerMethods,
-	}, nil
+		return map[string]interface{}{
+			"attack-class": "com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation",
+			"duration":     int(duration / time.Millisecond),
+			"delay":        extutil.ToUInt64(request.Config["delay"]),
+			"delayJitter":  extutil.ToBool(request.Config["delayJitter"]),
+			"methods":      handlerMethods,
+		}, nil
+	}
 }

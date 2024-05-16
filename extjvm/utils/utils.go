@@ -2,37 +2,26 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"os/exec"
 	"runtime"
+	"slices"
 	"strings"
 	"syscall"
 )
 
-func Contains(s []int32, str int32) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-	return false
-}
-
-func ContainsString(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-	return false
-}
-
 func ContainsPartOfString(s []string, str string) bool {
-	for _, v := range s {
-		if strings.Contains(str, v) {
-			return true
-		}
+	return slices.ContainsFunc(s, func(v string) bool {
+		return strings.Contains(str, v)
+	})
+}
+
+func StdErr(err error) []byte {
+	var exitError *exec.ExitError
+	if errors.As(err, &exitError) {
+		return exitError.Stderr
 	}
-	return false
+	return nil
 }
 
 func RootCommandContext(ctx context.Context, name string, arg ...string) *exec.Cmd {

@@ -8,17 +8,19 @@ import (
 	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
 )
 
-func NewJavaMethodDelay() action_kit_sdk.Action[JavaagentActionState] {
+func NewJavaMethodDelay(facade jvm.JavaFacade) action_kit_sdk.Action[JavaagentActionState] {
 	return &javaagentAction{
 		pluginJar:      utils.GetJarPath("attack-java-javaagent.jar"),
 		description:    methodDelayDescribe(),
 		configProvider: methodDelayConfigProvider,
+		facade:         facade,
 	}
 }
 
