@@ -23,7 +23,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/xin053/hsperfdata v0.2.3
 	go.uber.org/automaxprocs v1.5.3
-	golang.org/x/sys v0.20.0
+	golang.org/x/sys v0.21.0
 	k8s.io/api v0.30.1
 	k8s.io/apimachinery v0.30.1
 	k8s.io/client-go v0.30.1
