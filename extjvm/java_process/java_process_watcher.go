@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/procyon-projects/chrono"
 	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/process"
+	"github.com/shirou/gopsutil/v3/process"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"path/filepath"
 	"strconv"
@@ -23,12 +23,14 @@ type DiscoveryWork struct {
 	retries int
 }
 
+const ()
+
 var (
 	discoveredPids   sync.Map
 	ignoredPidsMutex sync.Mutex
 	ignoredPids      []string
 	listeners        []Listener
-	RunningStates    = []string{"R", "W", "S", "I", "L"} // Running, Waiting, Sleeping
+	RunningStates    = []string{process.Running, process.Wait, process.Sleep, process.Idle, process.Lock, process.Blocked}
 
 	discoveryJobs = make(chan DiscoveryWork)
 )
@@ -249,7 +251,7 @@ func IsRunning(p *process.Process) bool {
 		log.Trace().Err(err).Msgf("Failed to get process status. Pid: %d. Error: %s", p.Pid, err.Error())
 		return false
 	}
-	containsString := utils.ContainsString(RunningStates, status)
+	containsString := utils.ContainsString(RunningStates, status[0])
 	if !containsString {
 		log.Trace().Msgf("Process %d is not running. Status: %s", p.Pid, status)
 	}

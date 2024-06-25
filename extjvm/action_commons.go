@@ -48,6 +48,7 @@ type javaagentAction struct {
 	pluginJar      string
 	description    action_kit_api.ActionDescription
 	configProvider func(request action_kit_api.PrepareActionRequestBody) (any, error)
+	facade         *jvm.JavaFacade
 }
 
 var (
@@ -117,7 +118,7 @@ func (j *javaagentAction) Start(_ context.Context, state *JavaagentActionState) 
 		return nil, extension_kit.ToError("JVM not found", nil)
 	}
 
-	if err := startAttack(javaVm, j.pluginJar, state.CallbackUrl); err != nil {
+	if err := j.startAttack(javaVm, j.pluginJar, state.CallbackUrl); err != nil {
 		return nil, extension_kit.ToError("Failed to start action", err)
 	}
 	return &action_kit_api.StartResult{
@@ -131,7 +132,7 @@ func (j *javaagentAction) Stop(_ context.Context, state *JavaagentActionState) (
 	javaVm := jvm.GetJvm(state.Pid)
 	var msg action_kit_api.Message
 	if javaVm != nil {
-		if err := stopAttack(javaVm, j.pluginJar); err != nil {
+		if err := j.stopAttack(javaVm, j.pluginJar); err != nil {
 			return nil, extension_kit.ToError("Failed to stop action", nil)
 		}
 		msg.Level = extutil.Ptr(action_kit_api.Info)
@@ -165,8 +166,8 @@ var (
 	attackStartTimeout = 10 * time.Second
 )
 
-func startAttack(javaVm *jvm.JavaVm, pluginJar, callbackUrl string) error {
-	if err := jvm.LoadAgentPlugin(javaVm, pluginJar, callbackUrl); err != nil {
+func (j *javaagentAction) startAttack(javaVm *jvm.JavaVm, pluginJar, callbackUrl string) error {
+	if err := j.facade.LoadAgentPlugin(javaVm, pluginJar, callbackUrl); err != nil {
 		return err
 	}
 
@@ -188,7 +189,7 @@ func startAttack(javaVm *jvm.JavaVm, pluginJar, callbackUrl string) error {
 	}
 }
 
-func stopAttack(javaVm *jvm.JavaVm, pluginJar string) error {
+func (j *javaagentAction) stopAttack(javaVm *jvm.JavaVm, pluginJar string) error {
 	jvmhttp.StopAttackHttpServer(javaVm.Pid)
-	return jvm.UnloadAgentPlugin(javaVm, pluginJar)
+	return j.facade.UnloadAgentPlugin(javaVm, pluginJar)
 }

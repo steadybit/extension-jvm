@@ -58,6 +58,10 @@ func TestWithMinikube(t *testing.T) {
 			Test: testDiscovery,
 		},
 		{
+			Name: "discover spring boot sample as spring discovery",
+			Test: testSpringDiscovery,
+		},
+		{
 			Name: "mvc delay",
 			Test: testMvcDelay,
 		},
@@ -88,10 +92,6 @@ func TestWithMinikube(t *testing.T) {
 		{
 			Name: "jdbc template exception",
 			Test: testJDBCTemplateException,
-		},
-		{
-			Name: "discover spring boot sample as spring discovery",
-			Test: testSpringDiscovery,
 		},
 	})
 }

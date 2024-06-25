@@ -7,6 +7,7 @@ package extjvm
 import (
 	"context"
 	"fmt"
+	"github.com/procyon-projects/chrono"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_commons"
@@ -15,7 +16,6 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm/hotspot"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
-	"github.com/steadybit/extension-jvm/extjvm/jvmhttp"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
@@ -29,6 +29,8 @@ import (
 )
 
 type jvmDiscovery struct {
+	datasource *DataSourceDiscovery
+	spring     *SpringDiscovery
 }
 
 var (
@@ -37,28 +39,43 @@ var (
 	_ discovery_kit_sdk.EnrichmentRulesDescriber = (*jvmDiscovery)(nil)
 )
 
-func NewJvmDiscovery() discovery_kit_sdk.TargetDiscovery {
-	discovery := &jvmDiscovery{}
+type discoveryTasks struct {
+	task30s chrono.ScheduledTask
+	task60s chrono.ScheduledTask
+	task15m chrono.ScheduledTask
+}
+
+func NewJvmDiscovery(datasource *DataSourceDiscovery, spring *SpringDiscovery) discovery_kit_sdk.TargetDiscovery {
+	discovery := &jvmDiscovery{
+		datasource: datasource,
+		spring:     spring,
+	}
 	return discovery_kit_sdk.NewCachedTargetDiscovery(discovery,
 		discovery_kit_sdk.WithRefreshTargetsNow(),
 		discovery_kit_sdk.WithRefreshTargetsInterval(context.Background(), 30*time.Second),
 	)
 }
 
-func StartJvmInfrastructure() {
-	installSignalHandler()
+// FIXME cleanup this shit
+func StartJvmInfrastructure() (*jvm.JavaFacade, *DataSourceDiscovery, *SpringDiscovery) {
+	facade := &jvm.JavaFacade{}
+	datasource := &DataSourceDiscovery{facade: facade}
+	spring := &SpringDiscovery{facade: facade}
 
-	initDataSourceDiscovery()
-	initSpringDiscovery()
+	installSignalHandler(datasource, spring, facade)
 
-	jvmhttp.Start(config.Config.JavaAgentAttachmentPort)
+	datasource.start()
+	spring.start()
+
 	jvm.AddJVMListener()
-	jvm.StartAttachment()
+	facade.Start()
 	java_process.Start()
 	hotspot.Start()
+
+	return facade, datasource, spring
 }
 
-func installSignalHandler() {
+func installSignalHandler(datasource *DataSourceDiscovery, spring *SpringDiscovery, facade *jvm.JavaFacade) {
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
 	go func(signals <-chan os.Signal) {
@@ -66,8 +83,9 @@ func installSignalHandler() {
 			signalName := unix.SignalName(s.(syscall.Signal))
 
 			log.Info().Str("signal", signalName).Msg("received signal - stopping all active discoveries")
-			deactivateDataSourceDiscovery()
-			deactivateSpringDiscovery()
+			datasource.stop()
+			spring.stop()
+			facade.Stop()
 
 			switch s {
 			case syscall.SIGINT:
@@ -367,26 +385,24 @@ func (j *jvmDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.T
 			},
 		})
 	}
-	enhanceTargetsWithSpringAttributes(targets)
-	enhanceTargetsWithDataSourceAttributes(targets)
+	j.enhanceTargetsWithSpringAttributes(targets)
+	j.enhanceTargetsWithDataSourceAttributes(targets)
 	return discovery_kit_commons.ApplyAttributeExcludes(targets, config.Config.DiscoveryAttributesExcludesJVM), nil
 }
 
-func enhanceTargetsWithDataSourceAttributes(targets []discovery_kit_api.Target) {
-	dataSourceApplications := GetDataSourceApplications()
-	for _, dataSourceApplication := range dataSourceApplications {
-		target := findTargetByPid(targets, dataSourceApplication.Pid)
+func (j *jvmDiscovery) enhanceTargetsWithDataSourceAttributes(targets []discovery_kit_api.Target) {
+	for _, app := range j.datasource.getApplications() {
+		target := findTargetByPid(targets, app.Pid)
 		if target != nil {
-			for _, dataSourceConnection := range dataSourceApplication.DataSourceConnections {
+			for _, dataSourceConnection := range app.DataSourceConnections {
 				target.Attributes["datasource.jdbc-url"] = append(target.Attributes["datasource.jdbc-url"], dataSourceConnection.JdbcUrl)
 			}
 		}
 	}
 }
 
-func enhanceTargetsWithSpringAttributes(targets []discovery_kit_api.Target) {
-	springApplications := GetSpringApplications()
-	for _, app := range springApplications {
+func (j *jvmDiscovery) enhanceTargetsWithSpringAttributes(targets []discovery_kit_api.Target) {
+	for _, app := range j.spring.GetApplications() {
 		target := findTargetByPid(targets, app.Pid)
 		if target != nil {
 			target.Attributes["jvm-instance.name"] = utils.AppendIfMissing(target.Attributes["jvm-instance.name"], app.Name)
@@ -407,11 +423,11 @@ func enhanceTargetsWithSpringAttributes(targets []discovery_kit_api.Target) {
 	}
 }
 
-func addHttpClientRequests(target *discovery_kit_api.Target, requests *[]HttpRequest) {
-	if requests == nil {
+func addHttpClientRequests(target *discovery_kit_api.Target, requests []HttpRequest) {
+	if len(requests) == 0 {
 		return
 	}
-	for _, request := range *requests {
+	for _, request := range requests {
 		target.Attributes["spring-instance.http-outgoing-calls"] = append(target.Attributes["spring-instance.http-outgoing-calls"], request.Address)
 		if !request.CircuitBreaker {
 			target.Attributes["spring-instance.http-outgoing-calls.missing-circuit-breaker"] = append(target.Attributes["spring-instance.http-outgoing-calls"], request.Address)
@@ -422,12 +438,12 @@ func addHttpClientRequests(target *discovery_kit_api.Target, requests *[]HttpReq
 	}
 }
 
-func addMvcMappings(target *discovery_kit_api.Target, mappings *[]SpringMvcMapping) {
-	if mappings == nil {
+func addMvcMappings(target *discovery_kit_api.Target, mappings []SpringMvcMapping) {
+	if len(mappings) == 0 {
 		return
 	}
 	mappingsByPath := make(map[string]SpringMvcMapping)
-	for _, mapping := range *mappings {
+	for _, mapping := range mappings {
 		if mapping.Patterns != nil {
 			for _, pattern := range mapping.Patterns {
 				mappingsByPath[pattern] = mapping

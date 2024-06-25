@@ -7,6 +7,7 @@ import (
 	"github.com/xin053/hsperfdata"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 func GetJvmPids() []int32 {
@@ -23,7 +24,8 @@ func GetJvmPids() []int32 {
 	return jvmPids
 }
 
-func GetJvmPidsForPath(hostPid int32, rootPath string) []int32 {
+func GetJvmPidsForPath(hostPid int32) []int32 {
+	rootPath := filepath.Join("/proc", strconv.Itoa(int(hostPid)), "root")
 	filePaths := GetRootHsPerfPaths(hostPid, rootPath)
 
 	jvmPids := make([]int32, len(filePaths))

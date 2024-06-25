@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,8 @@ import (
 )
 
 func Test_http_Client_Delay_Prepare(t *testing.T) {
-	fake, err := startFakeJvm()
+	facade := &jvm.JavaFacade{}
+	fake, err := startFakeJvm(nil)
 	require.NoError(t, err)
 	defer func(fake *fakeJvm) {
 		_ = fake.stop()
@@ -41,7 +43,7 @@ func Test_http_Client_Delay_Prepare(t *testing.T) {
 			},
 		},
 	}
-	action := NewHttpClientDelay()
+	action := NewHttpClientDelay(facade)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//Given

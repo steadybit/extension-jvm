@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/process"
+	"github.com/shirou/gopsutil/v3/process"
+	"github.com/steadybit/extension-jvm/extjvm/container"
 	"github.com/steadybit/extension-jvm/extjvm/hotspot"
 	"github.com/steadybit/extension-jvm/extjvm/hsperf"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
-	"github.com/steadybit/extension-jvm/extjvm/procfs"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extruntime"
 	"github.com/xin053/hsperfdata"
@@ -20,6 +20,8 @@ import (
 	"strings"
 	"sync"
 )
+
+//FIXME cleanup this mess
 
 var (
 	jvms                sync.Map //map[int32]java_process.JavaVm
@@ -150,19 +152,20 @@ func removeJVM(key interface{}, vm JavaVm) {
 	}
 }
 func createJvm(p *process.Process) *JavaVm {
-	containerId := procfs.GetContainerIdForProcess(p)
+	containerId := container.GetContainerIdForProcess(p)
 	if containerId == "" {
 		return createHostJvm(p)
 	}
 
-	containerPid := procfs.GetContainerPid(p.Pid)
+	containerPid := container.GetContainerPid(p.Pid)
 	if containerPid > 0 {
-		return createContainerizedJvm(p, containerId, containerPid, procfs.GetProcessRoot(p.Pid))
+		return createContainerizedJvm(p, containerId, containerPid)
 	}
 	return nil
 }
 
-func createContainerizedJvm(p *process.Process, containerId string, containerPid int32, containerFs string) *JavaVm {
+func createContainerizedJvm(p *process.Process, containerId string, containerPid int32) *JavaVm {
+	containerFs := filepath.Join("/proc", strconv.Itoa(int(p.Pid)), "root")
 	log.Debug().Msgf("Found containerized JVM %s with containerPid %d on FS %s", containerId, containerPid, containerFs)
 	filePaths := hotspot.GetRootHsPerfPaths(p.Pid, containerFs)
 	if len(filePaths) == 0 {
@@ -186,7 +189,7 @@ func createContainerizedJvm(p *process.Process, containerId string, containerPid
 
 func createHostJvm(p *process.Process) *JavaVm {
 	if runtime.GOOS != "windows" {
-		rootPath := procfs.GetProcessRoot(p.Pid)
+		rootPath := filepath.Join("/proc", strconv.Itoa(int(p.Pid)), "root")
 		dirsGlob := filepath.Join(rootPath, os.TempDir())
 		vm := findJvmOnPath(p, dirsGlob)
 		if vm != nil {

@@ -24,16 +24,7 @@ var (
 	springRestTemplateBuilderBeanClass = "org.springframework.boot.web.client.RestTemplateBuilder"
 	springWebclientBeanClass           = "org.springframework.web.reactive.function.client.WebClient"
 	springWebclientBuilderBeanClass    = "org.springframework.web.reactive.function.client.WebClient$Builder"
-
-	springApplications                  = sync.Map{} // map[Pid int32]SpringApplication
-	springVMDiscoverySchedulerHolderMap = sync.Map{} // map[Pid int32]springVMDiscoverySchedulerHolder
 )
-
-type springVMDiscoverySchedulerHolder struct {
-	scheduledSpringDiscoveryTask30s chrono.ScheduledTask
-	scheduledSpringDiscoveryTask60s chrono.ScheduledTask
-	scheduledSpringDiscoveryTask15m chrono.ScheduledTask
-}
 
 type SpringMvcMapping struct {
 	Consumes          []string `json:"consumes"`
@@ -60,32 +51,35 @@ type SpringApplication struct {
 	SpringBoot         bool
 	UsingJdbcTemplate  bool
 	UsingHttpClient    bool
-	MvcMappings        *[]SpringMvcMapping
-	HttpClientRequests *[]HttpRequest
+	MvcMappings        []SpringMvcMapping
+	HttpClientRequests []HttpRequest
 }
 
-type SpringDiscovery struct{}
-
-func (s SpringDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
-	startScheduledSpringDiscovery(jvm)
-}
-func (s SpringDiscovery) AttachedProcessStopped(jvm *jvm.JavaVm) {
-	stopScheduledSpringDiscoveryForVM(jvm)
-	springApplications.Delete(jvm.Pid)
+type SpringDiscovery struct {
+	facade       *jvm.JavaFacade
+	applications sync.Map // map[Pid int32]SpringApplication
+	tasks        sync.Map // map[Pid int32]springVMDiscoverySchedulerHolder
 }
 
-func GetSpringApplications() []SpringApplication {
+func (s *SpringDiscovery) JvmAttachedSuccessfully(jvm *jvm.JavaVm) {
+	s.scheduleDiscovery(jvm)
+}
+func (s *SpringDiscovery) AttachedProcessStopped(jvm *jvm.JavaVm) {
+	s.stopDiscovery(jvm)
+	s.applications.Delete(jvm.Pid)
+}
+
+func (s *SpringDiscovery) GetApplications() []SpringApplication {
 	var result []SpringApplication
-	springApplications.Range(func(key, value interface{}) bool {
+	s.applications.Range(func(key, value interface{}) bool {
 		result = append(result, value.(SpringApplication))
 		return true
 	})
 	return result
 }
 
-func findSpringApplication(pid int32) *SpringApplication {
-	applications := GetSpringApplications()
-	for _, application := range applications {
+func (s *SpringDiscovery) FindSpringApplication(pid int32) *SpringApplication {
+	for _, application := range s.GetApplications() {
 		if application.Pid == pid {
 			return extutil.Ptr(application)
 		}
@@ -93,32 +87,35 @@ func findSpringApplication(pid int32) *SpringApplication {
 	return nil
 }
 
-func initSpringDiscovery() {
-	log.Info().Msg("Init Spring Plugin")
-	jvm.AddAutoloadAgentPlugin(springPlugin, springMarkerClass)
-	jvm.AddAttachedListener(SpringDiscovery{})
+func (s *SpringDiscovery) start() {
+	s.facade.AddAutoloadAgentPlugin(springPlugin, springMarkerClass)
+	s.facade.AddAttachedListener(s)
 }
 
-func stopScheduledSpringDiscoveryForVM(vm *jvm.JavaVm) {
-	if holder, ok := springVMDiscoverySchedulerHolderMap.Load(vm.Pid); ok {
-		if holder.(*springVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask30s != nil {
-			holder.(*springVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask30s.Cancel()
+func (d *SpringDiscovery) stop() {
+	d.facade.RemoveAutoloadAgentPlugin(springPlugin, springMarkerClass)
+}
+
+func (s *SpringDiscovery) stopDiscovery(vm *jvm.JavaVm) {
+	if holder, ok := s.tasks.Load(vm.Pid); ok {
+		if holder.(*discoveryTasks).task30s != nil {
+			holder.(*discoveryTasks).task30s.Cancel()
 		}
-		if holder.(*springVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60s != nil {
-			holder.(*springVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask60s.Cancel()
+		if holder.(*discoveryTasks).task60s != nil {
+			holder.(*discoveryTasks).task60s.Cancel()
 		}
-		if holder.(*springVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask15m != nil {
-			holder.(*springVMDiscoverySchedulerHolder).scheduledSpringDiscoveryTask15m.Cancel()
+		if holder.(*discoveryTasks).task15m != nil {
+			holder.(*discoveryTasks).task15m.Cancel()
 		}
 	}
 }
 
-func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
-	schedulerHolder := &springVMDiscoverySchedulerHolder{}
-	springVMDiscoverySchedulerHolderMap.Store(vm.Pid, schedulerHolder)
+func (s *SpringDiscovery) scheduleDiscovery(vm *jvm.JavaVm) {
+	schedulerHolder := &discoveryTasks{}
+	s.tasks.Store(vm.Pid, schedulerHolder)
 
-	task30s, err := scheduleSpringDiscoveryForVM(30*time.Second, vm)
-	schedulerHolder.scheduledSpringDiscoveryTask30s = task30s
+	task30s, err := s.scheduleDiscoveryWithFixedDelay(30*time.Second, vm)
+	schedulerHolder.task30s = task30s
 
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 30s interval for VM Name: " + vm.VmName + " and PID: " + strconv.Itoa(int(vm.Pid)))
@@ -131,8 +128,8 @@ func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
 		time.Sleep(5 * time.Minute)
 		task30s.Cancel()
 		log.Info().Msg("Spring Watcher in 30s interval has been canceled for VM Name: " + vm.VmName + " and PID: " + strconv.Itoa(int(vm.Pid)))
-		task60s, err := scheduleSpringDiscoveryForVM(60*time.Second, vm)
-		schedulerHolder.scheduledSpringDiscoveryTask60s = task60s
+		task60s, err := s.scheduleDiscoveryWithFixedDelay(60*time.Second, vm)
+		schedulerHolder.task60s = task60s
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 60s interval for VM Name: " + vm.VmName + " and PID: " + strconv.Itoa(int(vm.Pid)))
 			return
@@ -143,8 +140,8 @@ func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
 			time.Sleep(5 * time.Minute)
 			task60s.Cancel()
 			log.Info().Msg("Spring Watcher in 60s interval has been canceled.")
-			task15m, err := scheduleSpringDiscoveryForVM(15*time.Minute, vm)
-			schedulerHolder.scheduledSpringDiscoveryTask15m = task15m
+			task15m, err := s.scheduleDiscoveryWithFixedDelay(15*time.Minute, vm)
+			schedulerHolder.task15m = task15m
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to schedule Spring Watcher in 15m interval for VM Name: " + vm.VmName + " and PID: " + strconv.Itoa(int(vm.Pid)))
 				return
@@ -156,88 +153,87 @@ func startScheduledSpringDiscovery(vm *jvm.JavaVm) {
 	}()
 }
 
-func deactivateSpringDiscovery() {
-	jvm.RemoveAutoloadAgentPlugin(springPlugin, springMarkerClass)
+func (s *SpringDiscovery) deactivateSpringDiscovery() {
+	s.facade.RemoveAutoloadAgentPlugin(springPlugin, springMarkerClass)
 }
-func scheduleSpringDiscoveryForVM(interval time.Duration, vm *jvm.JavaVm) (chrono.ScheduledTask, error) {
+func (s *SpringDiscovery) scheduleDiscoveryWithFixedDelay(interval time.Duration, vm *jvm.JavaVm) (chrono.ScheduledTask, error) {
 	taskScheduler := chrono.NewDefaultTaskScheduler()
 	return taskScheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
-		springDiscover(vm)
+		s.springDiscover(vm)
 	}, interval)
 }
 
-func springDiscover(javaVm *jvm.JavaVm) {
-
-	if jvm.HasAgentPlugin(javaVm, springPlugin) {
-		springApplication := createSpringApplication(javaVm)
-		springApplications.Store(javaVm.Pid, springApplication)
+func (s *SpringDiscovery) springDiscover(javaVm *jvm.JavaVm) {
+	if s.facade.HasAgentPlugin(javaVm, springPlugin) {
+		springApplication := s.createSpringApplication(javaVm)
+		s.applications.Store(javaVm.Pid, springApplication)
 		log.Trace().Msgf("Spring Instance '%s' on PID %d has been discovered: %+v", springApplication.Name, javaVm.Pid, springApplication)
 	}
 }
 
-func createSpringApplication(javaVm *jvm.JavaVm) SpringApplication {
+func (s *SpringDiscovery) createSpringApplication(javaVm *jvm.JavaVm) SpringApplication {
 	app := SpringApplication{
-		Name:               readSpringApplicationName(javaVm),
+		Name:               s.readSpringApplicationName(javaVm),
 		Pid:                javaVm.Pid,
-		SpringBoot:         isSpringBootApplication(javaVm),
-		UsingJdbcTemplate:  hasJdbcTemplate(javaVm),
-		UsingHttpClient:    hasRestTemplate(javaVm) || hasWebClient(javaVm),
-		MvcMappings:        readRequestMappings(javaVm),
-		HttpClientRequests: readHttpClientRequest(javaVm),
+		SpringBoot:         s.isSpringBootApplication(javaVm),
+		UsingJdbcTemplate:  s.hasJdbcTemplate(javaVm),
+		UsingHttpClient:    s.hasRestTemplate(javaVm) || s.hasWebClient(javaVm),
+		MvcMappings:        s.readRequestMappings(javaVm),
+		HttpClientRequests: s.readHttpClientRequest(javaVm),
 	}
 	log.Info().Msgf("Spring Instance '%s' on PID %d has been discovered: %+v", app.Name, javaVm.Pid, app)
 	return app
 }
 
-func readHttpClientRequest(javaVm *jvm.JavaVm) *[]HttpRequest {
-	requests, err := jvm.SendCommandToAgentWithHandler(javaVm, "spring-httpclient-requests", "", func(response io.Reader) (*[]HttpRequest, error) {
-		requests := make([]HttpRequest, 0)
+func (s *SpringDiscovery) readHttpClientRequest(javaVm *jvm.JavaVm) []HttpRequest {
+	requests, err := s.facade.SendCommandToAgentWithHandler(javaVm, "spring-httpclient-requests", "", func(response io.Reader) (any, error) {
+		var requests []HttpRequest
 		if err := json.NewDecoder(response).Decode(&requests); err != nil {
 			return nil, fmt.Errorf("failed to decode response: %w", err)
 		}
-		return &requests, nil
+		return requests, nil
 	})
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to read HttpClient requests on PID %d", javaVm.Pid)
 		return nil
 	}
-	return requests
+	return requests.([]HttpRequest)
 }
 
-func readRequestMappings(javaVm *jvm.JavaVm) *[]SpringMvcMapping {
-	mappings, err := jvm.SendCommandToAgentWithHandler(javaVm, "spring-mvc-mappings", "", func(response io.Reader) (*[]SpringMvcMapping, error) {
-		mappings := make([]SpringMvcMapping, 0)
+func (s *SpringDiscovery) readRequestMappings(javaVm *jvm.JavaVm) []SpringMvcMapping {
+	mappings, err := s.facade.SendCommandToAgentWithHandler(javaVm, "spring-mvc-mappings", "", func(response io.Reader) (any, error) {
+		var mappings []SpringMvcMapping
 		if err := json.NewDecoder(response).Decode(&mappings); err != nil {
 			return nil, fmt.Errorf("failed to decode response: %w", err)
 
 		}
-		return &mappings, nil
+		return mappings, nil
 	})
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to read Sping MVC mappings on PID %d", javaVm.Pid)
 		return nil
 	}
-	return mappings
+	return mappings.([]SpringMvcMapping)
 }
 
-func hasWebClient(javaVm *jvm.JavaVm) bool {
-	return hasSpringBean(javaVm, springWebclientBeanClass) || hasSpringBean(javaVm, springWebclientBuilderBeanClass)
+func (s *SpringDiscovery) hasWebClient(javaVm *jvm.JavaVm) bool {
+	return s.hasSpringBean(javaVm, springWebclientBeanClass) || s.hasSpringBean(javaVm, springWebclientBuilderBeanClass)
 }
 
-func hasRestTemplate(javaVm *jvm.JavaVm) bool {
-	return hasSpringBean(javaVm, springRestTemplateBeanClass) || hasSpringBean(javaVm, springRestTemplateBuilderBeanClass)
+func (s *SpringDiscovery) hasRestTemplate(javaVm *jvm.JavaVm) bool {
+	return s.hasSpringBean(javaVm, springRestTemplateBeanClass) || s.hasSpringBean(javaVm, springRestTemplateBuilderBeanClass)
 }
 
-func hasJdbcTemplate(javaVm *jvm.JavaVm) bool {
-	return hasSpringBean(javaVm, springJdbcTemplateBeanClass)
+func (s *SpringDiscovery) hasJdbcTemplate(javaVm *jvm.JavaVm) bool {
+	return s.hasSpringBean(javaVm, springJdbcTemplateBeanClass)
 }
 
-func isSpringBootApplication(vm *jvm.JavaVm) bool {
-	return jvm.HasClassLoaded(vm, springBootMarkerClass)
+func (s *SpringDiscovery) isSpringBootApplication(vm *jvm.JavaVm) bool {
+	return s.facade.HasClassLoaded(vm, springBootMarkerClass)
 }
 
-func hasSpringBean(javaVm *jvm.JavaVm, beanClass string) bool {
-	result, err := jvm.SendCommandToAgent(javaVm, "spring-bean", beanClass)
+func (s *SpringDiscovery) hasSpringBean(javaVm *jvm.JavaVm, beanClass string) bool {
+	result, err := s.facade.SendCommandToAgent(javaVm, "spring-bean", beanClass)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to check Spring Bean %s on PID %d", beanClass, javaVm.Pid)
 		return false
@@ -245,14 +241,14 @@ func hasSpringBean(javaVm *jvm.JavaVm, beanClass string) bool {
 	return result
 }
 
-func readSpringApplicationName(javaVm *jvm.JavaVm) string {
-	name, err := jvm.SendCommandToAgentWithHandler(javaVm, "spring-env", "spring.application.name", func(response io.Reader) (*string, error) {
+func (s *SpringDiscovery) readSpringApplicationName(javaVm *jvm.JavaVm) string {
+	name, err := s.facade.SendCommandToAgentWithHandler(javaVm, "spring-env", "spring.application.name", func(response io.Reader) (any, error) {
 		s, err := jvm.GetCleanSocketCommandResult(response)
-		return &s, err
+		return s, err
 	})
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to read Spring Application Name on PID %d", javaVm.Pid)
 		return ""
 	}
-	return *name
+	return name.(string)
 }

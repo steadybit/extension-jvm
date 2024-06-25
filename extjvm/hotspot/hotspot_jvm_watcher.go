@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/procyon-projects/chrono"
 	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/process"
+	"github.com/shirou/gopsutil/v3/process"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"sync"
 	"time"

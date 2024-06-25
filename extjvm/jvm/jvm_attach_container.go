@@ -2,9 +2,9 @@ package jvm
 
 import (
 	"context"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/extjvm/java_process"
-	"github.com/steadybit/extension-jvm/extjvm/procfs"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"net"
 	"os"
@@ -39,42 +39,37 @@ func (a containerJvmAttachment) attach(agentJar string, initJar string, agentHTT
 }
 
 func (a containerJvmAttachment) copyFiles(dstPath string, files map[string]string) (map[string]string, error) {
-	processRoot := procfs.GetProcessRoot(a.jvm.Pid)
-
+	processRoot := filepath.Join("/proc", strconv.Itoa(int(a.jvm.Pid)), "root")
 	result := make(map[string]string)
 
-	for filename, sourceFile := range files {
-		destinationFile := filepath.Join(processRoot, dstPath, filename)
-		result[filename] = dstPath + "/" + filename
-		sourceFileStat, err := os.Stat(sourceFile)
+	for filename, srcFile := range files {
+		destFile := filepath.Join(processRoot, dstPath, filename)
+		result[filename] = filepath.Join(dstPath, filename)
+
+		srcFileStat, err := os.Stat(srcFile)
 		if err != nil {
-			log.Error().Msgf("Error reading file %s: %s", sourceFile, err)
+			log.Error().Msgf("Error reading file %s: %s", srcFile, err)
 			return nil, err
 		}
-		destinationFileStat, _ := os.Stat(destinationFile)
 
-		if destinationFileStat != nil && sourceFileStat.ModTime() == destinationFileStat.ModTime() {
-			log.Trace().Msgf("File %s already exists and is up to date. Skipping copy.", destinationFile)
+		if destStat, _ := os.Stat(destFile); destStat != nil && srcFileStat.ModTime() == destStat.ModTime() {
+			log.Trace().Msgf("File %s already exists and is up to date. Skipping copy.", destFile)
 			continue
 		}
 
-		copyCommand := utils.RootCommandContext(context.Background(), "cp", sourceFile, destinationFile)
-		err = copyCommand.Run()
-		if err != nil {
-			log.Error().Msgf("Copying file failed %s: %s", destinationFile, err)
-			return nil, err
+		copyCmd := utils.RootCommandContext(context.Background(), "cp", srcFile, destFile)
+		if out, err := copyCmd.CombinedOutput(); err != nil {
+			return nil, fmt.Errorf("error copying file %s: %s - %s", srcFile, err, out)
 		}
-		chmodCommand := utils.RootCommandContext(context.Background(), "chmod", "777", destinationFile)
-		err = chmodCommand.Run()
-		if err != nil {
-			log.Warn().Msgf("Error setting file permissions %s: %s", destinationFile, err)
-			continue
+
+		chmodCmd := utils.RootCommandContext(context.Background(), "chmod", "777", destFile)
+		if out, err := chmodCmd.CombinedOutput(); err != nil {
+			log.Warn().Msgf("error setting file permissions for %s: %s - %s", destFile, err, out)
 		}
-		setLastModifiedCommand := utils.RootCommandContext(context.Background(), "touch", "-m", "-d", sourceFileStat.ModTime().Format("2006-01-02T15:04:05"), destinationFile)
-		err = setLastModifiedCommand.Run()
-		if err != nil {
-			log.Warn().Msgf("Error setting file modification time %s: %s", destinationFile, err)
-			continue
+
+		setLastModifiedMd := utils.RootCommandContext(context.Background(), "touch", "-m", "-d", srcFileStat.ModTime().Format("2006-01-02T15:04:05"), destFile)
+		if out, err := setLastModifiedMd.CombinedOutput(); err != nil {
+			log.Warn().Msgf("error setting file modification time for %s: %s - %s", destFile, err, out)
 		}
 	}
 	return result, nil

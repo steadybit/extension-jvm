@@ -86,7 +86,7 @@ func extractMethod(request action_kit_api.PrepareActionRequestBody) (string, err
 	return pattern, nil
 }
 
-func extractHandlerMethods(request action_kit_api.PrepareActionRequestBody) ([]string, error) {
+func extractHandlerMethods(spring *SpringDiscovery, request action_kit_api.PrepareActionRequestBody) ([]string, error) {
 	pattern, err := extractPattern(request)
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func extractHandlerMethods(request action_kit_api.PrepareActionRequestBody) ([]s
 		return nil, err
 	}
 
-	application := findSpringApplication(pid)
+	application := spring.FindSpringApplication(pid)
 	if application == nil {
 		return nil, errors.New("spring instance not found")
 	}
@@ -112,7 +112,7 @@ func extractHandlerMethods(request action_kit_api.PrepareActionRequestBody) ([]s
 	}
 
 	relevantMappings := make([]SpringMvcMapping, 0)
-	for _, m := range *application.MvcMappings {
+	for _, m := range application.MvcMappings {
 		if !utils.ContainsString(m.Patterns, pattern) {
 			continue
 		}

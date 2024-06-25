@@ -11,7 +11,7 @@ type fakeJvm struct {
 	cmd *exec.Cmd
 }
 
-func startFakeJvm() (fakeJvm, error) {
+func startFakeJvm(spring *SpringDiscovery) (fakeJvm, error) {
 	cmd := exec.Command("sleep", "120")
 	if err := cmd.Start(); err != nil {
 		return fakeJvm{}, err
@@ -21,18 +21,20 @@ func startFakeJvm() (fakeJvm, error) {
 		Pid: int32(cmd.Process.Pid),
 	})
 
-	springApplications.Store(cmd.Process.Pid, SpringApplication{
-		Name: "customers",
-		Pid:  int32(cmd.Process.Pid),
-		MvcMappings: &[]SpringMvcMapping{
-			{
-				Methods:      []string{"GET"},
-				Patterns:     []string{"/customers"},
-				HandlerClass: "com.steadybit.demo.CustomerController",
-				HandlerName:  "customers",
+	if spring != nil {
+		spring.applications.Store(cmd.Process.Pid, SpringApplication{
+			Name: "customers",
+			Pid:  int32(cmd.Process.Pid),
+			MvcMappings: []SpringMvcMapping{
+				{
+					Methods:      []string{"GET"},
+					Patterns:     []string{"/customers"},
+					HandlerClass: "com.steadybit.demo.CustomerController",
+					HandlerName:  "customers",
+				},
 			},
-		},
-	})
+		})
+	}
 
 	return fakeJvm{cmd}, nil
 }
