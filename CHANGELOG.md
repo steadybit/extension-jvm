@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.1.8 (next)
+## v1.1.8
 
 - Update dependencies (go 1.22)
 - Added namespace label to jvm-instance
