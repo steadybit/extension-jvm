@@ -2,9 +2,9 @@ package extjvm
 
 import (
 	"bufio"
+	"codnect.io/chrono"
 	"context"
 	"encoding/json"
-	"github.com/procyon-projects/chrono"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/extjvm/common"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"

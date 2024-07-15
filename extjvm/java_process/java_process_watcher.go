@@ -1,9 +1,9 @@
 package java_process
 
 import (
+	"codnect.io/chrono"
 	"context"
 	"fmt"
-	"github.com/procyon-projects/chrono"
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/process"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
