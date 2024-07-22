@@ -4,16 +4,15 @@
 
 package com.steadybit.javaagent;
 
-import org.apache.commons.io.IOUtils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.Attributes;
@@ -50,11 +49,11 @@ class TrampolineAgentTest {
         Attributes attributes = manifest.getMainAttributes();
         attributes.put(Attributes.Name.MANIFEST_VERSION, "1.0.0");
         attributes.putValue("Agent-Class", agentClass.getName());
-        try (JarOutputStream jar = new JarOutputStream(new FileOutputStream(file), manifest)) {
+        try (JarOutputStream jar = new JarOutputStream(Files.newOutputStream(file.toPath()), manifest)) {
             String classLocation = agentClass.getName().replace(".", "/") + ".class";
             jar.putNextEntry(new JarEntry(classLocation));
             try (InputStream classIs = agentClass.getResourceAsStream("/" + classLocation)) {
-                IOUtils.copy(classIs, jar);
+                classIs.transferTo(jar);
             }
             jar.closeEntry();
         }

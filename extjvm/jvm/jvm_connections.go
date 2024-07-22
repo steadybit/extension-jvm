@@ -43,7 +43,6 @@ func (c *jvmConnections) waitForConnection(pid int32, timeout time.Duration) boo
 func (c *jvmConnections) getConnection(pid int32) *jvmConnection {
 	ipaddress, ok := c.connections.Load(pid)
 	if !ok {
-		log.Trace().Msgf("No connection found for pid %d", pid)
 		return nil
 	}
 	return ipaddress.(*jvmConnection)

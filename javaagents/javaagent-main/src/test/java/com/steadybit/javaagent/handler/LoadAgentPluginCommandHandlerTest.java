@@ -6,7 +6,6 @@ package com.steadybit.javaagent.handler;
 
 import com.steadybit.javaagent.CommandHandler;
 import com.steadybit.javaagent.log.RemoteAgentLogger;
-import org.apache.commons.io.IOUtils;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,10 +14,10 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -58,10 +57,10 @@ class LoadAgentPluginCommandHandlerTest {
         Attributes attributes = manifest.getMainAttributes();
         attributes.putValue("Agent-Plugin-Class", TestAgentPlugin.class.getName());
         attributes.put(Attributes.Name.MANIFEST_VERSION, "1.0.0");
-        try(JarOutputStream jar = new JarOutputStream(new FileOutputStream(file), manifest)) {
+        try(JarOutputStream jar = new JarOutputStream(Files.newOutputStream(file.toPath()), manifest)) {
             jar.putNextEntry(new JarEntry(classLocation));
             try (InputStream classIs = TestAgentPlugin.class.getResourceAsStream("/" + classLocation)) {
-                IOUtils.copy(classIs, jar);
+                classIs.transferTo(jar);
             }
             jar.closeEntry();
         }

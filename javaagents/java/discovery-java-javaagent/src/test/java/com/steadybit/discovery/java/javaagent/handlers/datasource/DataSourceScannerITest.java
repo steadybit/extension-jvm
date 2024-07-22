@@ -39,8 +39,8 @@ class DataSourceScannerITest {
         pool.close(0);
 
         assertThat(this.scanner.getDataSourceConnections()).anySatisfy(dsConn -> {
-            assertThat(dsConn.getJdbcUrl().equals("jdbc:hsqldb:mem:test"));
-            assertThat(dsConn.getDatabaseType().equals("HSQLDB"));
+            assertThat(dsConn.getJdbcUrl()).isEqualTo("jdbc:hsqldb:mem:test");
+            assertThat(dsConn.getDatabaseType()).isEqualTo("HSQL Database Engine");
         });
     }
 }

@@ -103,7 +103,7 @@ class AttackRunnableTest {
     }
 
     public static class TestInstrumentationAttack implements Installable {
-        public TestInstrumentationAttack(java.lang.instrument.Instrumentation instrumentation, JSONObject config) {
+        public TestInstrumentationAttack(java.lang.instrument.Instrumentation ignoredInstrumentation, JSONObject ignoredConfig) {
         }
 
         @Override
@@ -118,16 +118,12 @@ class AttackRunnableTest {
     }
 
     public static class FailureTestInstrumentationAttack implements Installable {
-        public FailureTestInstrumentationAttack(java.lang.instrument.Instrumentation instrumentation, JSONObject config) {
+        public FailureTestInstrumentationAttack(java.lang.instrument.Instrumentation ignoredInstrumentation, JSONObject ignoredConfig) {
         }
 
         @Override
         public void install() {
             throw new RuntimeException("Test");
-        }
-
-        @Override
-        public void reset() {
         }
     }
 }

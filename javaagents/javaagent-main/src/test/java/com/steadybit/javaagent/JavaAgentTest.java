@@ -35,10 +35,10 @@ class JavaAgentTest {
         System.setProperty("STEADYBIT_LOG_JAVAAGENT_STDOUT", "true");
         System.setProperty("STEADYBIT_LOG_LEVEL", "DEBUG");
         System.setProperty("steadybit.javaagent.inject-bootstrap-enabled", "false");
-        //Start HttpEndpoint with RegisterJavaagentHandler
 
         //When
         JavaAgent.init("disableBootstrapLoaderInjection=true,pid=6,host=127.0.0.1,port=" + wireMock.port(), ByteBuddyAgent.install(), null);
+
         //Then
         await().untilAsserted(
                 () -> wireMock.verify(putRequestedFor(urlMatching("/javaagent")))

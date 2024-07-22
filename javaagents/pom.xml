@@ -19,8 +19,7 @@
   <modules>
     <module>javaagent-init</module>
     <module>javaagent-main</module>
-    <module>discovery-java-javaagent</module>
-    <module>attack-java-javaagent</module>
+    <module>java</module>
 		<module>springboot2</module>
     <module>download</module>
   </modules>
@@ -29,40 +28,38 @@
   <properties>
     <revision>1.0.0-SNAPSHOT</revision>
     <java.version>8</java.version>
+    <java-test.version>21</java-test.version>
+
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <!-- dependencies -->
-    <commons-io.version>2.13.0</commons-io.version>
-    <commons-net.version>3.9.0</commons-net.version>
-    <jna.version>5.13.0</jna.version>
-		<lombok.version>1.18.32</lombok.version>
-    <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
-    <mapstruct.version>1.5.5.Final</mapstruct.version>
-    <org-json.version>20231013</org-json.version>
-    <ipaddress.version>5.4.0</ipaddress.version>
-		<logback-classic.version>1.4.14</logback-classic.version>
+		<byte-buddy.version>1.14.18</byte-buddy.version>
+		<jna.version>5.14.0</jna.version>
+		<org-json.version>20240303</org-json.version>
+		<logback-classic.version>1.5.6</logback-classic.version>
 
-    <wiremock.version>2.35.1</wiremock.version>
-    <byte-buddy.version>1.14.15</byte-buddy.version>
-		<junit.version>5.10.2</junit.version>
-    <junit-pioneer.version>2.0.1</junit-pioneer.version>
-		<assertj-core.version>3.24.2</assertj-core.version>
-		<mockito.version>5.7.0</mockito.version>
+		<!-- Test -->
+		<hsqldb.version>2.7.2</hsqldb.version>
+		<wiremock.version>3.5.4</wiremock.version>
+		<junit.version>5.10.3</junit.version>
+    <junit-pioneer.version>2.2.0</junit-pioneer.version>
+		<assertj-core.version>3.26.3</assertj-core.version>
+		<mockito.version>5.12.0</mockito.version>
 		<awaitility.version>4.2.1</awaitility.version>
 
     <!-- plugins -->
-    <exec-maven-plugin.version>3.1.0</exec-maven-plugin.version>
-    <flatten-maven-plugin.version>1.5.0</flatten-maven-plugin.version>
-    <jacoco-maven-plugin.version>0.8.10</jacoco-maven-plugin.version>
-    <license-maven-plugin.version>2.2.0</license-maven-plugin.version>
-    <maven-deploy-plugin.version>3.1.0</maven-deploy-plugin.version>
-    <maven-enforcer-plugin.version>3.1.0</maven-enforcer-plugin.version>
-    <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
-    <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
-		<maven-shade-plugin.version>3.5.3</maven-shade-plugin.version>
-		<maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
-		<maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
-		<build-helper-maven-plugin.version>3.4.0</build-helper-maven-plugin.version>
+    <exec-maven-plugin.version>3.3.0</exec-maven-plugin.version>
+    <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
+    <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
+    <license-maven-plugin.version>2.4.0</license-maven-plugin.version>
+    <maven-deploy-plugin.version>3.1.2</maven-deploy-plugin.version>
+    <maven-enforcer-plugin.version>3.5.0</maven-enforcer-plugin.version>
+    <maven-gpg-plugin.version>3.2.4</maven-gpg-plugin.version>
+    <maven-surefire-plugin.version>3.3.1</maven-surefire-plugin.version>
+		<maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
+		<maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
+		<maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+		<build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
     <!-- Sonarcloud-->
     <sonar.organization>steadybit</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
@@ -98,11 +95,6 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-      <dependency>
-        <groupId>com.github.seancfoley</groupId>
-        <artifactId>ipaddress</artifactId>
-        <version>${ipaddress.version}</version>
-      </dependency>
 			<dependency>
 				<groupId>org.json</groupId>
 				<artifactId>json</artifactId>
@@ -117,11 +109,6 @@
         <groupId>net.java.dev.jna</groupId>
         <artifactId>jna-platform</artifactId>
         <version>${jna.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>${commons-io.version}</version>
       </dependency>
 			<dependency>
 				<groupId>ch.qos.logback</groupId>
@@ -162,23 +149,23 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>commons-net</groupId>
-        <artifactId>commons-net</artifactId>
-        <version>${commons-net.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
         <groupId>org.junit-pioneer</groupId>
         <artifactId>junit-pioneer</artifactId>
         <version>${junit-pioneer.version}</version>
         <scope>test</scope>
       </dependency>
-      <dependency>
-        <groupId>com.github.tomakehurst</groupId>
-        <artifactId>wiremock-jre8-standalone</artifactId>
-        <version>${wiremock.version}</version>
-        <scope>test</scope>
-      </dependency>
+			<dependency>
+				<groupId>org.wiremock</groupId>
+				<artifactId>wiremock-standalone</artifactId>
+				<version>${wiremock.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.hsqldb</groupId>
+				<artifactId>hsqldb</artifactId>
+				<version>${hsqldb.version}</version>
+				<scope>test</scope>
+			</dependency>
     </dependencies>
   </dependencyManagement>
   <build>
@@ -266,30 +253,17 @@
             <target>${java.version}</target>
             <showWarnings>true</showWarnings>
             <parameters>true</parameters>
-            <annotationProcessorPaths>
-              <path>
-                <groupId>org.mapstruct</groupId>
-                <artifactId>mapstruct-processor</artifactId>
-                <version>${mapstruct.version}</version>
-              </path>
-              <path>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
-              </path>
-              <path>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok-mapstruct-binding</artifactId>
-                <version>${lombok-mapstruct-binding.version}</version>
-              </path>
-              <!-- other annotation processors -->
-            </annotationProcessorPaths>
-            <compilerArgs>
-              <compilerArg>
-                -Amapstruct.unmappedTargetPolicy=ERROR
-              </compilerArg>
-            </compilerArgs>
           </configuration>
+					<executions>
+						<!-- use a newer java version for tests -->
+						<execution>
+							<id>default-testCompile</id>
+							<configuration>
+								<source>${java-test.version}</source>
+								<target>${java-test.version}</target>
+							</configuration>
+						</execution>
+					</executions>
         </plugin>
       </plugins>
     </pluginManagement>

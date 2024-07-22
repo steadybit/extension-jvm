@@ -16,10 +16,6 @@
         <version>${revision}</version>
     </parent>
     <packaging>jar</packaging>
-    <properties>
-        <!-- to support instrumenting old java -->
-        <java.version>1.8</java.version>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>net.bytebuddy</groupId>
@@ -42,11 +38,6 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

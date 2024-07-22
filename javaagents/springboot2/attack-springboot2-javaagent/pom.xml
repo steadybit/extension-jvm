@@ -10,16 +10,12 @@
 	<artifactId>attack-springboot2-javaagent</artifactId>
 	<name>steadybit :: Agent Attack :: Spring Boot 2 Agent Plugin</name>
 	<parent>
-		<artifactId>springboot2-dependencies</artifactId>
+		<artifactId>springboot2</artifactId>
 		<groupId>com.steadybit</groupId>
 		<relativePath>..</relativePath>
 		<version>${revision}</version>
 	</parent>
 	<packaging>jar</packaging>
-	<properties>
-		<!-- to support instrumenting old java -->
-		<java.version>1.8</java.version>
-	</properties>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -82,18 +78,8 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.awaitility</groupId>
-			<artifactId>awaitility</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.github.tomakehurst</groupId>
-			<artifactId>wiremock-jre8-standalone</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>net.bytebuddy</groupId>
-			<artifactId>byte-buddy-agent</artifactId>
+			<groupId>org.wiremock</groupId>
+			<artifactId>wiremock-standalone</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
