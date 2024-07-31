@@ -16,10 +16,6 @@
         <version>${revision}</version>
     </parent>
     <packaging>jar</packaging>
-    <properties>
-        <!-- to support instrumenting old java -->
-        <java.version>1.8</java.version>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>net.bytebuddy</groupId>
@@ -46,19 +42,14 @@
             <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock-jre8-standalone</artifactId>
-            <scope>test</scope>
-        </dependency>
+			<dependency>
+				<groupId>org.wiremock</groupId>
+				<artifactId>wiremock-standalone</artifactId>
+				<scope>test</scope>
+			</dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -150,6 +141,6 @@
                     </execution>
                 </executions>
             </plugin>
-        </plugins>
+				</plugins>
     </build>
 </project>

@@ -56,20 +56,21 @@ func main() {
 	// This is a section you will most likely want to change: The registration of HTTP handlers
 	// for your extension. You might want to change these because the names do not fit, or because
 	// you do not have a need for all of them.
-	discovery_kit_sdk.Register(extjvm.NewJvmDiscovery())
-	action_kit_sdk.RegisterAction(extjvm.NewControllerDelay())
-	action_kit_sdk.RegisterAction(extjvm.NewControllerException())
-	action_kit_sdk.RegisterAction(extjvm.NewJdbcTemplateException())
-	action_kit_sdk.RegisterAction(extjvm.NewJdbcTemplateDelay())
-	action_kit_sdk.RegisterAction(extjvm.NewHttpClientStatus())
-	action_kit_sdk.RegisterAction(extjvm.NewHttpClientDelay())
-	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodDelay())
-	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodException())
 
-	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
+	facade, datasource, spring := extjvm.StartJvmInfrastructure()
+
+	discovery_kit_sdk.Register(extjvm.NewJvmDiscovery(facade, datasource, spring))
+	action_kit_sdk.RegisterAction(extjvm.NewControllerDelay(facade, spring))
+	action_kit_sdk.RegisterAction(extjvm.NewControllerException(facade, spring))
+	action_kit_sdk.RegisterAction(extjvm.NewJdbcTemplateException(facade))
+	action_kit_sdk.RegisterAction(extjvm.NewJdbcTemplateDelay(facade))
+	action_kit_sdk.RegisterAction(extjvm.NewHttpClientStatus(facade))
+	action_kit_sdk.RegisterAction(extjvm.NewHttpClientDelay(facade))
+	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodDelay(facade))
+	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodException(facade))
+
+	//This will install a signal handler, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
-
-	extjvm.StartJvmInfrastructure()
 
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)

@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"runtime"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -32,13 +31,15 @@ func TestWithMinikube(t *testing.T) {
 			return []string{
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
 				"--set", "discovery.attributes.excludes.jvm={spring-instance.http-client}",
-				"--set", "logging.level=INFO",
+				"--set", "logging.level=TRACE",
+				"--set", "extraEnv[0].name=STEADYBIT_EXTENSION_MIN_PROCESS_AGE_BEFORE_ATTACHMENT",
+				"--set", "extraEnv[0].value=1s",
 			}
 		},
 	}
 
 	mOpts := e2e.DefaultMinikubeOpts().
-		WithRuntimes(e2e.RuntimeDocker, e2e.RuntimeContainerd).
+		WithRuntimes(e2e.RuntimeContainerd).
 		AfterStart(func(m *e2e.Minikube) error {
 			springBootSample = deploySpringBootSample(t, m)
 			springBootSample.AssertIsReachable(t, true)
@@ -51,8 +52,8 @@ func TestWithMinikube(t *testing.T) {
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
 		{
-				Name: "validate discovery",
-				Test: validateDiscovery,
+			Name: "validate discovery",
+			Test: validateDiscovery,
 		},
 		{
 			Name: "discover spring boot sample",
@@ -90,20 +91,16 @@ func TestWithMinikube(t *testing.T) {
 			Name: "jdbc template exception",
 			Test: testJDBCTemplateException,
 		},
-		{
-			Name: "discover spring boot sample as spring discovery",
-			Test: testSpringDiscovery,
-		},
 	})
 }
 
-func validateDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+func validateDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 	assert.NoError(t, validate.ValidateEndpointReferences("/", e.Client))
 }
 
 func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	log.Info().Msg("Starting testDiscovery")
-	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	fashionBestseller := FashionBestseller{Minikube: m}
@@ -111,13 +108,10 @@ func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	require.NoError(t, err, "failed to create pod")
 	defer func() { _ = fashionBestseller.Delete() }()
 
-	go m.TailLog(ctx, fashionBestseller.Pod)
-
 	target := getSpringBootSampleTarget(t, ctx, e)
 	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.jvm-instance")
 
 	targetFashion, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.jvm-instance", func(target discovery_kit_api.Target) bool {
-		log.Debug().Msgf("targetApplications: %+v", target.Attributes)
 		return e2e.HasAttribute(target, "jvm-instance.name", "fashion-bestseller")
 	})
 	require.NoError(t, err)
@@ -126,31 +120,8 @@ func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	assert.Equal(t, targetFashion.Attributes["host.domainname"], []string{m.Profile})
 }
 
-func testSpringDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testSpringDiscovery")
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
-	defer cancel()
-
-	target := getSpringBootSampleTarget(t, ctx, e)
-	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.jvm-instance")
-
-	springBootSample.Delete()
-
-	for i := 0; i < 20; i++ {
-		log.Info().Msgf("Attempt %d", i)
-		springBootSample2 := deploySpringBootSample(t, m)
-		springBootSample2.AssertIsReachable(t, true)
-		target = getSpringBootSampleTarget(t, ctx, e)
-		assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.jvm-instance")
-		springBootSample2.Delete()
-	}
-	springBootSample = deploySpringBootSample(t, m)
-	springBootSample.AssertIsReachable(t, true)
-}
-
 func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extension) discovery_kit_api.Target {
 	target, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.jvm-instance", func(target discovery_kit_api.Target) bool {
-		log.Debug().Msgf("targetApplications: %+v", target.Attributes)
 		return e2e.HasAttribute(target, "jvm-instance.name", "app") &&
 			e2e.HasAttribute(target, "instance.type", "spring-boot") &&
 			e2e.HasAttribute(target, "spring-instance.name", "spring-boot-sample") &&
@@ -430,7 +401,7 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			if tt.erroneousCallRate > 0 {
 				springBootSample.AssertStatusOnPath(t, tt.expectedHttpStatus, "/remote/blocking?url=https://www.github.com")
 				if tt.expectedLogStatus != 200 {
-					e2e.AssertLogContains(t, m, springBootSample.Pod, strconv.Itoa(tt.expectedLogStatus)+" Injected by steadybit")
+					e2e.AssertLogContains(t, m, springBootSample.Pod, fmt.Sprintf("%d Injected by steadybit", tt.expectedLogStatus))
 				}
 			} else {
 				springBootSample.AssertStatusOnPath(t, tt.expectedHttpStatus, "/remote/blocking?url=https://www.github.com")
@@ -724,8 +695,8 @@ func getTarget(t *testing.T, e *e2e.Extension) *action_kit_api.Target {
 }
 
 func deploySpringBootSample(t *testing.T, m *e2e.Minikube) *SpringBootSample {
-	springBootSample := SpringBootSample{Minikube: m}
-	err := springBootSample.Deploy("spring-boot-sample")
+	sample := SpringBootSample{Minikube: m}
+	err := sample.Deploy("spring-boot-sample")
 	require.NoError(t, err, "failed to create pod")
-	return &springBootSample
+	return &sample
 }

@@ -4,6 +4,7 @@
 package e2e
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
@@ -19,9 +20,10 @@ import (
 )
 
 type SpringBootSample struct {
-	Minikube *e2e.Minikube
-	Pod      metav1.Object
-	Service  metav1.Object
+	Minikube  *e2e.Minikube
+	Pod       metav1.Object
+	Service   metav1.Object
+	cancelCtx context.CancelFunc
 }
 
 func (n *SpringBootSample) Deploy(podName string, opts ...func(c *acorev1.PodApplyConfiguration)) error {
@@ -95,6 +97,10 @@ func (n *SpringBootSample) Deploy(podName string, opts ...func(c *acorev1.PodApp
 		return err
 	}
 	n.Service = service
+
+	ctx, cancel := context.WithCancel(context.Background())
+	n.cancelCtx = cancel
+	go n.Minikube.TailLog(ctx, n.Pod)
 
 	return nil
 }
@@ -255,6 +261,7 @@ func (n *SpringBootSample) ContainerStatus() (*corev1.ContainerStatus, error) {
 }
 
 func (n *SpringBootSample) Delete() error {
+	n.cancelCtx()
 	return errors.Join(
 		n.Minikube.DeletePod(n.Pod),
 		n.Minikube.DeleteService(n.Service),
