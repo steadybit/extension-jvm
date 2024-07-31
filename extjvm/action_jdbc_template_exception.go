@@ -16,7 +16,7 @@ import (
 
 func NewJdbcTemplateException(facade jvm.JavaFacade) action_kit_sdk.Action[JavaagentActionState] {
 	return &javaagentAction{
-		pluginJar:      utils.GetJarPath("attack-springboot2-javaagent.jar"),
+		pluginJar:      utils.GetJarPath("attack-spring-javaagent.jar"),
 		description:    jdbcTemplateExceptionDescribe(),
 		configProvider: jdbcTemplateExceptionConfigProvider,
 		facade:         facade,
@@ -116,7 +116,7 @@ func jdbcTemplateExceptionConfigProvider(request action_kit_api.PrepareActionReq
 	}
 
 	return map[string]interface{}{
-		"attack-class":      "com.steadybit.attacks.springboot2.instrumentation.SpringJdbcTemplateExceptionInstrumentation",
+		"attack-class":      "com.steadybit.attacks.spring.instrumentation.SpringJdbcTemplateExceptionInstrumentation",
 		"duration":          int(duration / time.Millisecond),
 		"operations":        extutil.ToString(request.Config["operations"]),
 		"jdbc-url":          extutil.ToString(request.Config["jdbcUrl"]),

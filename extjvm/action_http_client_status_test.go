@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Steadybit GmbH
+
 package extjvm
 
 import (
@@ -40,7 +43,7 @@ func Test_http_Client_Status_Prepare(t *testing.T) {
 			},
 
 			wantedState: &JavaagentActionState{
-				ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.springboot2.instrumentation.SpringHttpClientStatusInstrumentation\",\"duration\":10000,\"erroneousCallRate\":75,\"failureCauses\":[\"HTTP_502\"],\"hostAddress\":\"*\",\"httpMethods\":[\"GET\"],\"urlPath\":\"/test\"}",
+				ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.spring.instrumentation.SpringHttpClientStatusInstrumentation\",\"duration\":10000,\"erroneousCallRate\":75,\"failureCauses\":[\"HTTP_502\"],\"hostAddress\":\"*\",\"httpMethods\":[\"GET\"],\"urlPath\":\"/test\"}",
 			},
 		},
 	}

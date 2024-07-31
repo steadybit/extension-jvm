@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Steadybit GmbH
+
 package extjvm
 
 import (
@@ -38,7 +41,7 @@ func Test_JDBC_Template_Exception_Prepare(t *testing.T) {
 			},
 
 			wantedState: &JavaagentActionState{
-				ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.springboot2.instrumentation.SpringJdbcTemplateExceptionInstrumentation\",\"duration\":10000,\"erroneousCallRate\":75,\"jdbc-url\":\"jdbc:mysql://localhost:3306/test\",\"operations\":\"r\"}",
+				ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.spring.instrumentation.SpringJdbcTemplateExceptionInstrumentation\",\"duration\":10000,\"erroneousCallRate\":75,\"jdbc-url\":\"jdbc:mysql://localhost:3306/test\",\"operations\":\"r\"}",
 			},
 		},
 	}

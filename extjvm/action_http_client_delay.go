@@ -16,7 +16,7 @@ import (
 
 func NewHttpClientDelay(facade jvm.JavaFacade) action_kit_sdk.Action[JavaagentActionState] {
 	return &javaagentAction{
-		pluginJar:      utils.GetJarPath("attack-springboot2-javaagent.jar"),
+		pluginJar:      utils.GetJarPath("attack-spring-javaagent.jar"),
 		description:    httpClientDelayDescribe(),
 		configProvider: httpClientDelayConfigProvider,
 		facade:         facade,
@@ -111,7 +111,7 @@ func httpClientDelayConfigProvider(request action_kit_api.PrepareActionRequestBo
 	}
 
 	return map[string]interface{}{
-		"attack-class": "com.steadybit.attacks.springboot2.instrumentation.SpringHttpClientDelayInstrumentation",
+		"attack-class": "com.steadybit.attacks.spring.instrumentation.SpringHttpClientDelayInstrumentation",
 		"duration":     int(duration / time.Millisecond),
 		"delay":        extutil.ToUInt64(request.Config["delay"]),
 		"delayJitter":  extutil.ToBool(request.Config["delayJitter"]),

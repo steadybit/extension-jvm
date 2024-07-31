@@ -16,7 +16,7 @@ import (
 
 func NewHttpClientStatus(facade jvm.JavaFacade) action_kit_sdk.Action[JavaagentActionState] {
 	return &javaagentAction{
-		pluginJar:      utils.GetJarPath("attack-springboot2-javaagent.jar"),
+		pluginJar:      utils.GetJarPath("attack-spring-javaagent.jar"),
 		description:    httpClientStatusDescribe(),
 		configProvider: httpClientStatusConfigProvider,
 		facade:         facade,
@@ -176,7 +176,7 @@ func httpClientStatusConfigProvider(request action_kit_api.PrepareActionRequestB
 	}
 
 	return map[string]interface{}{
-		"attack-class":      "com.steadybit.attacks.springboot2.instrumentation.SpringHttpClientStatusInstrumentation",
+		"attack-class":      "com.steadybit.attacks.spring.instrumentation.SpringHttpClientStatusInstrumentation",
 		"duration":          int(duration / time.Millisecond),
 		"erroneousCallRate": extutil.ToInt(request.Config["erroneousCallRate"]),
 		"httpMethods":       extutil.ToStringArray(request.Config["httpMethods"]),

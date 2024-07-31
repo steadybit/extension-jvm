@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Steadybit GmbH
+
 package extjvm
 
 import (
@@ -23,7 +26,7 @@ const (
 )
 
 var (
-	springPlugin = utils.GetJarPath("discovery-springboot2-javaagent.jar")
+	springPlugin = utils.GetJarPath("discovery-spring-javaagent.jar")
 )
 
 type SpringMvcMapping struct {
@@ -67,7 +70,7 @@ func newSpringDiscovery(facade jvm.JavaFacade) *SpringDiscovery {
 }
 
 func (d *SpringDiscovery) Attached(jvm jvm.JavaVm) {
-	d.scheduleDiscove(jvm)
+	d.scheduleDiscover(jvm)
 }
 func (d *SpringDiscovery) Detached(jvm jvm.JavaVm) {
 	d.cancelDiscover(jvm)
@@ -110,7 +113,7 @@ func (d *SpringDiscovery) cancelDiscover(vm jvm.JavaVm) {
 	}
 }
 
-func (d *SpringDiscovery) scheduleDiscove(javaVm jvm.JavaVm) {
+func (d *SpringDiscovery) scheduleDiscover(javaVm jvm.JavaVm) {
 	t := &discoveryTask{}
 
 	err := t.scheduleOn(d.taskScheduler, func() {

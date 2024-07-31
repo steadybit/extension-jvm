@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2022 steadybit GmbH. All rights reserved.
+  ~ Copyright 2024 steadybit GmbH. All rights reserved.
   -->
 
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -42,7 +42,7 @@
             </artifactItem>
 						<artifactItem>
 							<groupId>com.steadybit</groupId>
-							<artifactId>attack-springboot2-javaagent</artifactId>
+							<artifactId>attack-spring-javaagent</artifactId>
 							<version>${revision}</version>
 							<type>jar</type>
 							<overWrite>true</overWrite>
@@ -74,7 +74,7 @@
             </artifactItem>
             <artifactItem>
               <groupId>com.steadybit</groupId>
-              <artifactId>discovery-springboot2-javaagent</artifactId>
+              <artifactId>discovery-spring-javaagent</artifactId>
               <version>${revision}</version>
               <type>jar</type>
               <overWrite>true</overWrite>

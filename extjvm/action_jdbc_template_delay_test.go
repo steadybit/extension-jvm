@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Steadybit GmbH
+
 package extjvm
 
 import (
@@ -39,7 +42,7 @@ func Test_JDBC_Template_Delay_Prepare(t *testing.T) {
 			},
 
 			wantedState: &JavaagentActionState{
-				ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.springboot2.instrumentation.SpringJdbcTemplateDelayInstrumentation\",\"delay\":500,\"delayJitter\":true,\"duration\":10000,\"jdbc-url\":\"jdbc:mysql://localhost:3306/test\",\"operations\":\"w\"}",
+				ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.spring.instrumentation.SpringJdbcTemplateDelayInstrumentation\",\"delay\":500,\"delayJitter\":true,\"duration\":10000,\"jdbc-url\":\"jdbc:mysql://localhost:3306/test\",\"operations\":\"w\"}",
 			},
 		},
 	}

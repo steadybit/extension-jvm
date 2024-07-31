@@ -16,7 +16,7 @@ import (
 
 func NewJdbcTemplateDelay(facade jvm.JavaFacade) action_kit_sdk.Action[JavaagentActionState] {
 	return &javaagentAction{
-		pluginJar:      utils.GetJarPath("attack-springboot2-javaagent.jar"),
+		pluginJar:      utils.GetJarPath("attack-spring-javaagent.jar"),
 		description:    jdbcTemplateDelayDescribe(),
 		configProvider: jdbcTemplateDelayConfigProvider,
 		facade:         facade,
@@ -132,7 +132,7 @@ func jdbcTemplateDelayConfigProvider(request action_kit_api.PrepareActionRequest
 	}
 
 	return map[string]interface{}{
-		"attack-class": "com.steadybit.attacks.springboot2.instrumentation.SpringJdbcTemplateDelayInstrumentation",
+		"attack-class": "com.steadybit.attacks.spring.instrumentation.SpringJdbcTemplateDelayInstrumentation",
 		"duration":     int(duration / time.Millisecond),
 		"delay":        extutil.ToUInt64(request.Config["delay"]),
 		"delayJitter":  extutil.ToBool(request.Config["delayJitter"]),
