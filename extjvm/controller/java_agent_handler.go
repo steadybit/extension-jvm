@@ -37,7 +37,7 @@ func javaagent(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(int(status))
 	default:
-		_, err := fmt.Fprintf(w, "Sorry, only POST methods are supported.")
+		_, err := fmt.Fprintf(w, "Sorry, only PUT methods are supported.")
 		if err != nil {
 			log.Err(err).Msg("Failed to write response.")
 			return
