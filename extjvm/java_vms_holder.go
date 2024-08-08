@@ -27,7 +27,7 @@ import (
 
 var (
 	jvms                sync.Map //map[int32]java_process.JavaVm
-	ClasspathExcludes   = []string{"IntelliJ IDEA", "surefirebooter", "Eclipse"}
+	ClasspathExcludes   = []string{"JetBrains Toolbox.app", "IntelliJ IDEA", "surefirebooter", "Eclipse"}
 	CommandlineExcludes = []string{"IntelliJ IDEA", "com.intellij.idea.Main", "jetbrains.buildServer.agent.Launcher",
 		"jetbrains.buildServer.agent.AgentMain", "org.jetbrains.jps.cmdline.BuildMain", "org.jetbrains.idea.maven.server.RemoteMavenServer",
 		"org.jetbrains.jps.cmdline.Launcher", "org.jetbrains.plugins.scala.nailgun.NailgunRunner", "sun.tools.",
