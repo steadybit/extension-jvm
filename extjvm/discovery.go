@@ -365,8 +365,10 @@ func enhanceTargetsWithSpringAttributes(targets []discovery_kit_api.Target) {
 	for _, app := range springApplications {
 		target := findTargetByPid(targets, app.Pid)
 		if target != nil {
-			target.Attributes["jvm-instance.name"] = utils.AppendIfMissing(target.Attributes["jvm-instance.name"], app.Name)
-			target.Attributes["spring-instance.name"] = []string{app.Name}
+			if app.Name != "" {
+				target.Attributes["jvm-instance.name"] = utils.AppendIfMissing(target.Attributes["jvm-instance.name"], app.Name)
+				target.Attributes["spring-instance.name"] = []string{app.Name}
+			}
 			target.Attributes["instance.type"] = append(target.Attributes["instance.type"], "spring")
 			if app.SpringBoot {
 				target.Attributes["instance.type"] = append(target.Attributes["instance.type"], "spring-boot")
