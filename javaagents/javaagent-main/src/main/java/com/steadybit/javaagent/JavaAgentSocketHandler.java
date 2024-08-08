@@ -81,7 +81,7 @@ public class JavaAgentSocketHandler {
 						if (log.isDebugEnabled()) {
 							log.warn(String.format("Unexpected Exception running command '%s:%s'", command, argument), e);
 						} else {
-							log.warn("Unexpected Exception running command '{}:{}': {}", command, argument, e.getMessage());
+							log.warn("Unexpected Exception running command '{}:{}': {} - {}", command, argument, e.getClass().getSimpleName(), e.getMessage());
 						}
 						if (countedOs.getCount() == 0L) {
 							try {
