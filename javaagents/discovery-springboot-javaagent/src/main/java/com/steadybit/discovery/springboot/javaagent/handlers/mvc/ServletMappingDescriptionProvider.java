@@ -4,6 +4,8 @@
 
 package com.steadybit.discovery.springboot.javaagent.handlers.mvc;
 
+import com.steadybit.javaagent.log.Logger;
+import com.steadybit.javaagent.log.RemoteAgentLogger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.asm.Type;
@@ -30,6 +32,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class ServletMappingDescriptionProvider {
+
+    private static final Logger log = RemoteAgentLogger.getLogger(ServletMappingDescriptionProvider.class);
 
     private static final boolean dispatcherServletPresent = ClassUtils.isPresent("org.springframework.web.servlet.DispatcherServlet",
             ServletMappingDescriptionProvider.class.getClassLoader());
@@ -63,8 +67,12 @@ public class ServletMappingDescriptionProvider {
 
             if (servletRegistrationBeanPresent) {
                 for (ServletRegistrationBean<?> registrationBean : applicationContext.getBeansOfType(ServletRegistrationBean.class).values()) {
-                    if (registrationBean.getServlet() instanceof DispatcherServlet) {
-                        dispatcherServlets.put(registrationBean.getServletName(), (DispatcherServlet) registrationBean.getServlet());
+                    try {
+                        if (registrationBean.getServlet() instanceof DispatcherServlet) {
+                            dispatcherServlets.put(registrationBean.getServletName(), (DispatcherServlet) registrationBean.getServlet());
+                        }
+                    } catch (Exception e) {
+                        log.error(String.format("Error while getting DispatcherServlet of registrationBean: %s/%s with class loader: %s", registrationBean.toString(), registrationBean.getClass(), applicationContext.getClassLoader()), e);
                     }
                 }
             }
