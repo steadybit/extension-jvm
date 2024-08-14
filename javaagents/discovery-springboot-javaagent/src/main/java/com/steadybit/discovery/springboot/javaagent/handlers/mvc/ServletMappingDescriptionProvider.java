@@ -71,8 +71,8 @@ public class ServletMappingDescriptionProvider {
                         if (registrationBean.getServlet() instanceof DispatcherServlet) {
                             dispatcherServlets.put(registrationBean.getServletName(), (DispatcherServlet) registrationBean.getServlet());
                         }
-                    } catch (Exception e) {
-                        log.error(String.format("Error while getting DispatcherServlet of registrationBean: %s/%s with class loader: %s", registrationBean.toString(), registrationBean.getClass(), applicationContext.getClassLoader()), e);
+                    } catch (Exception | Error e) {
+                        log.trace(String.format("Error while getting DispatcherServlet of registrationBean: %s/%s with class loader: %s", registrationBean.toString(), registrationBean.getClass(), applicationContext.getClassLoader()), e);
                     }
                 }
             }
