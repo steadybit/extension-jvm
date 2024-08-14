@@ -75,7 +75,7 @@ public class HttpAttackClient {
 
     public void attackStopped() {
         try {
-            HttpURLConnection conn = this.openConnection("/started", "POST");
+            HttpURLConnection conn = this.openConnection("/stopped", "POST");
             try {
                 this.assertStatusOK(conn.getResponseCode());
             } finally {
