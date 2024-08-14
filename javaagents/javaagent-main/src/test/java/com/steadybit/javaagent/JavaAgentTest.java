@@ -10,6 +10,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
@@ -33,6 +35,8 @@ class JavaAgentTest {
     @Test
     void callAgentMain() throws Exception {
         //Given
+        wireMock.stubFor(put("/javaagent").willReturn(ok()));
+
         System.setProperty("STEADYBIT_LOG_JAVAAGENT_STDOUT", "true");
         System.setProperty("STEADYBIT_LOG_LEVEL", "DEBUG");
         System.setProperty("steadybit.javaagent.inject-bootstrap-enabled", "false");
