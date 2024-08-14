@@ -18,6 +18,7 @@ type Specification struct {
 	HealthPort                     uint16   `json:"healthPort" split_words:"true" required:"false" default:"8083"`
 	JavaAgentAttachmentPort        uint16   `json:"javaAgentAttachmentPort" split_words:"true" required:"false" default:"8095"`
 	DiscoveryAttributesExcludesJVM []string `json:"discoveryAttributesExcludesJVM" split_words:"true" required:"false"`
+	JavaAgentLogLevel              string   `json:"javaAgentLogLevel" split_words:"true" required:"false" default:"INFO"`
 }
 
 var (

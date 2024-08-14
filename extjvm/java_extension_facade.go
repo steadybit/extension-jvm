@@ -372,7 +372,7 @@ func GetCleanSocketCommandResult(response io.Reader) (string, error) {
 }
 
 func getJvmExtensionLogLevel() string {
-	loglevel := os.Getenv("STEADYBIT_EXTENSION_LOG_LEVEL")
+	loglevel := config.Config.JavaAgentLogLevel
 	if loglevel == "" {
 		loglevel = "info"
 	}
