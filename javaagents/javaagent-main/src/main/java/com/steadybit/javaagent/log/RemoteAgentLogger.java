@@ -92,30 +92,30 @@ public class RemoteAgentLogger implements Logger {
         for (int i = 0; i < len; ++i) {
             char ch = value.charAt(i);
             switch (ch) {
-            case '\b':
-                pw.print("\\b");
-                continue;
-            case '\t':
-                pw.print("\\t");
-                continue;
-            case '\n':
-                pw.print("\\n");
-                continue;
-            case '\f':
-                pw.print("\\f");
-                continue;
-            case '\r':
-                pw.print("\\r");
-                continue;
-            case '"':
-                pw.print("\\\"");
-                continue;
-            case '/':
-                pw.print("\\/");
-                continue;
-            case '\\':
-                pw.print("\\\\");
-                continue;
+                case '\b':
+                    pw.print("\\b");
+                    continue;
+                case '\t':
+                    pw.print("\\t");
+                    continue;
+                case '\n':
+                    pw.print("\\n");
+                    continue;
+                case '\f':
+                    pw.print("\\f");
+                    continue;
+                case '\r':
+                    pw.print("\\r");
+                    continue;
+                case '"':
+                    pw.print("\\\"");
+                    continue;
+                case '/':
+                    pw.print("\\/");
+                    continue;
+                case '\\':
+                    pw.print("\\\\");
+                    continue;
             }
             if (ch >= 0 && ch <= 31 || ch >= 127 && ch <= 159 || ch >= 8192 && ch <= 8447) {
                 String ss = Integer.toHexString(ch);

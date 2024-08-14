@@ -7,7 +7,6 @@ package com.steadybit.javaagent.handler;
 import com.steadybit.javaagent.CommandHandler;
 import com.steadybit.javaagent.log.LogLevel;
 import com.steadybit.javaagent.log.RemoteAgentLogger;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
@@ -15,6 +14,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class SetLoglevelCommandHandlerTest {
     private final CommandHandler handler = new SetLoglevelCommandHandler();
@@ -37,7 +38,7 @@ class SetLoglevelCommandHandlerTest {
         this.handler.handle(command, argument, os);
         byte[] buf = os.toByteArray();
         assertThat(buf[0]).isEqualTo(CommandHandler.RC_OK);
-        return new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buf, 1, buf.length -1))).readLine();
+        return new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buf, 1, buf.length - 1))).readLine();
     }
 
 }

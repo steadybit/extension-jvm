@@ -4,11 +4,12 @@
 
 package com.steadybit.javaagent.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class CountingOutputStreamTest {
 
@@ -18,10 +19,10 @@ class CountingOutputStreamTest {
             assertThat(counting.getCount()).isEqualTo(0);
 
             counting.write(1);
-            counting.write(new byte[] {2,3});
-            counting.write(new byte[] {1,2,3,4,5}, 3,2);
+            counting.write(new byte[]{2, 3});
+            counting.write(new byte[]{1, 2, 3, 4, 5}, 3, 2);
 
-            assertThat(bos.toByteArray()).containsExactly(1,2,3,4,5);
+            assertThat(bos.toByteArray()).containsExactly(1, 2, 3, 4, 5);
             assertThat(counting.getCount()).isEqualTo(5);
 
             counting.resetCount();

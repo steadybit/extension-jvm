@@ -25,15 +25,15 @@ public class WeakConcurrentSet<V> implements Runnable, Iterable<V> {
 
     public WeakConcurrentSet(Cleaner cleaner) {
         switch (cleaner) {
-        case INLINE:
-            this.target = new WeakConcurrentMap.WithInlinedExpunction<>();
-            break;
-        case THREAD:
-        case MANUAL:
-            this.target = new WeakConcurrentMap<>(cleaner == Cleaner.THREAD);
-            break;
-        default:
-            throw new AssertionError();
+            case INLINE:
+                this.target = new WeakConcurrentMap.WithInlinedExpunction<>();
+                break;
+            case THREAD:
+            case MANUAL:
+                this.target = new WeakConcurrentMap<>(cleaner == Cleaner.THREAD);
+                break;
+            default:
+                throw new AssertionError();
         }
     }
 
@@ -112,7 +112,7 @@ public class WeakConcurrentSet<V> implements Runnable, Iterable<V> {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return Collections.newSetFromMap(this.target.target).toString();
     }
 

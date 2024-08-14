@@ -10,16 +10,6 @@ import com.steadybit.shaded.net.bytebuddy.agent.builder.AgentBuilder;
 import com.steadybit.shaded.net.bytebuddy.asm.Advice;
 import com.steadybit.shaded.net.bytebuddy.description.method.MethodDescription;
 import com.steadybit.shaded.net.bytebuddy.matcher.ElementMatcher;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.declaresMethod;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.hasSuperType;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.isStatic;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.named;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.not;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesArguments;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 import okhttp3.OkHttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -35,6 +25,17 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.declaresMethod;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.isAbstract;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.isStatic;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.named;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.not;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesArguments;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 public class HttpClientRequestScanner extends ClassTransformationPlugin {
     private final ConcurrentHashMap<String, HttpRequest> requests = new ConcurrentHashMap<>();

@@ -5,7 +5,6 @@
 package com.steadybit.discovery.java.javaagent.handlers.datasource;
 
 import net.bytebuddy.agent.ByteBuddyAgent;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.hsqldb.jdbc.JDBCPool;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import java.lang.instrument.Instrumentation;
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class DataSourceScannerITest {
     private static final Instrumentation INSTRUMENTATION = ByteBuddyAgent.install();

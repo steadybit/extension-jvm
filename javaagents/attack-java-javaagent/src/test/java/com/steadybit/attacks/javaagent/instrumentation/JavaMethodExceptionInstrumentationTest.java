@@ -5,14 +5,15 @@
 package com.steadybit.attacks.javaagent.instrumentation;
 
 import net.bytebuddy.agent.ByteBuddyAgent;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JavaMethodExceptionInstrumentationTest {
     private static final Instrumentation INSTRUMENTATION = ByteBuddyAgent.install();

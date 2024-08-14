@@ -4,18 +4,19 @@
 
 package com.steadybit.attacks.javaagent.instrumentation;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.mock;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 class SpringHttpClientStatusInstrumentationTest {
 

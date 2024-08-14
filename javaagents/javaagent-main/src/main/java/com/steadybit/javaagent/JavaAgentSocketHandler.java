@@ -27,85 +27,85 @@ import java.util.List;
  * Accept handler for incoming tcp connections. The actual handling of the connection is delegated to the CommandHandler implementations.
  */
 public class JavaAgentSocketHandler {
-	private static final Logger log = RemoteAgentLogger.getLogger(JavaAgentSocketHandler.class);
-	private final List<CommandHandler> commandHandlers;
-	private final LoadedClassesCache loadedClassesCache;
+    private static final Logger log = RemoteAgentLogger.getLogger(JavaAgentSocketHandler.class);
+    private final List<CommandHandler> commandHandlers;
+    private final LoadedClassesCache loadedClassesCache;
 
-	public JavaAgentSocketHandler(Instrumentation instrumentation) {
-		this.loadedClassesCache = new LoadedClassesCache(instrumentation);
-		this.commandHandlers = Arrays.asList(
-			new ClassLoadedCommandHandler(this.loadedClassesCache),
-			new LoadAgentPluginCommandHandler(instrumentation, this.loadedClassesCache),
-			new SetLoglevelCommandHandler()
-		);
-	}
+    public JavaAgentSocketHandler(Instrumentation instrumentation) {
+        this.loadedClassesCache = new LoadedClassesCache(instrumentation);
+        this.commandHandlers = Arrays.asList(
+                new ClassLoadedCommandHandler(this.loadedClassesCache),
+                new LoadAgentPluginCommandHandler(instrumentation, this.loadedClassesCache),
+                new SetLoglevelCommandHandler()
+        );
+    }
 
 
-	public void accept(Socket socket) throws IOException {
-		OutputStream os = socket.getOutputStream();
-		BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+    public void accept(Socket socket) throws IOException {
+        OutputStream os = socket.getOutputStream();
+        BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-		while (true) {
-			String command = br.readLine();
-			if (command == null) {
-				return;
-			}
+        while (true) {
+            String command = br.readLine();
+            if (command == null) {
+                return;
+            }
 
-			log.trace(String.format("Received command: %s ", command));
+            log.trace(String.format("Received command: %s ", command));
 
-			this.handleCommand(command, os);
-		}
-	}
+            this.handleCommand(command, os);
+        }
+    }
 
-	public void disconnected() {
-		this.loadedClassesCache.evict();
-	}
+    public void disconnected() {
+        this.loadedClassesCache.evict();
+    }
 
-	private void handleCommand(String line, OutputStream os) {
-		int commandSeparator = line.indexOf(":");
-		PrintWriter pw = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8), true);
-		if (commandSeparator == -1) {
-			pw.write(CommandHandler.RC_ERROR);
-			pw.println("Invalid command: " + line);
-		} else {
-			String command = line.substring(0, commandSeparator);
-			String argument = line.substring(commandSeparator + 1);
-			log.trace("Received command: {}", command);
+    private void handleCommand(String line, OutputStream os) {
+        int commandSeparator = line.indexOf(":");
+        PrintWriter pw = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8), true);
+        if (commandSeparator == -1) {
+            pw.write(CommandHandler.RC_ERROR);
+            pw.println("Invalid command: " + line);
+        } else {
+            String command = line.substring(0, commandSeparator);
+            String argument = line.substring(commandSeparator + 1);
+            log.trace("Received command: {}", command);
 
-			for (CommandHandler commandHandler : this.commandHandlers) {
-				if (commandHandler.canHandle(command)) {
-					CountingOutputStream countedOs = new CountingOutputStream(os);
-					try {
-						commandHandler.handle(command, argument, countedOs);
-					} catch (Throwable e) {
-						if (log.isDebugEnabled()) {
-							log.warn(String.format("Unexpected Exception running command '%s:%s'", command, argument), e);
-						} else {
-							log.warn("Unexpected Exception running command '{}:{}': {} - {}", command, argument, e.getClass().getSimpleName(), e.getMessage());
-						}
-						if (countedOs.getCount() == 0L) {
-							try {
-								os.write(CommandHandler.RC_ERROR);
-							} catch (IOException ex) {
-								//ignore when error can't be reported
-							}
-						}
-					}
+            for (CommandHandler commandHandler : this.commandHandlers) {
+                if (commandHandler.canHandle(command)) {
+                    CountingOutputStream countedOs = new CountingOutputStream(os);
+                    try {
+                        commandHandler.handle(command, argument, countedOs);
+                    } catch (Throwable e) {
+                        if (log.isDebugEnabled()) {
+                            log.warn(String.format("Unexpected Exception running command '%s:%s'", command, argument), e);
+                        } else {
+                            log.warn("Unexpected Exception running command '{}:{}': {} - {}", command, argument, e.getClass().getSimpleName(), e.getMessage());
+                        }
+                        if (countedOs.getCount() == 0L) {
+                            try {
+                                os.write(CommandHandler.RC_ERROR);
+                            } catch (IOException ex) {
+                                //ignore when error can't be reported
+                            }
+                        }
+                    }
 
-					if (countedOs.getCount() == 0L) {
-						try {
-							os.write(CommandHandler.RC_OK);
-						} catch (IOException ex) {
-							//ignore when error can't be reported
-						}
-					}
-					return;
-				}
-			}
+                    if (countedOs.getCount() == 0L) {
+                        try {
+                            os.write(CommandHandler.RC_OK);
+                        } catch (IOException ex) {
+                            //ignore when error can't be reported
+                        }
+                    }
+                    return;
+                }
+            }
 
-			pw.write(CommandHandler.RC_ERROR);
-			pw.println("Unknown command: " + command);
-			log.warn("Received unknown command: {}", command);
-		}
-	}
+            pw.write(CommandHandler.RC_ERROR);
+            pw.println("Unknown command: " + command);
+            log.warn("Received unknown command: {}", command);
+        }
+    }
 }

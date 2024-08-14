@@ -11,6 +11,12 @@ import com.steadybit.shaded.net.bytebuddy.agent.builder.AgentBuilder;
 import com.steadybit.shaded.net.bytebuddy.asm.Advice;
 import com.steadybit.shaded.net.bytebuddy.description.method.MethodDescription;
 import com.steadybit.shaded.net.bytebuddy.matcher.ElementMatcher;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.lang.instrument.Instrumentation;
+import java.util.concurrent.ThreadLocalRandom;
+
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -18,11 +24,6 @@ import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.named;
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.not;
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.lang.instrument.Instrumentation;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class SpringHttpClientStatusInstrumentation extends ClassTransformationPlugin {
     private final int errorRate;
@@ -44,7 +45,7 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
 
     private String[] getAllStringValues(JSONArray array) {
         if (array == null || array.isEmpty()) {
-            return new String[] {};
+            return new String[]{};
         }
 
         String[] values = new String[array.length()];

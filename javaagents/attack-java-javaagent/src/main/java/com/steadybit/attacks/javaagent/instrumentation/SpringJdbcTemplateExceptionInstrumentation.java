@@ -12,13 +12,14 @@ import com.steadybit.shaded.net.bytebuddy.asm.Advice;
 import com.steadybit.shaded.net.bytebuddy.description.method.MethodDescription;
 import com.steadybit.shaded.net.bytebuddy.matcher.ElementMatcher;
 import com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers;
+import org.json.JSONObject;
+
+import java.lang.instrument.Instrumentation;
+
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.named;
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.none;
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesArguments;
-import org.json.JSONObject;
-
-import java.lang.instrument.Instrumentation;
 
 public class SpringJdbcTemplateExceptionInstrumentation extends ClassTransformation {
     private static final String CLASSNAME_JDBC_TEMPLATE = "org.springframework.jdbc.core.JdbcTemplate";

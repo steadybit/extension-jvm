@@ -4,7 +4,10 @@
 
 package com.steadybit.discovery.springboot.javaagent;
 
-import com.steadybit.discovery.springboot.javaagent.handlers.*;
+import com.steadybit.discovery.springboot.javaagent.handlers.BeanCommandHandler;
+import com.steadybit.discovery.springboot.javaagent.handlers.EnvCommandHandler;
+import com.steadybit.discovery.springboot.javaagent.handlers.HttpClientCommandHandler;
+import com.steadybit.discovery.springboot.javaagent.handlers.HttpMappingsCommandHandler;
 import com.steadybit.discovery.springboot.javaagent.handlers.common.ApplicationContextScanner;
 import com.steadybit.discovery.springboot.javaagent.handlers.httpclient.HttpClientRequestScanner;
 import com.steadybit.javaagent.AgentPlugin;

@@ -57,22 +57,22 @@ public class LoadAgentPluginCommandHandler implements CommandHandler {
         try {
             PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8), true);
             switch (command) {
-            case "load-agent-plugin":
-                boolean loadResult = this.loadAgentPlugin(argument);
-                writer.write(RC_OK);
-                writer.println(loadResult);
-                break;
-            case "unload-agent-plugin":
-                boolean unloadResult = this.unloadAgentPlugin(argument);
-                writer.write(RC_OK);
-                writer.println(unloadResult);
-                break;
-            default:
-                for (AgentPluginInstance agentPluginInstance : this.loadedAgentPlugins.values()) {
-                    if (agentPluginInstance.canHandle(command)) {
-                        agentPluginInstance.handle(command, argument, os);
+                case "load-agent-plugin":
+                    boolean loadResult = this.loadAgentPlugin(argument);
+                    writer.write(RC_OK);
+                    writer.println(loadResult);
+                    break;
+                case "unload-agent-plugin":
+                    boolean unloadResult = this.unloadAgentPlugin(argument);
+                    writer.write(RC_OK);
+                    writer.println(unloadResult);
+                    break;
+                default:
+                    for (AgentPluginInstance agentPluginInstance : this.loadedAgentPlugins.values()) {
+                        if (agentPluginInstance.canHandle(command)) {
+                            agentPluginInstance.handle(command, argument, os);
+                        }
                     }
-                }
             }
         } catch (Exception e) {
             log.error("Could not execute command '" + command + "': ", e);
@@ -238,7 +238,7 @@ class AgentURLClassloader extends URLClassLoader {
     }
 
     public AgentURLClassloader(File agentJar, ClassLoader parent) {
-        super(new URL[] { toURL(agentJar) }, parent);
+        super(new URL[]{toURL(agentJar)}, parent);
     }
 
     private static URL toURL(File agentJar) {

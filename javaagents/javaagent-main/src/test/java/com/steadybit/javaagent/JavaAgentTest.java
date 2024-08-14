@@ -5,14 +5,15 @@
 package com.steadybit.javaagent;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import net.bytebuddy.agent.ByteBuddyAgent;
-import static org.awaitility.Awaitility.await;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static org.awaitility.Awaitility.await;
 
 class JavaAgentTest {
     private static WireMockServer wireMock;

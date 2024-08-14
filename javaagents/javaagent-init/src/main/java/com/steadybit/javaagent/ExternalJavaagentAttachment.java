@@ -59,11 +59,11 @@ public class ExternalJavaagentAttachment {
             throw new IllegalStateException("Could not find agentJar file to load: " + ownJar.getAbsolutePath());
         }
         try {
-          ByteBuddyAgent.attach(ownJar, pid, options);
+            ByteBuddyAgent.attach(ownJar, pid, options);
         } catch (Exception e) {
-          //Fallback on Emulated Attach
-          System.out.println("Fallback on Emulated Attach");
-          ByteBuddyAgent.attach(ownJar, pid, options, new ByteBuddyAgent.AttachmentProvider.Compound(ByteBuddyAgent.AttachmentProvider.ForEmulatedAttachment.INSTANCE));
+            //Fallback on Emulated Attach
+            System.out.println("Fallback on Emulated Attach");
+            ByteBuddyAgent.attach(ownJar, pid, options, new ByteBuddyAgent.AttachmentProvider.Compound(ByteBuddyAgent.AttachmentProvider.ForEmulatedAttachment.INSTANCE));
         }
     }
 

@@ -18,9 +18,9 @@ import java.util.jar.JarFile;
 public class TrampolineAgent {
     static URLClassLoader previous;
 
-    @SuppressWarnings({ "java:S2095", "java:S2093" }) //Closing of URLClassLoader handled with love
+    @SuppressWarnings({"java:S2095", "java:S2093"}) //Closing of URLClassLoader handled with love
     public static void agentmain(String agentArguments, Instrumentation instrumentation) throws Exception {
-        URLClassLoader classLoader = new URLClassLoader(new URL[] { getAgentJarURL(agentArguments) });
+        URLClassLoader classLoader = new URLClassLoader(new URL[]{getAgentJarURL(agentArguments)});
         try {
             classLoader.loadClass(getAgentClass(agentArguments))
                     .getMethod("init", String.class, Instrumentation.class, ClassLoader.class)

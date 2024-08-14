@@ -5,15 +5,16 @@
 package com.steadybit.javaagent;
 
 import net.bytebuddy.agent.ByteBuddyAgent;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
-import static org.mockito.Mockito.mockStatic;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.mockStatic;
 
 class ExternalJavaagentAttachmentTest {
     @TempDir
@@ -25,7 +26,7 @@ class ExternalJavaagentAttachmentTest {
 
         try (MockedStatic<ByteBuddyAgent> agent = mockStatic(ByteBuddyAgent.class)) {
             assertThatCode(() -> {
-                String[] args = { "pid=1", "hostpid=1234", "host=127.0.0.1", "port=42899", "agentJar=" + this.tempDir };
+                String[] args = {"pid=1", "hostpid=1234", "host=127.0.0.1", "port=42899", "agentJar=" + this.tempDir};
                 ExternalJavaagentAttachment.main(args);
             }).doesNotThrowAnyException();
 
@@ -39,7 +40,7 @@ class ExternalJavaagentAttachmentTest {
 
         try (MockedStatic<ByteBuddyAgent> agent = mockStatic(ByteBuddyAgent.class)) {
             assertThatCode(() -> {
-                String[] args = { "pid=1", "host=127.0.0.1", "port=42899", "agentJar=" + this.tempDir };
+                String[] args = {"pid=1", "host=127.0.0.1", "port=42899", "agentJar=" + this.tempDir};
                 ExternalJavaagentAttachment.main(args);
             }).doesNotThrowAnyException();
 

@@ -20,12 +20,12 @@ public class JmxEnvironmentReader {
     public String readPropertyValue(String name) {
         try {
             ObjectName objectName = new ObjectName("org.springframework.boot:type=Endpoint,name=Env");
-            Map<?, ?> env = (Map<?,?>) this.mBeanServer.invoke(objectName, "environmentEntry", new String[] { name }, new String[] { "java.lang.String" });
+            Map<?, ?> env = (Map<?, ?>) this.mBeanServer.invoke(objectName, "environmentEntry", new String[]{name}, new String[]{"java.lang.String"});
             if (env == null) {
                 return null;
             }
 
-            Map<?, ?> property = (Map<?,?>) env.get("property");
+            Map<?, ?> property = (Map<?, ?>) env.get("property");
             if (property == null) {
                 return null;
             }
@@ -36,7 +36,7 @@ public class JmxEnvironmentReader {
             log.trace("Could not read " + name + " from spring environment. MBean org.springframework.boot:type=Endpoint,name=Env not found");
             return null;
         } catch (Exception e) {
-            log.debug("Could not read " + name + " from spring environment: " + e.getClass() +": " +e.getMessage());
+            log.debug("Could not read " + name + " from spring environment: " + e.getClass() + ": " + e.getMessage());
             return null;
         }
     }

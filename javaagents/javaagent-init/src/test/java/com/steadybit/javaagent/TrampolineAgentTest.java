@@ -5,8 +5,6 @@
 package com.steadybit.javaagent;
 
 import org.apache.commons.io.IOUtils;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -20,6 +18,9 @@ import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TrampolineAgentTest {
     public static List<String> events = new ArrayList<>();

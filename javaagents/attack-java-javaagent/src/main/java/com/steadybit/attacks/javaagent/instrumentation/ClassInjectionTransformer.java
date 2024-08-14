@@ -26,7 +26,7 @@ public class ClassInjectionTransformer implements AgentBuilder.Transformer {
 
     @Override
     public DynamicType.Builder<?> transform(DynamicType.Builder<?> builder, TypeDescription typeDescription, ClassLoader classLoader, JavaModule module,
-            ProtectionDomain protectionDomain) {
+                                            ProtectionDomain protectionDomain) {
         List<String> missingClasses = Arrays.stream(this.classesToInject)
                 .filter(name -> !ClassInjectionHelper.hasClass(classLoader, name))
                 .collect(Collectors.toList());

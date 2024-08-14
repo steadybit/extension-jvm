@@ -5,12 +5,7 @@
 package com.steadybit.attacks.javaagent;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import com.steadybit.javaagent.log.RemoteAgentLogger;
-import static java.util.Collections.synchronizedList;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,6 +14,16 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
+import static java.util.Collections.synchronizedList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class AttackRunnableTest {
     private static WireMockServer wireMock;

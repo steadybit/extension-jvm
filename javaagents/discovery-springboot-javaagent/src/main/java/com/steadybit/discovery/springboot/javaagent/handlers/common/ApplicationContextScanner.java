@@ -10,13 +10,14 @@ import com.steadybit.javaagent.util.WeakConcurrentSet;
 import com.steadybit.shaded.net.bytebuddy.agent.builder.AgentBuilder;
 import com.steadybit.shaded.net.bytebuddy.asm.Advice;
 import com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.hasMethodName;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.named;
 import org.springframework.context.ApplicationContext;
 
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.hasMethodName;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.named;
 
 public final class ApplicationContextScanner extends ClassTransformationPlugin {
     private final static int STALE_TIME = 2 * 60 * 1000;
@@ -44,7 +45,7 @@ public final class ApplicationContextScanner extends ClassTransformationPlugin {
         return agentBuilder
                 .type(named("org.springframework.context.support.AbstractApplicationContext"))
                 .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping().bind(Registration.class, this.getRegistration())).include(
-                        CaptureApplicationContextAdvice.class.getClassLoader())
+                                CaptureApplicationContextAdvice.class.getClassLoader())
                         .advice(hasMethodName("publishEvent").and(ElementMatchers.takesArguments(1)), CaptureApplicationContextAdvice.class.getName()));
     }
 

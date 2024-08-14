@@ -7,7 +7,6 @@ package com.steadybit.javaagent.handler;
 import com.steadybit.javaagent.CommandHandler;
 import com.steadybit.javaagent.log.RemoteAgentLogger;
 import org.apache.commons.io.IOUtils;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,8 +23,10 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 class LoadAgentPluginCommandHandlerTest {
-    private final CommandHandler handler = new LoadAgentPluginCommandHandler(null,null);
+    private final CommandHandler handler = new LoadAgentPluginCommandHandler(null, null);
     public static boolean pluginLoaded = false;
     public static boolean pluginUnloaded = false;
 
@@ -58,7 +59,7 @@ class LoadAgentPluginCommandHandlerTest {
         Attributes attributes = manifest.getMainAttributes();
         attributes.putValue("Agent-Plugin-Class", TestAgentPlugin.class.getName());
         attributes.put(Attributes.Name.MANIFEST_VERSION, "1.0.0");
-        try(JarOutputStream jar = new JarOutputStream(new FileOutputStream(file), manifest)) {
+        try (JarOutputStream jar = new JarOutputStream(new FileOutputStream(file), manifest)) {
             jar.putNextEntry(new JarEntry(classLocation));
             try (InputStream classIs = TestAgentPlugin.class.getResourceAsStream("/" + classLocation)) {
                 IOUtils.copy(classIs, jar);
@@ -73,6 +74,6 @@ class LoadAgentPluginCommandHandlerTest {
         this.handler.handle(command, argument, os);
         byte[] buf = os.toByteArray();
         assertThat(buf[0]).isEqualTo(CommandHandler.RC_OK);
-        return new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buf, 1, buf.length -1))).readLine();
+        return new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buf, 1, buf.length - 1))).readLine();
     }
 }

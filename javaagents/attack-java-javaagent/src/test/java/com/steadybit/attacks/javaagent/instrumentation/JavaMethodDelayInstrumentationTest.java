@@ -5,8 +5,6 @@
 package com.steadybit.attacks.javaagent.instrumentation;
 
 import net.bytebuddy.agent.ByteBuddyAgent;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.data.Offset.offset;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -15,6 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
 
 class JavaMethodDelayInstrumentationTest {
     private static final Logger log = LoggerFactory.getLogger(JavaMethodDelayInstrumentationTest.class);

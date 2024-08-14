@@ -4,15 +4,26 @@
 
 package com.steadybit.attacks.javaagent.instrumentation;
 
-import com.steadybit.attacks.javaagent.advice.*;
+import com.steadybit.attacks.javaagent.advice.Delay;
+import com.steadybit.attacks.javaagent.advice.HostAddress;
+import com.steadybit.attacks.javaagent.advice.Jitter;
+import com.steadybit.attacks.javaagent.advice.RestTemplateDelayAdvice;
+import com.steadybit.attacks.javaagent.advice.WebClientDelayAdvice;
 import com.steadybit.shaded.net.bytebuddy.agent.builder.AgentBuilder;
 import com.steadybit.shaded.net.bytebuddy.asm.Advice;
 import com.steadybit.shaded.net.bytebuddy.description.method.MethodDescription;
 import com.steadybit.shaded.net.bytebuddy.matcher.ElementMatcher;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.*;
 import org.json.JSONObject;
 
 import java.lang.instrument.Instrumentation;
+
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.declaresMethod;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.isAbstract;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.named;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.not;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesArguments;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 public class SpringHttpClientDelayInstrumentation extends ClassTransformation {
     private final long delay;

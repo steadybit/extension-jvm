@@ -11,7 +11,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import net.bytebuddy.agent.ByteBuddyAgent;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +21,8 @@ import reactor.core.publisher.Mono;
 import rx.Observable;
 
 import java.lang.instrument.Instrumentation;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class HttpClientRequestScannerITest {
     private static final Instrumentation INSTRUMENTATION = ByteBuddyAgent.install();

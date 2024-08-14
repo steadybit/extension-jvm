@@ -10,7 +10,6 @@ import com.steadybit.javaagent.CommandHandler;
 import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.core.StandardWrapper;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.SpringApplication;
@@ -21,6 +20,8 @@ import javax.servlet.ServletException;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ApplicationContextMappingDescriptionProviderTest {
     private ConfigurableWebServerApplicationContext context;

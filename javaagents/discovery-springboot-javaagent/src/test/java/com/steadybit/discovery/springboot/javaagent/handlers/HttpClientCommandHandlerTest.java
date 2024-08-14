@@ -6,12 +6,13 @@ package com.steadybit.discovery.springboot.javaagent.handlers;
 
 import com.steadybit.discovery.springboot.javaagent.handlers.httpclient.HttpRequest;
 import com.steadybit.javaagent.CommandHandler;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class HttpClientCommandHandlerTest {
     @Test

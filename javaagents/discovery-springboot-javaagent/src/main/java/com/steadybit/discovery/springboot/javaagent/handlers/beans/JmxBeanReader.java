@@ -57,8 +57,8 @@ public class JmxBeanReader {
         } catch (InstanceNotFoundException ex) {
             log.trace("Could not find bean of " + clazz + ": MBean org.springframework.boot:type=Endpoint,name=Beans not found");
             return null;
-        }catch (Exception e) {
-            log.debug("Could not find bean of " + clazz + ": " + e.getClass() +": " +e.getMessage());
+        } catch (Exception e) {
+            log.debug("Could not find bean of " + clazz + ": " + e.getClass() + ": " + e.getMessage());
             return null;
         }
     }

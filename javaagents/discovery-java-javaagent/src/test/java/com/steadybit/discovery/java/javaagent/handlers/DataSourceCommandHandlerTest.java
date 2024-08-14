@@ -6,11 +6,12 @@ package com.steadybit.discovery.java.javaagent.handlers;
 
 import com.steadybit.discovery.java.javaagent.handlers.datasource.DataSourceConnection;
 import com.steadybit.javaagent.CommandHandler;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class DataSourceCommandHandlerTest {
     @Test

@@ -28,7 +28,7 @@ public class JavaMethodDelayInstrumentation extends AbstractJavaMethodInstrument
 
     @Override
     protected AgentBuilder doInstall(AgentBuilder agentBuilder, ElementMatcher.Junction<? super TypeDescription> typeMatcher,
-            ElementMatcher.Junction<? super MethodDescription> methodMatcher) {
+                                     ElementMatcher.Junction<? super MethodDescription> methodMatcher) {
         return agentBuilder.type(typeMatcher) //
                 .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping() //
                         .bind(Delay.class, this.delay) //

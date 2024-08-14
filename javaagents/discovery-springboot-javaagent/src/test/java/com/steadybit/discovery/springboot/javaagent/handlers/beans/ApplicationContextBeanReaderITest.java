@@ -7,7 +7,6 @@ package com.steadybit.discovery.springboot.javaagent.handlers.beans;
 import com.steadybit.discovery.springboot.javaagent.handlers.BeanCommandHandler;
 import com.steadybit.discovery.springboot.javaagent.handlers.TestBootApplication;
 import com.steadybit.javaagent.CommandHandler;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +15,8 @@ import org.springframework.boot.web.context.ConfigurableWebServerApplicationCont
 
 import java.io.ByteArrayOutputStream;
 import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ApplicationContextBeanReaderITest {
     private ConfigurableWebServerApplicationContext context;

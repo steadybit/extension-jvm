@@ -8,7 +8,6 @@ import com.steadybit.shaded.net.bytebuddy.agent.builder.AgentBuilder;
 import com.steadybit.shaded.net.bytebuddy.description.method.MethodDescription;
 import com.steadybit.shaded.net.bytebuddy.description.type.TypeDescription;
 import com.steadybit.shaded.net.bytebuddy.matcher.ElementMatcher;
-import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.*;
 import org.json.JSONObject;
 
 import java.lang.instrument.Instrumentation;
@@ -16,6 +15,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.named;
+import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.none;
 
 public abstract class AbstractJavaMethodInstrumentation extends ClassTransformation {
     private ElementMatcher.Junction<? super TypeDescription> typeMatcher;

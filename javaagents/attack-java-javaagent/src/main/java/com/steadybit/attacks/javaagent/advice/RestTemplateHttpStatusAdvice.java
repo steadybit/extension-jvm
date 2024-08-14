@@ -18,7 +18,7 @@ import java.net.URI;
 public class RestTemplateHttpStatusAdvice {
     @Advice.OnMethodEnter(skipOn = Integer.class)
     static Integer enter(@Registration int registration,
-            @Advice.This ClientHttpRequest request) {
+                         @Advice.This ClientHttpRequest request) {
         URI uri = request.getURI();
         HttpMethod method = request.getMethod();
         return (Integer) InstrumentationPluginDispatcher
@@ -29,7 +29,7 @@ public class RestTemplateHttpStatusAdvice {
     @Advice.OnMethodExit
     // java:S1226 This is how bytebuddy assigns new response values.
     // java:S2095 it's on purpose
-    @SuppressWarnings({ "java:S1226", "java:S2095" })
+    @SuppressWarnings({"java:S1226", "java:S2095"})
     static void exit(@Advice.Return(readOnly = false) ClientHttpResponse response, @Advice.Enter Integer simulatedStatus) throws IOException {
         if (simulatedStatus == null) {
             return;

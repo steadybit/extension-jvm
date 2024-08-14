@@ -16,7 +16,7 @@ public class JdbcTemplateDelayAdvice {
     @Advice.OnMethodEnter
     static void enter(@Delay long delay, @Jitter boolean delayJitter, @JdbcUrl String jdbcUrl, @Advice.This JdbcTemplate jdbcTemplate) {
         DataSource dataSource = jdbcTemplate.getDataSource();
-        if (!jdbcUrl.equals("*") &&  dataSource != null) {
+        if (!jdbcUrl.equals("*") && dataSource != null) {
             try (Connection connection = dataSource.getConnection()) {
                 if (!jdbcUrl.equalsIgnoreCase(connection.getMetaData().getURL())) {
                     return;

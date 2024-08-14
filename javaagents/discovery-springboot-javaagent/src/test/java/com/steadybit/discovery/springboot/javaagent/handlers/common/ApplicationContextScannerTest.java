@@ -5,13 +5,14 @@
 package com.steadybit.discovery.springboot.javaagent.handlers.common;
 
 import net.bytebuddy.agent.ByteBuddyAgent;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.lang.instrument.Instrumentation;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ApplicationContextScannerTest {
     private static final Instrumentation INSTRUMENTATION = ByteBuddyAgent.install();

@@ -83,7 +83,8 @@ public class AttackRunnable implements Runnable {
             } else {
                 throw new IllegalArgumentException("Class '" + attackClass + "' does not implement " + Installable.class);
             }
-        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException |
+                 InvocationTargetException e) {
             throw new IllegalArgumentException("Could not instantiate JavaAttack '" + attackClass + "'", e);
         }
     }
