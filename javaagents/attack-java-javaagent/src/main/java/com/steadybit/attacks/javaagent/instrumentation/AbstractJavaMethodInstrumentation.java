@@ -4,6 +4,8 @@
 
 package com.steadybit.attacks.javaagent.instrumentation;
 
+import com.steadybit.javaagent.log.Logger;
+import com.steadybit.javaagent.log.RemoteAgentLogger;
 import com.steadybit.shaded.net.bytebuddy.agent.builder.AgentBuilder;
 import com.steadybit.shaded.net.bytebuddy.description.method.MethodDescription;
 import com.steadybit.shaded.net.bytebuddy.description.type.TypeDescription;
@@ -15,14 +17,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.named;
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.none;
 
 public abstract class AbstractJavaMethodInstrumentation extends ClassTransformation {
+
+    private static final Logger log = RemoteAgentLogger.getLogger(AbstractJavaMethodInstrumentation.class);
+
     private ElementMatcher.Junction<? super TypeDescription> typeMatcher;
     private ElementMatcher.Junction<? super MethodDescription> methodMatcher;
+    private final AtomicBoolean typeMatched = new AtomicBoolean(false);
+    private final AtomicBoolean methodMatched = new AtomicBoolean(false);
 
     public AbstractJavaMethodInstrumentation(Instrumentation instrumentation, JSONObject config) {
         super(instrumentation);
@@ -31,10 +39,24 @@ public abstract class AbstractJavaMethodInstrumentation extends ClassTransformat
 
     @Override
     protected AgentBuilder doInstall(AgentBuilder agentBuilder) {
-        return this.doInstall(agentBuilder, this.typeMatcher, this.methodMatcher);
+        return this.doInstall(agentBuilder, typeDefinitions -> {
+            boolean matches = this.typeMatcher.matches(typeDefinitions);
+            if (matches) {
+                log.debug("Matched type: " + typeDefinitions);
+                this.typeMatched.set(true);
+            }
+            return matches;
+        }, methodDescription -> {
+            boolean matches = this.methodMatcher.matches(methodDescription);
+            if (matches) {
+                log.debug("Matched method: " + methodDescription);
+                this.methodMatched.set(true);
+            }
+            return matches;
+        });
     }
 
-    protected abstract AgentBuilder doInstall(AgentBuilder agentBuilder, ElementMatcher.Junction<? super TypeDescription> typeMatcher, ElementMatcher.Junction<? super MethodDescription> methodMatcher);
+    protected abstract AgentBuilder doInstall(AgentBuilder agentBuilder, ElementMatcher<? super TypeDescription> typeMatcher, ElementMatcher<? super MethodDescription> methodMatcher);
 
     private void initializeMatchers(JSONObject config) {
         this.typeMatcher = none();
@@ -62,5 +84,13 @@ public abstract class AbstractJavaMethodInstrumentation extends ClassTransformat
                 }
             }
         }
+    }
+
+    @Override
+    protected AdviceApplied getAdviceApplied() {
+        if (this.typeMatched.get() && this.methodMatched.get()) {
+            return AdviceApplied.APPLIED;
+        }
+        return AdviceApplied.NOT_APPLIED;
     }
 }

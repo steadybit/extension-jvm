@@ -4,6 +4,7 @@
 
 package com.steadybit.attacks.javaagent.instrumentation;
 
+import com.steadybit.attacks.javaagent.Installable;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -29,8 +30,39 @@ class JavaMethodDelayInstrumentationTest {
 
         long normalTime = this.measureTime(TEST_CLASS::run);
 
-        attack.install();
+        Installable.AdviceApplied applied = attack.install();
+        assertThat(applied).isEqualTo(Installable.AdviceApplied.APPLIED);
         assertThat(this.measureTime(TEST_CLASS::run)).isCloseTo(normalTime + 100L, offset(10L));
+        attack.reset();
+
+        assertThat(this.measureTime(TEST_CLASS::run)).isCloseTo(normalTime, offset(10L));
+    }
+
+    @Test
+    void should_do_nothing_if_method_not_matching() {
+        JSONObject config = new JSONObject().put("methods", new JSONArray(Collections.singletonList(TestClass.class.getName() + "#anyOtherMethod"))).put("delay", "100");
+        JavaMethodDelayInstrumentation attack = new JavaMethodDelayInstrumentation(INSTRUMENTATION, config);
+
+        long normalTime = this.measureTime(TEST_CLASS::run);
+
+        Installable.AdviceApplied applied = attack.install();
+        assertThat(applied).isEqualTo(Installable.AdviceApplied.NOT_APPLIED);
+        assertThat(this.measureTime(TEST_CLASS::run)).isCloseTo(normalTime, offset(10L));
+        attack.reset();
+
+        assertThat(this.measureTime(TEST_CLASS::run)).isCloseTo(normalTime, offset(10L));
+    }
+
+    @Test
+    void should_do_nothing_if_class_not_matching() {
+        JSONObject config = new JSONObject().put("methods", new JSONArray(Collections.singletonList(TestClass.class.getName() + "Other#run"))).put("delay", "100");
+        JavaMethodDelayInstrumentation attack = new JavaMethodDelayInstrumentation(INSTRUMENTATION, config);
+
+        long normalTime = this.measureTime(TEST_CLASS::run);
+
+        Installable.AdviceApplied applied = attack.install();
+        assertThat(applied).isEqualTo(Installable.AdviceApplied.NOT_APPLIED);
+        assertThat(this.measureTime(TEST_CLASS::run)).isCloseTo(normalTime, offset(10L));
         attack.reset();
 
         assertThat(this.measureTime(TEST_CLASS::run)).isCloseTo(normalTime, offset(10L));

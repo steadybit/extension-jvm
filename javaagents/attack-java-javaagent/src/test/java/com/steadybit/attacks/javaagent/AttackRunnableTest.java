@@ -112,8 +112,9 @@ class AttackRunnableTest {
         }
 
         @Override
-        public void install() {
+        public AdviceApplied install() {
             events.add("install");
+            return AdviceApplied.UNKNOWN;
         }
 
         @Override
@@ -127,7 +128,7 @@ class AttackRunnableTest {
         }
 
         @Override
-        public void install() {
+        public AdviceApplied install() {
             throw new RuntimeException("Test");
         }
 

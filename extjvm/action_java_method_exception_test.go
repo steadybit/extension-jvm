@@ -24,6 +24,7 @@ func Test_Java_Method_Exception_Prepare(t *testing.T) {
 					"methodName":        "GetCustomers",
 					"duration":          "10000",
 					"erroneousCallRate": 75,
+					"validate":          "true",
 				},
 				ExecutionId: uuid.New(),
 				Target: extutil.Ptr(action_kit_api.Target{
@@ -34,6 +35,9 @@ func Test_Java_Method_Exception_Prepare(t *testing.T) {
 			},
 
 			wantedState: &JavaMethodExceptionState{
+				ClassName:  "com.steadybit.demo.CustomerController",
+				MethodName: "GetCustomers",
+				Validate:   true,
 				AttackState: &AttackState{
 					ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.JavaMethodExceptionInstrumentation\",\"duration\":10000,\"erroneousCallRate\":75,\"methods\":[\"com.steadybit.demo.CustomerController#GetCustomers\"]}",
 				},
@@ -52,6 +56,9 @@ func Test_Java_Method_Exception_Prepare(t *testing.T) {
 			action.Prepare(context.Background(), &state, request)
 			//Then
 			if tt.wantedState != nil {
+				assert.Equal(t, tt.wantedState.ClassName, state.ClassName)
+				assert.Equal(t, tt.wantedState.MethodName, state.MethodName)
+				assert.Equal(t, tt.wantedState.Validate, state.Validate)
 				assert.Equal(t, tt.wantedState.ConfigJson, state.ConfigJson)
 			}
 		})

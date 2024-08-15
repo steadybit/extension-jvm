@@ -25,6 +25,7 @@ func Test_Java_Method_Delay_Prepare(t *testing.T) {
 					"duration":    "10000",
 					"delay":       "500",
 					"delayJitter": "true",
+					"validate":    "true",
 				},
 				ExecutionId: uuid.New(),
 				Target: extutil.Ptr(action_kit_api.Target{
@@ -35,6 +36,9 @@ func Test_Java_Method_Delay_Prepare(t *testing.T) {
 			},
 
 			wantedState: &JavaMethodDelayState{
+				ClassName:  "com.steadybit.demo.CustomerController",
+				MethodName: "GetCustomers",
+				Validate:   true,
 				AttackState: &AttackState{
 					ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation\",\"delay\":500,\"delayJitter\":true,\"duration\":10000,\"methods\":[\"com.steadybit.demo.CustomerController#GetCustomers\"]}",
 				},
@@ -53,6 +57,9 @@ func Test_Java_Method_Delay_Prepare(t *testing.T) {
 			action.Prepare(context.Background(), &state, request)
 			//Then
 			if tt.wantedState != nil {
+				assert.Equal(t, tt.wantedState.ClassName, state.ClassName)
+				assert.Equal(t, tt.wantedState.MethodName, state.MethodName)
+				assert.Equal(t, tt.wantedState.Validate, state.Validate)
 				assert.Equal(t, tt.wantedState.ConfigJson, state.ConfigJson)
 			}
 		})

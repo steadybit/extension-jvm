@@ -23,8 +23,9 @@ public abstract class ClassTransformation implements Installable {
     }
 
     @Override
-    public void install() {
+    public AdviceApplied install() {
         this.transformer = this.doInstall(this.createAgentBuilder()).installOn(this.instrumentation);
+        return this.getAdviceApplied();
     }
 
     protected AgentBuilder createAgentBuilder() {
@@ -49,5 +50,9 @@ public abstract class ClassTransformation implements Installable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected AdviceApplied getAdviceApplied() {
+        return AdviceApplied.UNKNOWN;
     }
 }

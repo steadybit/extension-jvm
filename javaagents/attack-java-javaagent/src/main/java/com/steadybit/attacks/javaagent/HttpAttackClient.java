@@ -60,10 +60,14 @@ public class HttpAttackClient {
         }
     }
 
-    public void attackStarted() {
+    public void attackStarted(Installable.AdviceApplied applied) {
         try {
             HttpURLConnection conn = this.openConnection("/started", "POST");
+            conn.setDoOutput(true);
             try {
+                try (PrintWriter pw = new PrintWriter(conn.getOutputStream())) {
+                    pw.print(applied);
+                }
                 this.assertStatusOK(conn.getResponseCode());
             } finally {
                 conn.disconnect();

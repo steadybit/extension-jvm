@@ -26,9 +26,11 @@ public abstract class ClassTransformationPlugin extends InstrumentationPlugin im
         this.instrumentation = instrumentation;
     }
 
-    public void install() {
+    @Override
+    public AdviceApplied install() {
         InstrumentationPluginDispatcher.register(this);
         this.transformer = this.doInstall(this.createAgentBuilder()).installOn(this.instrumentation);
+        return AdviceApplied.UNKNOWN;
     }
 
     protected AgentBuilder createAgentBuilder() {
@@ -39,6 +41,7 @@ public abstract class ClassTransformationPlugin extends InstrumentationPlugin im
 
     protected abstract AgentBuilder doInstall(AgentBuilder agentBuilder);
 
+    @Override
     public void reset() {
         InstrumentationPluginDispatcher.deregister(this);
         if (this.transformer != null) {

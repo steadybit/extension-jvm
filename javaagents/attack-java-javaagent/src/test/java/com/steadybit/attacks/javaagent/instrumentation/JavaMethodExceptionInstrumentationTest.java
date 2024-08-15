@@ -4,6 +4,7 @@
 
 package com.steadybit.attacks.javaagent.instrumentation;
 
+import com.steadybit.attacks.javaagent.Installable;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.instrument.Instrumentation;
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -25,7 +27,8 @@ class JavaMethodExceptionInstrumentationTest {
         JavaMethodExceptionInstrumentation attack = new JavaMethodExceptionInstrumentation(INSTRUMENTATION, config);
 
         assertThatCode(TEST::run).doesNotThrowAnyException();
-        attack.install();
+        Installable.AdviceApplied applied = attack.install();
+        assertThat(applied).isEqualTo(Installable.AdviceApplied.APPLIED);
         assertThatThrownBy(TEST::run).isInstanceOf(RuntimeException.class);
         attack.reset();
         assertThatCode(TEST::run).doesNotThrowAnyException();
@@ -38,7 +41,8 @@ class JavaMethodExceptionInstrumentationTest {
         JavaMethodExceptionInstrumentation attack = new JavaMethodExceptionInstrumentation(INSTRUMENTATION, config);
 
         assertThatCode(TEST::run).doesNotThrowAnyException();
-        attack.install();
+        Installable.AdviceApplied applied = attack.install();
+        assertThat(applied).isEqualTo(Installable.AdviceApplied.APPLIED);
         assertThatCode(TEST::run).doesNotThrowAnyException();
         attack.reset();
         assertThatCode(TEST::run).doesNotThrowAnyException();

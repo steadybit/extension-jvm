@@ -3,6 +3,7 @@
 ## v1.1.10 (next release)
 
 - JVM excludes via vm arguments (like `steadybit.agent.disable-jvm-attachment`) are working again
+- Option to validate user provided class and method name for "Java Method Delay" and" "Java Method Exception" attacks
 
 ## v1.1.8
 

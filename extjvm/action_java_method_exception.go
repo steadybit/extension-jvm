@@ -8,6 +8,7 @@ import (
 	"context"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-jvm/extjvm/attack"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
@@ -19,6 +20,7 @@ type JavaMethodExceptionState struct {
 	ClassName         string
 	MethodName        string
 	ErroneousCallRate int
+	Validate          bool
 	*AttackState
 }
 
@@ -86,7 +88,6 @@ func (l *javaMethodException) Describe() action_kit_api.ActionDescription {
 				Required:    extutil.Ptr(true),
 			},
 			erroneousCallRate,
-
 			{
 				Name:         "duration",
 				Label:        "Duration",
@@ -94,6 +95,15 @@ func (l *javaMethodException) Describe() action_kit_api.ActionDescription {
 				Type:         action_kit_api.Duration,
 				DefaultValue: extutil.Ptr("30s"),
 				Required:     extutil.Ptr(true),
+			},
+			{
+				Name:         "validate",
+				Label:        "Validate class and method name",
+				Description:  extutil.Ptr("Should the action fail if the specified class and method could not be found?"),
+				Type:         action_kit_api.Boolean,
+				DefaultValue: extutil.Ptr("true"),
+				Required:     extutil.Ptr(true),
+				Advanced:     extutil.Ptr(true),
 			},
 		},
 		Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
@@ -115,6 +125,7 @@ func (l *javaMethodException) Prepare(_ context.Context, state *JavaMethodExcept
 	state.ClassName = extutil.ToString(request.Config["className"])
 	state.MethodName = extutil.ToString(request.Config["methodName"])
 	state.ErroneousCallRate = extutil.ToInt(request.Config["erroneousCallRate"])
+	state.Validate = extutil.ToBool(request.Config["validate"])
 
 	errResult = extractPid(request, state.AttackState)
 	if errResult != nil {
@@ -135,7 +146,22 @@ func (l *javaMethodException) Prepare(_ context.Context, state *JavaMethodExcept
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *javaMethodException) Start(_ context.Context, state *JavaMethodExceptionState) (*action_kit_api.StartResult, error) {
-	return commonStart(state.AttackState)
+	result, err := commonStart(state.AttackState)
+	if err != nil {
+		return result, err
+	}
+	if state.Validate {
+		status := attack.GetAttackStatus(state.Pid)
+		if status.AdviceApplied != "APPLIED" {
+			return &action_kit_api.StartResult{
+				Error: extutil.Ptr(action_kit_api.ActionKitError{
+					Title:  "The given class and method did not match anything in the target JVM.",
+					Status: extutil.Ptr(action_kit_api.Failed),
+				}),
+			}, nil
+		}
+	}
+	return result, err
 }
 
 // Stop is called to stop the action

@@ -6,7 +6,12 @@ package com.steadybit.attacks.javaagent;
 
 public interface Installable {
 
-    default void install() {
+    enum AdviceApplied {
+        APPLIED, NOT_APPLIED, UNKNOWN
+    }
+
+    default AdviceApplied install() {
+        return AdviceApplied.UNKNOWN;
     }
 
     default void reset() {

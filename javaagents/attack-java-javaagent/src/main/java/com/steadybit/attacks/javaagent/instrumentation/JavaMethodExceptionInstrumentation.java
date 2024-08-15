@@ -24,8 +24,8 @@ public class JavaMethodExceptionInstrumentation extends AbstractJavaMethodInstru
     }
 
     @Override
-    protected AgentBuilder doInstall(AgentBuilder agentBuilder, ElementMatcher.Junction<? super TypeDescription> typeMatcher,
-                                     ElementMatcher.Junction<? super MethodDescription> methodMatcher) {
+    protected AgentBuilder doInstall(AgentBuilder agentBuilder, ElementMatcher<? super TypeDescription> typeMatcher,
+                                     ElementMatcher<? super MethodDescription> methodMatcher) {
 
         return agentBuilder.type(typeMatcher) //
                 .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping()//

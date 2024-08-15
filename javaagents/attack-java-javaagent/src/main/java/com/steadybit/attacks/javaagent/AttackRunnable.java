@@ -34,11 +34,11 @@ public class AttackRunnable implements Runnable {
 
         try {
             Installable attack = this.createAttack(attackClass, config);
-            attack.install();
-            log.debug("Bytecode instrumentation for attack {} installed.", config.toString());
+            Installable.AdviceApplied applied = attack.install();
+            log.debug("Bytecode instrumentation for attack {} installed. Advice Applied Status: '{}'", config.toString(), applied);
 
             try {
-                this.client.attackStarted();
+                this.client.attackStarted(applied);
                 this.waitForEnd(duration);
             } finally {
                 attack.reset();
