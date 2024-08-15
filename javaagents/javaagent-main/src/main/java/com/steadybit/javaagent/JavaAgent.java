@@ -31,7 +31,7 @@ public class JavaAgent {
     public static void init(String agentArguments, Instrumentation instrumentation, ClassLoader previousAgent) throws Exception {
         String inject = getValueFromArgument(agentArguments, "disableBootstrapLoaderInjection");
         if ("true".equals(inject)) {
-            log.info("Injection of steadybit classes into bootstrap loader disabled.");
+            log.info("Injection of Steadybit classes into bootstrap loader disabled.");
         } else {
             injectClassesIntoBootstrapLoader(instrumentation);
         }
@@ -109,15 +109,15 @@ public class JavaAgent {
         Map<String, byte[]> classes = locateAndFilterClasses(instrumentation, "com.steadybit.javaagent.instrumentation.InstrumentationPluginDispatcher",
                 "com.steadybit.javaagent.instrumentation.InstrumentationPlugin");
         if (classes.isEmpty()) {
-            log.warn("No steadybit classes eligible for injecting");
+            log.warn("No Steadybit classes eligible for injecting");
         }
 
         ClassInjector injector = createClassInjector(instrumentation);
         if (injector != null) {
-            log.debug("Injecting steadybit classes using %s injector", injector.getClass());
+            log.debug("Injecting Steadybit classes using %s injector", injector.getClass());
             injector.injectRaw(classes);
         } else {
-            log.warn("No injector available to inject steadybit classes");
+            log.warn("No injector available to inject Steadybit classes");
         }
     }
 
