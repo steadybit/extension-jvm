@@ -65,13 +65,29 @@ public class AttackRunnable implements Runnable {
     private void waitForEnd(long duration) {
         long deadline = System.currentTimeMillis() + duration;
         try {
-            while (System.currentTimeMillis() < deadline && this.client.checkAttackStillRunning()) {
+            while (!this.isDeadlineReached(deadline) && this.isAttackStillRunningInAgent()) {
                 Thread.sleep(500);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.trace("Interrupted waiting on attack end.");
         }
+    }
+
+    private boolean isDeadlineReached(long deadline) {
+        boolean deadlineReached = System.currentTimeMillis() > deadline;
+        if (deadlineReached) {
+            log.debug("Attack deadline reached. Stopping now.");
+        }
+        return deadlineReached;
+    }
+
+    private boolean isAttackStillRunningInAgent() {
+        boolean stillRunning = this.client.checkAttackStillRunning();
+        if (!stillRunning) {
+            log.debug("Attack is not running in the agent. Stopping now.");
+        }
+        return stillRunning;
     }
 
     private Installable createAttack(String attackClass, JSONObject attackConfig) {
