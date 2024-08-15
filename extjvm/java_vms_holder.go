@@ -32,8 +32,7 @@ var (
 		"jetbrains.buildServer.agent.AgentMain", "org.jetbrains.jps.cmdline.BuildMain", "org.jetbrains.idea.maven.server.RemoteMavenServer",
 		"org.jetbrains.jps.cmdline.Launcher", "org.jetbrains.plugins.scala.nailgun.NailgunRunner", "sun.tools.",
 		"com.steadybit.javaagent.ExternalJavaagentAttachment", "steadybit.agent.disable-jvm-attachment",
-		"-XX:+DisableAttachMechanism", "-Dcom.ibm.tools.attach.enable=no", "com.steadybit.agent.application.SteadybitAgentApplication",
-		"com.steadybit.agent.application.SteadybitOutpostApplication"}
+		"-XX:+DisableAttachMechanism", "-Dcom.ibm.tools.attach.enable=no", "com.steadybit.SteadybitAgentApplication"}
 	listeners []Listener
 )
 
@@ -360,7 +359,7 @@ func isExcluded(vm *jvm.JavaVm) bool {
 		log.Debug().Msgf("%s is excluded by classpath", vm.ToDebugString())
 		return true
 	}
-	if utils.ContainsPartOfString(CommandlineExcludes, vm.CommandLine) {
+	if utils.ContainsPartOfString(CommandlineExcludes, vm.CommandLine) || utils.ContainsPartOfString(CommandlineExcludes, vm.VmArgs) {
 		log.Debug().Msgf("%s is excluded by command", vm.ToDebugString())
 		return true
 	}

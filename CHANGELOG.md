@@ -1,8 +1,8 @@
 # Changelog
 
-## v1.1.9
+## v1.1.10 (next release)
 
-- update dependencies
+- JVM excludes via vm arguments (like `steadybit.agent.disable-jvm-attachment`) are working again
 
 ## v1.1.8
 
