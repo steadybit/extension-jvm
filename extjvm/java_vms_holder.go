@@ -32,7 +32,7 @@ var (
 		"jetbrains.buildServer.agent.AgentMain", "org.jetbrains.jps.cmdline.BuildMain", "org.jetbrains.idea.maven.server.RemoteMavenServer",
 		"org.jetbrains.jps.cmdline.Launcher", "org.jetbrains.plugins.scala.nailgun.NailgunRunner", "sun.tools.",
 		"com.steadybit.javaagent.ExternalJavaagentAttachment", "steadybit.agent.disable-jvm-attachment",
-		"-XX:+DisableAttachMechanism", "-Dcom.ibm.tools.attach.enable=no", "com.steadybit.SteadybitAgentApplication"}
+		"-XX:+DisableAttachMechanism", "-Dcom.ibm.tools.attach.enable=no", "com.steadybit.SteadybitAgentApplication", "SteadybitPlatformApplication"}
 	listeners []Listener
 )
 
