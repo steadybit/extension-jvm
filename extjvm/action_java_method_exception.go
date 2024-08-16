@@ -50,7 +50,7 @@ func (l *javaMethodException) Describe() action_kit_api.ActionDescription {
 		Icon:        extutil.Ptr(javaMethodExceptionIcon),
 		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
 			// The target type this action is for
-			TargetType: targetID + "(instance.type=java)",
+			TargetType: targetType + "(instance.type=java)",
 			// You can provide a list of target templates to help the user select targets.
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),

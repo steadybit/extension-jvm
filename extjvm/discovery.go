@@ -60,7 +60,7 @@ func StartJvmInfrastructure() {
 
 func (j *jvmDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
 	return discovery_kit_api.DiscoveryDescription{
-		Id: targetID,
+		Id: targetType,
 		Discover: discovery_kit_api.DescribingEndpointReferenceWithCallInterval{
 			CallInterval: extutil.Ptr(config.Config.DiscoveryCallInterval),
 		},
@@ -69,7 +69,7 @@ func (j *jvmDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
 
 func (j *jvmDiscovery) DescribeTarget() discovery_kit_api.TargetDescription {
 	return discovery_kit_api.TargetDescription{
-		Id:      targetID,
+		Id:      targetType,
 		Version: extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:    extutil.Ptr(targetIcon),
 
@@ -117,7 +117,7 @@ func getKubernetesContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichm
 			},
 		},
 		Dest: discovery_kit_api.SourceOrDestination{
-			Type: targetID,
+			Type: targetType,
 			Selector: map[string]string{
 				"container.id.stripped": "${src.k8s.container.id.stripped}",
 			},
@@ -209,7 +209,7 @@ func getContainerToJvmEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
 			},
 		},
 		Dest: discovery_kit_api.SourceOrDestination{
-			Type: targetID,
+			Type: targetType,
 			Selector: map[string]string{
 				"container.id.stripped": "${src.container.id.stripped}",
 			},
@@ -244,7 +244,7 @@ func getJvmToContainerEnrichmentRule() discovery_kit_api.TargetEnrichmentRule {
 		Id:      "com.steadybit.extension_jvm.jvm-to-container",
 		Version: extbuild.GetSemverVersionStringOrUnknown(),
 		Src: discovery_kit_api.SourceOrDestination{
-			Type: targetID,
+			Type: targetType,
 			Selector: map[string]string{
 				"container.id.stripped": "${dest.container.id.stripped}",
 			},
@@ -330,7 +330,7 @@ func (j *jvmDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.T
 	for _, vm := range vms {
 		targets = append(targets, discovery_kit_api.Target{
 			Id:         fmt.Sprintf("%s/%d", vm.Hostname, vm.Pid),
-			TargetType: targetID,
+			TargetType: targetType,
 			Label:      getApplicationName(vm, "?"),
 			Attributes: map[string][]string{
 				"instance.type":         {"java"},
