@@ -33,11 +33,15 @@ public class EnvCommandHandler implements CommandHandler {
     @Override
     public void handle(String command, String argument, OutputStream os) {
         String value = this.jmxEnvironmentReader.readPropertyValue(argument);
-        if (value == null) {
+        if (value == null || value.isEmpty() || this.isSanitized(value)) {
             value = this.applicationContextEnvironmentReader.readPropertyValue(argument);
         }
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8), true);
         writer.write(RC_OK);
         writer.println(value != null ? value : "");
+    }
+
+    private boolean isSanitized(String value) {
+        return value != null && value.chars().allMatch(c -> (int) '*' == c);
     }
 }
