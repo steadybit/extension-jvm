@@ -35,7 +35,7 @@ func (n *FashionBestseller) Deploy(podName string, opts ...func(c *acorev1.PodAp
 			Containers: []acorev1.ContainerApplyConfiguration{
 				{
 					Name:  extutil.Ptr("fashion-bestseller"),
-					Image: extutil.Ptr("docker.io/steadybit/bestseller-fashion:latest"),
+					Image: extutil.Ptr("docker.io/steadybit/bestseller-fashion:main"),
 					Ports: []acorev1.ContainerPortApplyConfiguration{
 						{
 							ContainerPort: extutil.Ptr(int32(80)),
@@ -48,7 +48,7 @@ func (n *FashionBestseller) Deploy(podName string, opts ...func(c *acorev1.PodAp
 						},
 						{
 							Name:  extutil.Ptr("STEADYBIT_LOG_LEVEL"),
-							Value: extutil.Ptr("TRACE"),
+							Value: extutil.Ptr("DEBUG"),
 						},
 					},
 				},

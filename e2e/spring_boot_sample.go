@@ -39,7 +39,7 @@ func (n *SpringBootSample) Deploy(podName string, opts ...func(c *acorev1.PodApp
 			Containers: []acorev1.ContainerApplyConfiguration{
 				{
 					Name:  extutil.Ptr("spring-boot-sample"),
-					Image: extutil.Ptr("docker.io/steadybit/spring-boot-sample:1.0.23"),
+					Image: extutil.Ptr("docker.io/steadybit/spring-boot-sample:1.0.24"),
 					Ports: []acorev1.ContainerPortApplyConfiguration{
 						{
 							ContainerPort: extutil.Ptr(int32(80)),
@@ -52,7 +52,7 @@ func (n *SpringBootSample) Deploy(podName string, opts ...func(c *acorev1.PodApp
 						},
 						{
 							Name:  extutil.Ptr("STEADYBIT_LOG_LEVEL"),
-							Value: extutil.Ptr("TRACE"),
+							Value: extutil.Ptr("DEBUG"),
 						},
 					},
 				},
@@ -167,7 +167,7 @@ func (n *SpringBootSample) MeasureLatencyOnPath(expectedStatus int, path string)
 		return 0, err
 	}
 	if response.StatusCode() != expectedStatus {
-		return 0, errors.New("unexpected status code")
+		return 0, errors.New(fmt.Sprintf("unexpected status code %d, expected %d", response.StatusCode(), expectedStatus))
 	}
 	return response.Time(), nil
 }

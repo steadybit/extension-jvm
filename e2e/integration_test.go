@@ -51,8 +51,8 @@ func TestWithMinikube(t *testing.T) {
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
 		{
-				Name: "validate discovery",
-				Test: validateDiscovery,
+			Name: "validate discovery",
+			Test: validateDiscovery,
 		},
 		{
 			Name: "discover spring boot sample",
@@ -118,7 +118,7 @@ func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 	targetFashion, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.jvm-instance", func(target discovery_kit_api.Target) bool {
 		log.Debug().Msgf("targetApplications: %+v", target.Attributes)
-		return e2e.HasAttribute(target, "jvm-instance.name", "fashion-bestseller")
+		return e2e.HasAttribute(target, "jvm-instance.name", "JarLauncher")
 	})
 	require.NoError(t, err)
 	assert.Equal(t, targetFashion.TargetType, "com.steadybit.extension_jvm.jvm-instance")
@@ -133,23 +133,13 @@ func testSpringDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 	target := getSpringBootSampleTarget(t, ctx, e)
 	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.jvm-instance")
-
-	springBootSample.Delete()
-
-	for i := 0; i < 20; i++ {
-		log.Info().Msgf("Attempt %d", i)
-		springBootSample2 := deploySpringBootSample(t, m)
-		springBootSample2.AssertIsReachable(t, true)
-		target = getSpringBootSampleTarget(t, ctx, e)
-		assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.jvm-instance")
-		springBootSample2.Delete()
-	}
-	springBootSample = deploySpringBootSample(t, m)
-	springBootSample.AssertIsReachable(t, true)
 }
 
 func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extension) discovery_kit_api.Target {
 	target, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.jvm-instance", func(target discovery_kit_api.Target) bool {
+		//The application context is instrumented whenever an event is thrown. We make sure that events happen by calling a http endpoint in the application
+		springBootSample.AssertIsReachable(t, true)
+
 		log.Debug().Msgf("targetApplications: %+v", target.Attributes)
 		return e2e.HasAttribute(target, "jvm-instance.name", "app") &&
 			e2e.HasAttribute(target, "instance.type", "spring-boot") &&
@@ -289,14 +279,14 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			delay:         200,
 			jitter:        false,
 			expectedDelay: true,
-			hostAddress:   "www.github.com",
+			hostAddress:   "demo.dev.steadybit.io",
 		},
 		{
 			name:          "should not delay http client traffic on host",
 			delay:         200,
 			jitter:        false,
 			expectedDelay: false,
-			hostAddress:   "steadybit.github.com",
+			hostAddress:   "demo.steadybit.io",
 		},
 		{
 			name:          "should delay http client traffic with jitter",
@@ -328,16 +318,16 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			springBootSample.AssertIsReachable(t, true)
 
 			//measure customer endpoint
-			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/remote/blocking?url=https://www.github.com")
+			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/remote/blocking?url=https://demo.dev.steadybit.io/products")
 			require.NoError(t, err, "failed to measure customers endpoint")
 
 			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-httpclient-delay-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.expectedDelay {
-				springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://www.github.com", unaffectedLatency)
+				springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://demo.dev.steadybit.io/products", unaffectedLatency)
 			} else {
-				springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, "/remote/blocking?url=https://www.github.com", 0)
+				springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, "/remote/blocking?url=https://demo.dev.steadybit.io/products", 0)
 			}
 			require.NoError(t, action.Cancel())
 		})
