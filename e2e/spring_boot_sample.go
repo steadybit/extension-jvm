@@ -167,7 +167,7 @@ func (n *SpringBootSample) MeasureLatencyOnPath(expectedStatus int, path string)
 		return 0, err
 	}
 	if response.StatusCode() != expectedStatus {
-		return 0, errors.New(fmt.Sprintf("unexpected status code %d, expected %d", response.StatusCode(), expectedStatus))
+		return 0, fmt.Errorf("unexpected status code %d, expected %d", response.StatusCode(), expectedStatus)
 	}
 	return response.Time(), nil
 }
