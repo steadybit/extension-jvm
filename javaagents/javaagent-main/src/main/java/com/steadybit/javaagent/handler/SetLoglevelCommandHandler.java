@@ -24,12 +24,6 @@ public class SetLoglevelCommandHandler implements CommandHandler {
 
     @Override
     public void handle(String command, String argument, OutputStream os) {
-        String logLevelString = System.getProperty("STEADYBIT_LOG_LEVEL", System.getenv("STEADYBIT_LOG_LEVEL"));
-        if (logLevelString != null) {
-            log.debug(String.format("JVM has explicitly set STEADYBIT_LOG_LEVEL to %s. Ignoring log-level updates via agent-command to %s", logLevelString, argument));
-            return;
-        }
-
         RemoteAgentLogger.setLevel(LogLevel.fromString(argument));
         log.debug(String.format("Set loglevel to %s.", argument));
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8), true);
