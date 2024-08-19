@@ -98,6 +98,7 @@ func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
 				DefaultValue: extutil.Ptr("*"),
 				Required:     extutil.Ptr(false),
 				Advanced:     extutil.Ptr(true),
+				OptionsOnly:  extutil.Ptr(false),
 				Options: extutil.Ptr([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Any",
