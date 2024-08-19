@@ -111,7 +111,7 @@ func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
 			{
 				Name:         "urlPath",
 				Label:        "URL Path",
-				Description:  extutil.Ptr("Which URL paths should be attacked? Use '*' for any."),
+				Description:  extutil.Ptr("Which URL paths should be attacked?"),
 				Type:         action_kit_api.String,
 				DefaultValue: extutil.Ptr(""),
 				Required:     extutil.Ptr(false),
