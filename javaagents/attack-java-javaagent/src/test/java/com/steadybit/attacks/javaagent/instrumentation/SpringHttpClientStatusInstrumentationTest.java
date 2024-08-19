@@ -88,6 +88,22 @@ class SpringHttpClientStatusInstrumentationTest {
     }
 
     @Test
+    void should_support_empty_as_asterisk_path() {
+        this.config.remove("urlPath");
+        assertThat(this.attack("post", "example.com", 443, "/aPi")).isEqualTo(500);
+        assertThat(this.attack("post", "example.com", -1, "/")).isEqualTo(500);
+        assertThat(this.attack("post", "example.com", -1, "/api/attacks")).isEqualTo(500);
+    }
+
+    @Test
+    void should_support_empty_as_asterisk_path_2() {
+        this.config.put("urlPath", "");
+        assertThat(this.attack("post", "example.com", 443, "/aPi")).isEqualTo(500);
+        assertThat(this.attack("post", "example.com", -1, "/")).isEqualTo(500);
+        assertThat(this.attack("post", "example.com", -1, "/api/attacks")).isEqualTo(500);
+    }
+
+    @Test
     void should_support_multiple_failure_scenarios() {
         // Given
         this.config.put("failureCauses", this.toArray(HttpClientFailureCause.ERROR, HttpClientFailureCause.TIMEOUT, HttpClientFailureCause.HTTP_404));
