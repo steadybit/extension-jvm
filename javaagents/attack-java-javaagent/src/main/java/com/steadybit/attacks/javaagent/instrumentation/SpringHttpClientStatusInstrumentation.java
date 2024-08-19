@@ -26,6 +26,9 @@ import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesAr
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 public class SpringHttpClientStatusInstrumentation extends ClassTransformationPlugin {
+    private static final int[] HTTP_4XX_CODES = {400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 421, 422, 423, 424, 425, 426, 428, 429, 431, 451};
+    private static final int[] HTTP_5XX_CODES = {500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511};
+
     private final int errorRate;
     private final String[] httpMethods;
     private final String hostAddress;
@@ -132,9 +135,9 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
         } else if (HttpClientFailureCause.TIMEOUT.equals(failureCause)) {
             return -1;
         } else if (HttpClientFailureCause.HTTP_4XX.equals(failureCause)) {
-            return threadLocalRandom.nextInt(400, 500);
+            return HTTP_4XX_CODES[threadLocalRandom.nextInt(0, HTTP_4XX_CODES.length)];
         } else if (HttpClientFailureCause.HTTP_5XX.equals(failureCause)) {
-            return threadLocalRandom.nextInt(500, 600);
+            return HTTP_5XX_CODES[threadLocalRandom.nextInt(0, HTTP_5XX_CODES.length)];
         } else if (HttpClientFailureCause.HTTP_400.equals(failureCause)) {
             return 400;
         } else if (HttpClientFailureCause.HTTP_403.equals(failureCause)) {
