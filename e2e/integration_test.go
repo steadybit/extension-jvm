@@ -417,7 +417,7 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			ErroneousCallRate: tt.erroneousCallRate,
 			HttpMethods:       []string{"GET"},
 			HostAddress:       tt.hostAddress,
-			UrlPath:           "*",
+			UrlPath:           "",
 			FailureCauses:     tt.failureTypes,
 		}
 

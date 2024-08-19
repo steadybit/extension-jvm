@@ -13,6 +13,7 @@ import com.steadybit.shaded.net.bytebuddy.description.method.MethodDescription;
 import com.steadybit.shaded.net.bytebuddy.matcher.ElementMatcher;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.util.StringUtils;
 
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.ThreadLocalRandom;
@@ -105,7 +106,7 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
             return false;
         }
 
-        if (!"*".equals(this.urlPath) && !this.urlPath.equalsIgnoreCase(path)) {
+        if (!StringUtils.hasText(this.urlPath) && !this.urlPath.equalsIgnoreCase(path)) {
             return false;
         }
 

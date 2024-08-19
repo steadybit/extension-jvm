@@ -111,17 +111,11 @@ func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
 			{
 				Name:         "urlPath",
 				Label:        "URL Path",
-				Description:  extutil.Ptr("Which URL paths should be attacked?"),
+				Description:  extutil.Ptr("Which URL paths should be attacked? Use '*' for any."),
 				Type:         action_kit_api.String,
-				DefaultValue: extutil.Ptr("*"),
+				DefaultValue: extutil.Ptr(""),
 				Required:     extutil.Ptr(false),
 				Advanced:     extutil.Ptr(true),
-				Options: extutil.Ptr([]action_kit_api.ParameterOption{
-					action_kit_api.ExplicitParameterOption{
-						Label: "Any",
-						Value: "*",
-					},
-				}),
 			},
 			{
 				Name:        "failureCauses",
