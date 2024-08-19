@@ -19,6 +19,7 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -333,13 +334,14 @@ func (j *jvmDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.T
 			TargetType: targetType,
 			Label:      getApplicationName(vm, "?"),
 			Attributes: map[string][]string{
-				"instance.type":         {"java"},
-				"jvm-instance.name":     {getApplicationName(vm, "")},
-				"container.id.stripped": {vm.ContainerId},
-				"process.pid":           {strconv.Itoa(int(vm.Pid))},
-				"instance.hostname":     {vm.Hostname},
-				"host.hostname":         {vm.Hostname},
-				"host.domainname":       {vm.HostFQDN},
+				"instance.type":           {"java"},
+				"jvm-instance.name":       {getApplicationName(vm, "")},
+				"jvm-instance.main-class": {getApplicationName(vm, "")},
+				"container.id.stripped":   {vm.ContainerId},
+				"process.pid":             {strconv.Itoa(int(vm.Pid))},
+				"instance.hostname":       {vm.Hostname},
+				"host.hostname":           {vm.Hostname},
+				"host.domainname":         {vm.HostFQDN},
 			},
 		})
 	}
@@ -351,10 +353,10 @@ func (j *jvmDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.T
 func enhanceTargetsWithDataSourceAttributes(targets []discovery_kit_api.Target) {
 	dataSourceApplications := GetDataSourceApplications()
 	for _, dataSourceApplication := range dataSourceApplications {
-		target := findTargetByPid(targets, dataSourceApplication.Pid)
-		if target != nil {
+		targetIndex := findTargetByPid(targets, dataSourceApplication.Pid)
+		if targetIndex != -1 {
 			for _, dataSourceConnection := range dataSourceApplication.DataSourceConnections {
-				target.Attributes["datasource.jdbc-url"] = append(target.Attributes["datasource.jdbc-url"], dataSourceConnection.JdbcUrl)
+				targets[targetIndex].Attributes["datasource.jdbc-url"] = append(targets[targetIndex].Attributes["datasource.jdbc-url"], dataSourceConnection.JdbcUrl)
 			}
 		}
 	}
@@ -363,24 +365,25 @@ func enhanceTargetsWithDataSourceAttributes(targets []discovery_kit_api.Target) 
 func enhanceTargetsWithSpringAttributes(targets []discovery_kit_api.Target) {
 	springApplications := GetSpringApplications()
 	for _, app := range springApplications {
-		target := findTargetByPid(targets, app.Pid)
-		if target != nil {
+		targetIndex := findTargetByPid(targets, app.Pid)
+		if targetIndex != -1 {
 			if app.Name != "" {
-				target.Attributes["jvm-instance.name"] = utils.AppendIfMissing(target.Attributes["jvm-instance.name"], app.Name)
-				target.Attributes["spring-instance.name"] = []string{app.Name}
+				targets[targetIndex].Attributes["jvm-instance.name"] = utils.AppendIfMissing(targets[targetIndex].Attributes["jvm-instance.name"], app.Name)
+				targets[targetIndex].Attributes["spring-instance.name"] = []string{app.Name}
+				targets[targetIndex].Label = app.Name
 			}
-			target.Attributes["instance.type"] = append(target.Attributes["instance.type"], "spring")
+			targets[targetIndex].Attributes["instance.type"] = append(targets[targetIndex].Attributes["instance.type"], "spring")
 			if app.SpringBoot {
-				target.Attributes["instance.type"] = append(target.Attributes["instance.type"], "spring-boot")
+				targets[targetIndex].Attributes["instance.type"] = append(targets[targetIndex].Attributes["instance.type"], "spring-boot")
 			}
 			if app.UsingJdbcTemplate {
-				target.Attributes["spring-instance.jdbc-template"] = []string{"true"}
+				targets[targetIndex].Attributes["spring-instance.jdbc-template"] = []string{"true"}
 			}
 			if app.UsingHttpClient {
-				target.Attributes["spring-instance.http-client"] = []string{"true"}
+				targets[targetIndex].Attributes["spring-instance.http-client"] = []string{"true"}
 			}
-			addMvcMappings(target, app.MvcMappings)
-			addHttpClientRequests(target, app.HttpClientRequests)
+			addMvcMappings(&targets[targetIndex], app.MvcMappings)
+			addHttpClientRequests(&targets[targetIndex], app.HttpClientRequests)
 		}
 	}
 }
@@ -418,13 +421,10 @@ func addMvcMappings(target *discovery_kit_api.Target, mappings *[]SpringMvcMappi
 	}
 }
 
-func findTargetByPid(targets []discovery_kit_api.Target, pid int32) *discovery_kit_api.Target {
-	for _, target := range targets {
-		if target.Attributes["process.pid"][0] == strconv.Itoa(int(pid)) {
-			return extutil.Ptr(target)
-		}
-	}
-	return nil
+func findTargetByPid(targets []discovery_kit_api.Target, pid int32) int {
+	return slices.IndexFunc(targets, func(target discovery_kit_api.Target) bool {
+		return target.Attributes["process.pid"][0] == strconv.Itoa(int(pid))
+	})
 }
 
 func getApplicationName(jvm jvm.JavaVm, defaultIfEmpty string) string {
