@@ -83,7 +83,7 @@ func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
 			},
 			{
 				Name:        "httpMethods",
-				Label:       "HttpMethods",
+				Label:       "Http Methods",
 				Description: extutil.Ptr("Which HTTP methods should be attacked?"),
 				Type:        action_kit_api.StringArray,
 				Required:    extutil.Ptr(false),
@@ -120,7 +120,7 @@ func (l *httpClientStatus) Describe() action_kit_api.ActionDescription {
 			{
 				Name:        "failureCauses",
 				Label:       "Failure Types",
-				Description: extutil.Ptr("What HTTP client behavior should be simulated? Will overwrite any HttpStatus configuration."),
+				Description: extutil.Ptr("What HTTP client behavior should be simulated? If multiple are selected, one will be chosen randomly for every request."),
 				Type:        action_kit_api.StringArray,
 				Required:    extutil.Ptr(false),
 				Advanced:    extutil.Ptr(true),
