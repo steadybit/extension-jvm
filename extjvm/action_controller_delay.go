@@ -75,6 +75,7 @@ func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 		Parameters: []action_kit_api.ActionParameter{
 			patternAttribute,
 			methodAttribute,
+			methodsAttribute,
 			{
 				Name:         "delay",
 				Label:        "Delay",
@@ -115,7 +116,7 @@ func (l *controllerDelay) Prepare(_ context.Context, state *ControllerDelayState
 		return errResult, nil
 	}
 
-	errResult = extractMethod(request, state.ControllerState)
+	errResult = extractHttpMethods(request, state.ControllerState)
 	if errResult != nil {
 		return errResult, nil
 	}

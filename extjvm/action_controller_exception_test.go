@@ -16,12 +16,39 @@ func Test_controlleException_Prepare(t *testing.T) {
 		wantedState *ControllerExceptionState
 	}{
 		{
-			name: "Should return config",
+			name: "Should return config with deprecated method parameter",
 			requestBody: action_kit_api.PrepareActionRequestBody{
 				Config: map[string]interface{}{
 					"action":            "prepare",
 					"pattern":           "/customers",
 					"method":            "GET",
+					"methods":           []interface{}{"POST"},
+					"duration":          "10000",
+					"erroneousCallRate": 75,
+				},
+				ExecutionId: uuid.New(),
+				Target: extutil.Ptr(action_kit_api.Target{
+					Attributes: map[string][]string{
+						"process.pid": {"42"},
+					},
+				}),
+			},
+
+			wantedState: &ControllerExceptionState{
+				ControllerState: &ControllerState{
+					AttackState: &AttackState{
+						ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.JavaMethodExceptionInstrumentation\",\"duration\":10000,\"erroneousCallRate\":75,\"methods\":[\"com.steadybit.demo.CustomerController#customers\"]}",
+					},
+				},
+			},
+		},
+		{
+			name: "Should return config",
+			requestBody: action_kit_api.PrepareActionRequestBody{
+				Config: map[string]interface{}{
+					"action":            "prepare",
+					"pattern":           "/customers",
+					"methods":           []interface{}{"GET"},
 					"duration":          "10000",
 					"erroneousCallRate": 75,
 				},

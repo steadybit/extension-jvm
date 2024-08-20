@@ -74,6 +74,7 @@ func (l *controllerException) Describe() action_kit_api.ActionDescription {
 		Parameters: []action_kit_api.ActionParameter{
 			patternAttribute,
 			methodAttribute,
+			methodsAttribute,
 			{
 				Name:         "duration",
 				Label:        "Duration",
@@ -99,7 +100,7 @@ func (l *controllerException) Prepare(_ context.Context, state *ControllerExcept
 		return errResult, nil
 	}
 
-	errResult = extractMethod(request, state.ControllerState)
+	errResult = extractHttpMethods(request, state.ControllerState)
 	if errResult != nil {
 		return errResult, nil
 	}

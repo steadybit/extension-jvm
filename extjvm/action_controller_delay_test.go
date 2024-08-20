@@ -18,12 +18,42 @@ func Test_controllerDelay_Prepare(t *testing.T) {
 		wantedState *ControllerDelayState
 	}{
 		{
-			name: "Should return config",
+			name: "Should return config with deprecated method parameter",
 			requestBody: action_kit_api.PrepareActionRequestBody{
 				Config: map[string]interface{}{
 					"action":      "prepare",
 					"pattern":     "/customers",
 					"method":      "GET",
+					"methods":     []interface{}{"POST"},
+					"duration":    "10000",
+					"delay":       "500",
+					"delayJitter": "true",
+				},
+				ExecutionId: uuid.New(),
+				Target: extutil.Ptr(action_kit_api.Target{
+					Attributes: map[string][]string{
+						"process.pid": {"42"},
+					},
+				}),
+			},
+
+			wantedState: &ControllerDelayState{
+				Delay:       500 * time.Millisecond,
+				DelayJitter: true,
+				ControllerState: &ControllerState{
+					AttackState: &AttackState{
+						ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation\",\"delay\":500,\"delayJitter\":true,\"duration\":10000,\"methods\":[\"com.steadybit.demo.CustomerController#customers\"]}",
+					},
+				},
+			},
+		},
+		{
+			name: "Should return config",
+			requestBody: action_kit_api.PrepareActionRequestBody{
+				Config: map[string]interface{}{
+					"action":      "prepare",
+					"pattern":     "/customers",
+					"methods":     []interface{}{"GET"},
 					"duration":    "10000",
 					"delay":       "500",
 					"delayJitter": "true",

@@ -2,6 +2,7 @@ package extjvm
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extutil"
@@ -21,10 +22,19 @@ var (
 		}),
 	}
 	methodAttribute = action_kit_api.ActionParameter{
-		Name:         "method",
-		Label:        "Http Method",
+		Name:               "method",
+		Label:              "Http Method",
+		Description:        extutil.Ptr("Which HTTP method should be attacked?"),
+		Type:               action_kit_api.String,
+		Options:            methodsOptions,
+		Deprecated:         extutil.Ptr(true),
+		DeprecationMessage: extutil.Ptr("Use the 'Http Methods' parameter instead."),
+	}
+	methodsAttribute = action_kit_api.ActionParameter{
+		Name:         "methods",
+		Label:        "Http Methods",
 		Description:  extutil.Ptr("Which HTTP methods should be attacked?"),
-		Type:         action_kit_api.String,
+		Type:         action_kit_api.StringArray,
 		Required:     extutil.Ptr(true),
 		DefaultValue: extutil.Ptr("*"),
 		Options:      methodsOptions,
@@ -71,7 +81,7 @@ var (
 
 type ControllerState struct {
 	Pattern        string
-	Method         string
+	HttpMethods    []string
 	HandlerMethods []string
 	*AttackState
 }
@@ -90,9 +100,17 @@ func extractPattern(request action_kit_api.PrepareActionRequestBody, state *Cont
 	return nil
 }
 
-func extractMethod(request action_kit_api.PrepareActionRequestBody, state *ControllerState) *action_kit_api.PrepareResult {
+func extractHttpMethods(request action_kit_api.PrepareActionRequestBody, state *ControllerState) *action_kit_api.PrepareResult {
+	state.HttpMethods = make([]string, 0)
+
 	method := extutil.ToString(request.Config["method"])
-	if method == "" {
+	if method != "" {
+		log.Info().Msg("`HTTP Method` is deprecated, use `HTTP Methods` instead.")
+		state.HttpMethods = append(state.HttpMethods, method)
+	}
+
+	state.HttpMethods = append(state.HttpMethods, extutil.ToStringArray(request.Config["methods"])...)
+	if len(state.HttpMethods) == 0 {
 		return &action_kit_api.PrepareResult{
 			Error: extutil.Ptr(action_kit_api.ActionKitError{
 				Title:  "Method is required",
@@ -100,7 +118,6 @@ func extractMethod(request action_kit_api.PrepareActionRequestBody, state *Contr
 			}),
 		}
 	}
-	state.Method = method
 	return nil
 }
 
@@ -126,10 +143,15 @@ func extractHandlerMethods(_ action_kit_api.PrepareActionRequestBody, state *Con
 	relevantMappings := make([]SpringMvcMapping, 0)
 	for _, m := range *application.MvcMappings {
 		if utils.ContainsString(m.Patterns, state.Pattern) {
-			if state.Method == "*" || (len(m.Methods) == 0 && state.Method == "GET") {
+			if utils.ContainsString(state.HttpMethods, "*") || (len(m.Methods) == 0 && utils.ContainsString(state.HttpMethods, "GET")) {
 				relevantMappings = append(relevantMappings, m)
-			} else if utils.ContainsString(m.Methods, state.Method) {
-				relevantMappings = append(relevantMappings, m)
+			} else {
+				for _, method := range m.Methods {
+					if utils.ContainsString(state.HttpMethods, method) {
+						relevantMappings = append(relevantMappings, m)
+						break
+					}
+				}
 			}
 		}
 	}
