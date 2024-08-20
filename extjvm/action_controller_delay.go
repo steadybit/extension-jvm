@@ -96,7 +96,7 @@ func (l *controllerDelay) Describe() action_kit_api.ActionDescription {
 				Label:        "Jitter",
 				Description:  extutil.Ptr("Add random +/-30% jitter to response delay?"),
 				Type:         action_kit_api.Boolean,
-				DefaultValue: extutil.Ptr("true"),
+				DefaultValue: extutil.Ptr("false"),
 				Required:     extutil.Ptr(true),
 				Advanced:     extutil.Ptr(true),
 			},
