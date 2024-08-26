@@ -299,6 +299,7 @@ jobs:
 
       - name: "[release] Upload packages to gcp public repositories"
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        working-directory: ./dist
         run: |
           for deb in $(find * -name '*.deb'); do
             ERROR=$(gcloud artifacts apt upload deb-public --location=${{ vars.GCP_ARTIFACT_REGISTRY_PROJECT_LOCATION }} --source=$deb 2>&1) || {
