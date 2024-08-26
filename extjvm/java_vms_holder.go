@@ -160,7 +160,7 @@ func createContainerizedJvm(p *process.Process, containerId string, containerPid
 	log.Debug().Msgf("Found containerized JVM %s with containerPid %d on FS %s", containerId, containerPid, containerFs)
 	filePaths := hotspot.GetRootHsPerfPaths(p.Pid, containerFs)
 	if len(filePaths) == 0 {
-		log.Warn().Msgf("Could not find hsperfdata root path for container %s on pid %d. Will be retried", containerId, p.Pid)
+		log.Debug().Msgf("Could not find hsperfdata root path for container %s on pid %d. Will be retried", containerId, p.Pid)
 		return nil
 	}
 	hsPerfDataPath := filePaths[strconv.Itoa(int(containerPid))]
