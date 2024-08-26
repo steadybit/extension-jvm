@@ -197,6 +197,9 @@ jobs:
   build-packages:
     name: Build Linux Packages
     needs: [audit]
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -252,6 +255,73 @@ jobs:
           curl -X POST -u $REPO_USER https://artifacts.steadybit.io/service/rest/v1/repositories/yum-proxy/invalidate-cache
           curl -X POST -u $REPO_USER https://artifacts.steadybit.io/service/rest/v1/repositories/yum-public/invalidate-cache
           curl -X POST -u $REPO_USER https://artifacts.steadybit.io/service/rest/v1/repositories/deb-public/invalidate-cache
+
+      - uses: google-github-actions/setup-gcloud@v1
+        with:
+          version: latest
+
+      - name: Google Auth
+        id: auth
+        uses: 'google-github-actions/auth@v2'
+        with:
+          token_format: 'access_token'
+          project_id: ${{ vars.GCP_ARTIFACT_REGISTRY_PROJECT_ID }}
+          service_account: ${{ vars.GCP_ARTIFACT_REGISTRY_PROJECT_SA }}
+          workload_identity_provider: ${{ secrets.GCP_ARTIFACT_REGISTRY_IDENTITY_PROVIDER }}
+
+
+      - name: "[build] Upload packages to gcp internal repositories"
+        if: github.event_name != 'pull_request'
+        working-directory: ./dist
+        run: |
+          for deb in $(find * -name '*.deb'); do
+            ERROR=$(gcloud artifacts apt upload deb-dev --location=${{ vars.GCP_ARTIFACT_REGISTRY_PROJECT_LOCATION }} --source=$deb 2>&1) || {
+              echo "$ERROR"
+              if echo "$ERROR" | grep -q 'updated packages must bear a new version'; then
+                echo "The package is already uploaded. Continuing..."
+              else
+                echo "Package installation failed for a different reason."
+                exit 1
+              fi
+            }
+          done
+          for rpm in $(find * -name '*.rpm'); do
+            ERROR=$(gcloud artifacts yum upload yum-dev --location=${{ vars.GCP_ARTIFACT_REGISTRY_PROJECT_LOCATION }} --source=$rpm 2>&1) || {
+              echo "$ERROR"
+              if echo "$ERROR" | grep -q 'updated packages must bear a new version'; then
+                echo "The package is already uploaded. Continuing..."
+              else
+                echo "Package installation failed for a different reason."
+                exit 1
+              fi
+            }
+          done
+
+      - name: "[release] Upload packages to gcp public repositories"
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          for deb in $(find * -name '*.deb'); do
+            ERROR=$(gcloud artifacts apt upload deb-public --location=${{ vars.GCP_ARTIFACT_REGISTRY_PROJECT_LOCATION }} --source=$deb 2>&1) || {
+              echo "$ERROR"
+              if echo "$ERROR" | grep -q 'updated packages must bear a new version'; then
+                echo "The package is already uploaded. Continuing..."
+              else
+                echo "Package installation failed for a different reason."
+                exit 1
+              fi
+            }
+          done
+          for rpm in $(find * -name '*.rpm'); do
+            ERROR=$(gcloud artifacts yum upload yum-public --location=${{ vars.GCP_ARTIFACT_REGISTRY_PROJECT_LOCATION }} --source=$rpm 2>&1) || {
+              echo "$ERROR"
+              if echo "$ERROR" | grep -q 'updated packages must bear a new version'; then
+                echo "The package is already uploaded. Continuing..."
+              else
+                echo "Package installation failed for a different reason."
+                exit 1
+              fi
+            }
+          done
 
   test-helm-charts:
     name: "Test Helm Charts"
