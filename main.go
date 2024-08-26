@@ -23,11 +23,6 @@ import (
 )
 
 func main() {
-	// Most Steadybit extensions leverage zerolog. To encourage persistent logging setups across extensions,
-	// you may leverage the extlogging package to initialize zerolog. Among others, this package supports
-	// configuration of active log levels and the log format (JSON or plain text).
-	//
-	// Example
 	//  - to activate JSON logging, set the environment variable STEADYBIT_LOG_FORMAT="json"
 	//  - to set the log level to debug, set the environment variable STEADYBIT_LOG_LEVEL="debug"
 	extlogging.InitZeroLog()
@@ -53,9 +48,7 @@ func main() {
 	// by the Steadybit agent to obtain the extension's capabilities.
 	exthttp.RegisterHttpHandler("/", exthttp.GetterAsHandler(getExtensionList))
 
-	// This is a section you will most likely want to change: The registration of HTTP handlers
-	// for your extension. You might want to change these because the names do not fit, or because
-	// you do not have a need for all of them.
+	// The registration of HTTP handlers for the extension.
 	discovery_kit_sdk.Register(extjvm.NewJvmDiscovery())
 	action_kit_sdk.RegisterAction(extjvm.NewControllerDelay())
 	action_kit_sdk.RegisterAction(extjvm.NewControllerException())
@@ -78,7 +71,6 @@ func main() {
 		// This is the default port under which your extension is accessible.
 		// The port can be configured externally through the
 		// STEADYBIT_EXTENSION_PORT environment variable.
-		// We suggest that you keep port 8080 as the default.
 		Port: int(config.Config.Port),
 	})
 }
