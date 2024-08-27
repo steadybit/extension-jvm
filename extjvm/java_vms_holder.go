@@ -16,7 +16,6 @@ import (
 	"golang.org/x/sys/unix"
 	"math"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -366,26 +365,10 @@ func isExcluded(vm *jvm.JavaVm) bool {
 	return false
 }
 
-func installSignalHandler() {
-	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
-	go func(signals <-chan os.Signal) {
-		for s := range signals {
-			signalName := unix.SignalName(s.(syscall.Signal))
-
-			log.Info().Str("signal", signalName).Msg("received signal - stopping all active discoveries")
-			DeactivateDataSourceDiscovery()
-			DeactivateSpringDiscovery()
-
-			switch s {
-			case syscall.SIGINT:
-				fmt.Println()
-				os.Exit(128 + int(s.(syscall.Signal)))
-
-			case syscall.SIGTERM:
-				fmt.Printf("Terminated: %d\n", int(s.(syscall.Signal)))
-				os.Exit(128 + int(s.(syscall.Signal)))
-			}
-		}
-	}(signalChannel)
+func SignalHandler(signal os.Signal) {
+	signalName := unix.SignalName(signal.(syscall.Signal))
+	log.Info().Str("signal", signalName).Msg("received signal - stopping all active discoveries")
+	DeactivateDataSourceDiscovery()
+	DeactivateSpringDiscovery()
 }
+

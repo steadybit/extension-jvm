@@ -43,8 +43,6 @@ func NewJvmDiscovery() discovery_kit_sdk.TargetDiscovery {
 }
 
 func StartJvmInfrastructure() {
-	installSignalHandler()
-
 	controller.Start(config.Config.JavaAgentAttachmentPort)
 
 	initDataSourceDiscovery()
