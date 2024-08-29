@@ -1,12 +1,12 @@
 # Changelog
 
-## v1.1.10 (next release)
+## v1.1.10
 
 - JVM excludes via vm arguments (like `steadybit.agent.disable-jvm-attachment`) are working again
 - Option to validate user provided class and method name for "Java Method Delay" and" "Java Method Exception" attacks
 - Align method parameter of "Controller Exception" and "Controller Delay" to "HTTP Client Status" and accept multiple values
 - Change default value for "jitter" in all "Delay" attacks to false
-- fix graceful shutdown
+- Fix graceful shutdown
 
 ## v1.1.8
 
