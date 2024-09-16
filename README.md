@@ -58,12 +58,37 @@ To avoid this warning or be able to use this extension in future java releases y
 
 ## Installation
 
-### Using Helm in Kubernetes
+### Kubernetes
 
-```sh
-$ helm repo add steadybit-extension-jvm https://steadybit.github.io/extension-jvm
-$ helm repo update
-$ helm upgrade steadybit-extension-jvm \
+Detailed information about agent and extension installation in kubernetes can also be found in
+our [documentation](https://docs.steadybit.com/install-and-configure/install-agent/install-on-kubernetes).
+
+#### Recommended (via agent helm chart)
+
+All extensions provide a helm chart that is also integrated in the
+[helm-chart](https://github.com/steadybit/helm-charts/tree/main/charts/steadybit-agent) of the agent.
+
+The extension is installed by default when you install the agent.
+
+You can provide additional values to configure this extension.
+
+```
+--set extension-jvm.container.runtime={{YOUR-CONTAINER-RUNTIME}} \
+```
+
+Additional configuration options can be found in
+the [helm-chart](https://github.com/steadybit/extension-jvm/blob/main/charts/steadybit-extension-jvm/values.yaml) of the
+extension.
+
+#### Alternative (via own helm chart)
+
+If you need more control, you can install the extension via its
+dedicated [helm-chart](https://github.com/steadybit/extension-jvm/blob/main/charts/steadybit-extension-jvm).
+
+```bash
+helm repo add steadybit-extension-jvm https://steadybit.github.io/extension-jvm
+helm repo update
+helm upgrade steadybit-extension-jvm \
     --install \
     --wait \
     --timeout 5m0s \
@@ -73,33 +98,20 @@ $ helm upgrade steadybit-extension-jvm \
     steadybit-extension-jvm/steadybit-extension-jvm
 ```
 
-### Using Docker
-
-```sh
-docker run \
-  --rm \
-  -p 8087 \
-  --privileged \
-  --pid=host \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /run/docker/runtime-runc/moby:/run/docker/runtime-runc/moby\
-  -v /sys/fs/cgroup:/sys/fs/cgroup\
-  --name steadybit-extension-jvm \
-  ghcr.io/steadybit/extension-jvm:latest
-```
-
 ### Linux Package
 
 Please use
-our [agent-linux.sh script](https://docs.steadybit.com/install-and-configure/install-agent/install-on-linux-hosts) to
-install the extension on your Linux machine.
-The script will download the latest version of the extension and install it using the package manager.
+our [agent-linux.sh script](https://docs.steadybit.com/install-and-configure/install-agent/install-on-linux-hosts)
+to install the extension on your Linux machine. The script will download the latest version of the extension and install
+it using the package manager.
 
-## Register the extension
+After installing, configure the extension by editing `/etc/steadybit/extension-jvm` and then restart the service.
 
-Make sure to register the extension at the steadybit platform. Please refer to
-the [documentation](https://docs.steadybit.com/integrate-with-steadybit/extensions/extension-installation) for more
-information.
+## Extension registration
+
+Make sure that the extension is registered with the agent. In most cases this is done automatically. Please refer to
+the [documentation](https://docs.steadybit.com/install-and-configure/install-agent/extension-discovery) for more
+information about extension registration and how to verify.
 
 ## Anatomy of the extension / Security
 
