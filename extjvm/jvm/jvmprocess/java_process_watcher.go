@@ -7,7 +7,7 @@ import (
 	"codnect.io/chrono"
 	"context"
 	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/process"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"path/filepath"
 	"strconv"
@@ -16,10 +16,10 @@ import (
 )
 
 type ProcessWatcher struct {
-	seenCreateTime int64
-	scheduler      chrono.TaskScheduler
-	Processes      <-chan *process.Process
-	ch             chan<- *process.Process
+	seenStartTime int64 //start time of the last seen process in clock ticks
+	scheduler     chrono.TaskScheduler
+	Processes     <-chan *process.Process
+	ch            chan<- *process.Process
 }
 
 func (w *ProcessWatcher) Start() {
@@ -53,25 +53,23 @@ func (w *ProcessWatcher) lookForNewProcesses(ctx context.Context) {
 	}
 
 	count := 0
-	lastSeenCreateTime := w.seenCreateTime
-	maxCreateTime := time.Now().Add(-1 * time.Second).UnixMilli() // we want to ignore processes created in the last second
+	lastSeenStartTime := w.seenStartTime
 	for _, p := range processes {
 		if !isJavaProcess(ctx, p) {
 			continue
 		}
 
-		createTime, _ := p.CreateTimeWithContext(ctx)
-		if createTime <= lastSeenCreateTime || createTime > maxCreateTime {
+		startTime, _ := p.CreateTime()
+		if startTime <= lastSeenStartTime {
 			log.Trace().
-				Int64("createTime", createTime).
-				Int64("lastSeenCreateTime", lastSeenCreateTime).
-				Int64("maxCreateTime", maxCreateTime).
+				Int64("startTime", startTime).
+				Int64("lastSeenStartTime", lastSeenStartTime).
 				Msgf("Ignoring java process with PID %d", p.Pid)
 			continue
 		}
 
-		if createTime > w.seenCreateTime {
-			w.seenCreateTime = createTime
+		if startTime > w.seenStartTime {
+			w.seenStartTime = startTime
 		}
 
 		log.Trace().Msgf("Found new java processes with PID %d", p.Pid)

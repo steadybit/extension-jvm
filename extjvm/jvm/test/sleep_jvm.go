@@ -5,7 +5,7 @@ package test
 
 import (
 	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/process"
 	"os"
 	"os/exec"
 	"sync"
@@ -50,7 +50,7 @@ func NewSleep() *SleepJvm {
 	if err := cmd.Start(); err != nil {
 		panic(err)
 	} else {
-		log.Info().Msgf("Started new JVM with PID %d\n", cmd.Process.Pid)
+		log.Info().Msgf("Started new JVM with PID %d", cmd.Process.Pid)
 		return &SleepJvm{cmd: cmd}
 	}
 }

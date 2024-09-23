@@ -19,6 +19,7 @@ type Specification struct {
 	HealthPort                     uint16        `json:"healthPort" split_words:"true" required:"false" default:"8083"`
 	DiscoveryAttributesExcludesJVM []string      `json:"discoveryAttributesExcludesJVM" split_words:"true" required:"false"`
 	MinProcessAgeBeforeAttach      time.Duration `json:"minProcessAgeBeforeAttach" split_words:"true" required:"false" default:"15s"`
+	MinProcessAgeBeforeInspect     time.Duration `json:"MinProcessAgeBeforeInspect" split_words:"true" required:"false" default:"1s"`
 	JvmAttachmentEnabled           bool          `json:"jvmAttachmentEnabled" split_words:"true" required:"false" default:"true"`
 	JavaAgentLogLevel              string        `json:"javaAgentLogLevel" split_words:"true" required:"false" default:"INFO"`
 }

@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/process"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/xin053/hsperfdata"
 	"k8s.io/utils/path"

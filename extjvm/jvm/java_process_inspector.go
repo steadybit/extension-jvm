@@ -9,7 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/process"
 	"github.com/steadybit/extension-jvm/extjvm/container"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/hsperf"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
@@ -19,13 +19,15 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type JavaProcessInspector struct {
-	JavaVms          <-chan JavaVm
-	ch               chan<- JavaVm
-	scheduler        chrono.TaskScheduler
-	ignoreHsperfData bool
+	JavaVms                    <-chan JavaVm
+	ch                         chan<- JavaVm
+	scheduler                  chrono.TaskScheduler
+	ignoreHsperfData           bool
+	minProcessAgeBeforeInspect time.Duration
 }
 
 func (i *JavaProcessInspector) Start() {
@@ -41,8 +43,15 @@ func (i *JavaProcessInspector) Stop() {
 }
 
 func (i *JavaProcessInspector) Inspect(p *process.Process, retries int, source string) {
-	if _, err := i.scheduler.Schedule(func(ctx context.Context) {
-		log.Trace().Msgf("Inspecting process %d reported by %s", p.Pid, source)
+	delay := 0 * time.Second
+	createTime, _ := p.CreateTime()
+	age := time.Since(time.UnixMilli(createTime))
+	if age < i.minProcessAgeBeforeInspect {
+		delay = i.minProcessAgeBeforeInspect - age
+	}
+
+	if _, err := i.scheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
+		log.Trace().Msgf("Inspecting process %d reported by %s (retries: %d)", p.Pid, source, retries)
 		if javaVm, err := i.createJvm(ctx, p, source); err == nil {
 			if ctx.Err() == nil {
 				i.ch <- javaVm
@@ -53,8 +62,8 @@ func (i *JavaProcessInspector) Inspect(p *process.Process, retries int, source s
 		} else {
 			log.Warn().Err(err).Msgf("Failed to create JVM for process %d. No more retries left", p.Pid)
 		}
-	}); err != nil {
-		log.Warn().Err(err).Msgf("Faield to schedule process insecoption. Pid: %d", p.Pid)
+	}, delay); err != nil {
+		log.Warn().Err(err).Msgf("Failed to schedule process insecoption. Pid: %d", p.Pid)
 	}
 }
 

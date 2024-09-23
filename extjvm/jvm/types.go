@@ -2,7 +2,7 @@ package jvm
 
 import (
 	"fmt"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/process"
 	"time"
 )
 

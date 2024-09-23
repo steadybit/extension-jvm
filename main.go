@@ -53,11 +53,13 @@ func main() {
 	// The registration of HTTP handlers for the extension.
 	stop, facade, datasource, spring := extjvm.StartJvmInfrastructure()
 
-	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
+	//This will install a signal handler, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	extsignals.AddSignalHandler(extsignals.SignalHandler{
-		Handler: extjvm.SignalHandler,
-		Order:   extsignals.OrderStopCustom,
-		Name:    "extjvm.SignalHandler",
+		Handler: func(_ os.Signal) {
+			stop()
+		},
+		Order: extsignals.OrderStopCustom,
+		Name:  "extjvm.SignalHandler",
 	})
 	extsignals.ActivateSignalHandlers()
 
@@ -70,11 +72,6 @@ func main() {
 	action_kit_sdk.RegisterAction(extjvm.NewHttpClientDelay(facade))
 	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodDelay(facade))
 	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodException(facade))
-
-	//This will install a signal handler, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
-	action_kit_sdk.InstallSignalHandler(func(_ os.Signal) {
-		stop()
-	})
 
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)

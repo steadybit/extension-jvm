@@ -6,7 +6,7 @@ package hsperf
 import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/process"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -35,6 +35,8 @@ func (w *Watcher) Start() {
 	go func(ch chan<- *process.Process) {
 		defer close(ch)
 
+		w.walkHsperfdataDir(os.TempDir(), ch)
+
 		for {
 			select {
 			case event, ok := <-w.watcher.Events:
@@ -52,8 +54,6 @@ func (w *Watcher) Start() {
 			}
 		}
 	}(ch)
-
-	go w.walkHsperfdataDir(os.TempDir(), ch)
 }
 
 func (w *Watcher) Stop() {

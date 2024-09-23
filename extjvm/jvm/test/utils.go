@@ -1,9 +1,8 @@
 package test
 
 import (
-	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/process"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -16,7 +15,6 @@ func RequireProcessEmitted(t *testing.T, ch <-chan *process.Process, pid int32) 
 	for {
 		select {
 		case p, ok := <-ch:
-			fmt.Printf("Process %v\n", p)
 			if ok && p.Pid == pid {
 				return p
 			}
@@ -34,7 +32,7 @@ func AssertProcessEmitted(t *testing.T, ch <-chan *process.Process, pid int32) b
 	for {
 		select {
 		case p, ok := <-ch:
-			log.Info().Msgf("New JVM Process emitted %v\n", p)
+			log.Info().Msgf("New JVM Process emitted %v", p)
 			if ok && p.Pid == pid {
 				return true
 			}

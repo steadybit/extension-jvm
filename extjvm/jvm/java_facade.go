@@ -48,9 +48,9 @@ type defaultJavaFacade struct {
 	attachJobs                chan attachJob
 	attachListeners           []AttachListener
 	loadPluginJobs            chan loadPluginJob
-	http           *javaagentHttpServer
-	processWatcher jvmprocess.ProcessWatcher
-	hsperfWatcher  hsperf.Watcher
+	http                      *javaagentHttpServer
+	processWatcher            jvmprocess.ProcessWatcher
+	hsperfWatcher             hsperf.Watcher
 	inspector                 JavaProcessInspector
 	plugins                   internal.PluginMap
 	minProcessAgeBeforeAttach time.Duration
@@ -153,6 +153,7 @@ func (f *defaultJavaFacade) Start() {
 		}
 	}()
 
+	f.inspector.minProcessAgeBeforeInspect = config.Config.MinProcessAgeBeforeInspect
 	f.inspector.Start()
 	f.hsperfWatcher.Start()
 	f.processWatcher.Start()

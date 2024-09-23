@@ -2,7 +2,7 @@ package extjvm
 
 import (
 	"fmt"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/process"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/stretchr/testify/mock"

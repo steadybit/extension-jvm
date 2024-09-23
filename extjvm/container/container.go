@@ -2,7 +2,7 @@ package container
 
 import (
 	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/process"
 	"github.com/steadybit/extension-kit/extutil"
 	"os"
 	"path/filepath"

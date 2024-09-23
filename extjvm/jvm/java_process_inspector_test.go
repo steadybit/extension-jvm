@@ -25,11 +25,11 @@ func Test_should_inspect_host_process_via_process(t *testing.T) {
 	jvm := test.NewSleep()
 	defer jvm.Stop()
 
-	inspector := JavaProcessInspector{ignoreHsperfData: true}
+	inspector := JavaProcessInspector{ignoreHsperfData: true, minProcessAgeBeforeInspect: 1 * time.Second}
 	inspector.Start()
 	defer inspector.Stop()
 
-	inspector.Inspect(jvm.Process(), 5, "test")
+	inspector.Inspect(jvm.Process(), 5, "test_process")
 
 	hostname, _ := os.Hostname()
 
@@ -63,7 +63,7 @@ func Test_should_inspect_host_process_via_hsperf(t *testing.T) {
 	jvm := test.NewSleep()
 	defer jvm.Stop()
 
-	inspector := JavaProcessInspector{}
+	inspector := JavaProcessInspector{minProcessAgeBeforeInspect: 1 * time.Second}
 	inspector.Start()
 	defer inspector.Stop()
 
@@ -75,7 +75,7 @@ func Test_should_inspect_host_process_via_hsperf(t *testing.T) {
 	p := test.RequireProcessEmitted(t, w.Processes, jvm.Pid())
 	drain(w.Processes)
 
-	inspector.Inspect(p, 5, "test")
+	inspector.Inspect(p, 5, "test_hsperf")
 
 	select {
 	case j := <-inspector.JavaVms:
@@ -98,7 +98,7 @@ func Test_should_inspect_host_process_via_hsperf(t *testing.T) {
 		assert.False(t, j.IsRunning())
 
 	case <-time.After(5 * time.Second):
-		assert.Fail(t, "jvm not inspected")
+		assert.Failf(t, "jvm not inspected", "missing %d", jvm.Pid())
 	}
 
 }
