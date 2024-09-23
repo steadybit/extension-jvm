@@ -5,6 +5,7 @@
 package extjvm
 
 import (
+	"codnect.io/chrono"
 	"context"
 	"fmt"
 	"github.com/rs/zerolog/log"
@@ -12,9 +13,6 @@ import (
 	"github.com/steadybit/discovery-kit/go/discovery_kit_commons"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_sdk"
 	"github.com/steadybit/extension-jvm/config"
-	"github.com/steadybit/extension-jvm/extjvm/controller"
-	"github.com/steadybit/extension-jvm/extjvm/hotspot"
-	"github.com/steadybit/extension-jvm/extjvm/java_process"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
@@ -26,35 +24,88 @@ import (
 )
 
 type jvmDiscovery struct {
+	jvms       jvmLister
+	datasource *DataSourceDiscovery
+	spring     *SpringDiscovery
 }
 
 var (
 	_ discovery_kit_sdk.TargetDescriber          = (*jvmDiscovery)(nil)
 	_ discovery_kit_sdk.AttributeDescriber       = (*jvmDiscovery)(nil)
 	_ discovery_kit_sdk.EnrichmentRulesDescriber = (*jvmDiscovery)(nil)
+
+	discoverySchedule = []time.Duration{
+		0 * time.Second,
+		30 * time.Second,
+		1 * time.Minute,
+		5 * time.Minute,
+	}
 )
 
-func NewJvmDiscovery() discovery_kit_sdk.TargetDiscovery {
-	discovery := &jvmDiscovery{}
+type discoveryTask struct {
+	task  chrono.ScheduledTask
+	count int
+}
+
+func (t *discoveryTask) nextDelay() time.Duration {
+	if t.count >= len(discoverySchedule) {
+		return discoverySchedule[len(discoverySchedule)-1]
+	} else {
+		return discoverySchedule[t.count]
+	}
+}
+
+func (t *discoveryTask) cancel() {
+	if t.task != nil {
+		t.task.Cancel()
+	}
+}
+
+func (t *discoveryTask) scheduleOn(scheduler chrono.TaskScheduler, f func()) (err error) {
+	t.task, err = scheduler.Schedule(func(ctx context.Context) {
+		f()
+
+		t.count++
+		if err := t.scheduleOn(scheduler, f); err != nil {
+			log.Warn().Err(err).Msg("Failed to schedule next task")
+		}
+	}, chrono.WithTime(time.Now().Add(t.nextDelay())))
+	return
+}
+
+type jvmLister interface {
+	GetJvms() []jvm.JavaVm
+}
+
+func NewJvmDiscovery(jvms jvmLister, datasource *DataSourceDiscovery, spring *SpringDiscovery) discovery_kit_sdk.TargetDiscovery {
+	discovery := &jvmDiscovery{
+		jvms:       jvms,
+		datasource: datasource,
+		spring:     spring,
+	}
 	return discovery_kit_sdk.NewCachedTargetDiscovery(discovery,
 		discovery_kit_sdk.WithRefreshTargetsNow(),
 		discovery_kit_sdk.WithRefreshTargetsInterval(context.Background(), 30*time.Second),
 	)
 }
 
-func StartJvmInfrastructure() {
-	controller.Start(config.Config.JavaAgentAttachmentPort)
+func StartJvmInfrastructure() (func(), jvm.JavaFacade, *DataSourceDiscovery, *SpringDiscovery) {
+	facade := jvm.NewJavaFacade()
+	datasource := newDataSourceDiscovery(facade)
+	spring := newSpringDiscovery(facade)
 
-	initDataSourceDiscovery()
-	initSpringDiscovery()
-	addJVMListener()
+	stop := func() {
+		log.Info().Msg("Stopping all active discoveries")
+		datasource.stop()
+		spring.stop()
+		facade.Stop()
+	}
 
-	startAttachment()
+	facade.Start()
+	datasource.start()
+	spring.start()
 
-	// Start JVM Watcher
-	java_process.Start()
-	// Start Hotspot JVM Watcher
-	hotspot.Start()
+	return stop, facade, datasource, spring
 }
 
 func (j *jvmDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
@@ -324,45 +375,50 @@ func (j *jvmDiscovery) DescribeAttributes() []discovery_kit_api.AttributeDescrip
 }
 
 func (j *jvmDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.Target, error) {
-	vms := GetJVMs()
-	targets := make([]discovery_kit_api.Target, 0, len(vms))
-	for _, vm := range vms {
-		targets = append(targets, discovery_kit_api.Target{
-			Id:         fmt.Sprintf("%s/%d", vm.Hostname, vm.Pid),
+	javaVms := j.jvms.GetJvms()
+	targets := make([]discovery_kit_api.Target, 0, len(javaVms))
+
+	for _, javaVm := range javaVms {
+		target := discovery_kit_api.Target{
+			Id:         fmt.Sprintf("%s/%d", javaVm.Hostname(), javaVm.Pid()),
 			TargetType: targetType,
-			Label:      getApplicationName(vm, "?"),
+			Label:      "?",
 			Attributes: map[string][]string{
-				"instance.type":           {"java"},
-				"jvm-instance.name":       {getApplicationName(vm, "")},
-				"jvm-instance.main-class": {getApplicationName(vm, "")},
-				"container.id.stripped":   {vm.ContainerId},
-				"process.pid":             {strconv.Itoa(int(vm.Pid))},
-				"instance.hostname":       {vm.Hostname},
-				"host.hostname":           {vm.Hostname},
-				"host.domainname":         {vm.HostFQDN},
+				"instance.type":     {"java"},
+				"process.pid":       {strconv.Itoa(int(javaVm.Pid()))},
+				"instance.hostname": {javaVm.Hostname()},
+				"host.hostname":     {javaVm.Hostname()},
+				"host.domainname":   {javaVm.HostFQDN()},
 			},
-		})
+		}
+		if name := getApplicationName(javaVm); name != "" {
+			target.Label = name
+			target.Attributes["jvm-instance.name"] = []string{name}
+		}
+		if c, ok := javaVm.(jvm.JavaVmInContainer); ok {
+			target.Attributes["container.id.stripped"] = []string{c.ContainerId()}
+		}
+		targets = append(targets, target)
 	}
-	enhanceTargetsWithSpringAttributes(targets)
-	enhanceTargetsWithDataSourceAttributes(targets)
+
+	j.enhanceTargetsWithSpringAttributes(targets)
+	j.enhanceTargetsWithDataSourceAttributes(targets)
 	return discovery_kit_commons.ApplyAttributeExcludes(targets, config.Config.DiscoveryAttributesExcludesJVM), nil
 }
 
-func enhanceTargetsWithDataSourceAttributes(targets []discovery_kit_api.Target) {
-	dataSourceApplications := GetDataSourceApplications()
-	for _, dataSourceApplication := range dataSourceApplications {
-		targetIndex := findTargetByPid(targets, dataSourceApplication.Pid)
+func (j *jvmDiscovery) enhanceTargetsWithDataSourceAttributes(targets []discovery_kit_api.Target) {
+	for _, app := range j.datasource.getApplications() {
+		targetIndex := findTargetByPid(targets, app.Pid)
 		if targetIndex != -1 {
-			for _, dataSourceConnection := range dataSourceApplication.DataSourceConnections {
+			for _, dataSourceConnection := range app.DataSourceConnections {
 				targets[targetIndex].Attributes["datasource.jdbc-url"] = append(targets[targetIndex].Attributes["datasource.jdbc-url"], dataSourceConnection.JdbcUrl)
 			}
 		}
 	}
 }
 
-func enhanceTargetsWithSpringAttributes(targets []discovery_kit_api.Target) {
-	springApplications := GetSpringApplications()
-	for _, app := range springApplications {
+func (j *jvmDiscovery) enhanceTargetsWithSpringAttributes(targets []discovery_kit_api.Target) {
+	for _, app := range j.spring.getApplications() {
 		targetIndex := findTargetByPid(targets, app.Pid)
 		if targetIndex != -1 {
 			if app.Name != "" {
@@ -386,11 +442,11 @@ func enhanceTargetsWithSpringAttributes(targets []discovery_kit_api.Target) {
 	}
 }
 
-func addHttpClientRequests(target *discovery_kit_api.Target, requests *[]HttpRequest) {
-	if requests == nil {
+func addHttpClientRequests(target *discovery_kit_api.Target, requests []HttpRequest) {
+	if len(requests) == 0 {
 		return
 	}
-	for _, request := range *requests {
+	for _, request := range requests {
 		target.Attributes["spring-instance.http-outgoing-calls"] = append(target.Attributes["spring-instance.http-outgoing-calls"], request.Address)
 		if !request.CircuitBreaker {
 			target.Attributes["spring-instance.http-outgoing-calls.missing-circuit-breaker"] = append(target.Attributes["spring-instance.http-outgoing-calls"], request.Address)
@@ -401,12 +457,12 @@ func addHttpClientRequests(target *discovery_kit_api.Target, requests *[]HttpReq
 	}
 }
 
-func addMvcMappings(target *discovery_kit_api.Target, mappings *[]SpringMvcMapping) {
-	if mappings == nil {
+func addMvcMappings(target *discovery_kit_api.Target, mappings []SpringMvcMapping) {
+	if len(mappings) == 0 {
 		return
 	}
 	mappingsByPath := make(map[string]SpringMvcMapping)
-	for _, mapping := range *mappings {
+	for _, mapping := range mappings {
 		if mapping.Patterns != nil {
 			for _, pattern := range mapping.Patterns {
 				mappingsByPath[pattern] = mapping
@@ -425,11 +481,7 @@ func findTargetByPid(targets []discovery_kit_api.Target, pid int32) int {
 	})
 }
 
-func getApplicationName(jvm jvm.JavaVm, defaultIfEmpty string) string {
-	name := strings.Replace(jvm.MainClass, ".jar", "", -1)
-	if name == "" {
-		name = defaultIfEmpty
-	}
-	name = strings.TrimPrefix(name, "/")
-	return name
+func getApplicationName(jvm jvm.JavaVm) string {
+	name := strings.Replace(jvm.MainClass(), ".jar", "", -1)
+	return strings.TrimPrefix(name, "/")
 }
