@@ -54,8 +54,7 @@ func (l *controllerException) Describe() action_kit_api.ActionDescription {
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
 		}),
-		// Category for the targets to appear in
-		Category: extutil.Ptr(category),
+		Technology: extutil.Ptr("JVM"),
 
 		// To clarify the purpose of the action, you can set a kind.
 		//   Attack: Will cause harm to targets
