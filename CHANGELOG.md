@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.11
+
+- Set new `Technology` property in extension description
+- Update dependencies (go 1.23)
+
 ## v1.1.10
 
 - JVM excludes via vm arguments (like `steadybit.agent.disable-jvm-attachment`) are working again

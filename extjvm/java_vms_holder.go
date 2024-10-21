@@ -371,4 +371,3 @@ func SignalHandler(signal os.Signal) {
 	DeactivateDataSourceDiscovery()
 	DeactivateSpringDiscovery()
 }
-
