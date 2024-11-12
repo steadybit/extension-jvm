@@ -18,6 +18,7 @@ import (
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extlogging"
 	"github.com/steadybit/extension-kit/extruntime"
+	"github.com/steadybit/extension-kit/extsignals"
 	_ "go.uber.org/automaxprocs" // Importing automaxprocs automatically adjusts GOMAXPROCS.
 	_ "net/http/pprof"           //allow pprof
 )
@@ -60,7 +61,12 @@ func main() {
 	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodException())
 
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
-	action_kit_sdk.InstallSignalHandler(extjvm.SignalHandler)
+	extsignals.AddSignalHandler(extsignals.SignalHandler{
+		Handler: extjvm.SignalHandler,
+		Order:   extsignals.OrderStopCustom,
+		Name:    "extjvm.SignalHandler",
+	})
+	extsignals.ActivateSignalHandlers()
 
 	extjvm.StartJvmInfrastructure()
 
