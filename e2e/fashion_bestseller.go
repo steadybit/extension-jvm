@@ -96,7 +96,7 @@ func (n *FashionBestseller) Deploy(podName string, opts ...func(c *acorev1.PodAp
 
 	ctx, cancel := context.WithCancel(context.Background())
 	n.cancelCtx = cancel
-	go n.Minikube.TailLog(ctx, n.Pod)
+	go n.Minikube.TailLogPrefixed(ctx, n.Pod, "👗")
 
 	return nil
 }

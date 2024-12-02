@@ -92,8 +92,7 @@ func (w *Watcher) walkHsperfdataDir(path string, ch chan<- *process.Process) {
 			return nil
 		}
 
-		p, err := process.NewProcess(int32(pid))
-		if err == nil {
+		if p, err := process.NewProcess(int32(pid)); err == nil {
 			ch <- p
 		} else {
 			log.Trace().Err(err).Msgf("Failed to get process %d", pid)

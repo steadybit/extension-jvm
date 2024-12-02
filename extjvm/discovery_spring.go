@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/chrono_utils"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extutil"
@@ -66,7 +67,7 @@ type SpringDiscovery struct {
 }
 
 func newSpringDiscovery(facade jvm.JavaFacade) *SpringDiscovery {
-	return &SpringDiscovery{facade: facade, taskScheduler: chrono.NewDefaultTaskScheduler()}
+	return &SpringDiscovery{facade: facade, taskScheduler: chrono_utils.NewContextTaskScheduler()}
 }
 
 func (d *SpringDiscovery) Attached(jvm jvm.JavaVm) {

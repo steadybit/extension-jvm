@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/chrono_utils"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"io"
@@ -31,14 +32,14 @@ type dataSourceApplication struct {
 }
 
 type DataSourceDiscovery struct {
-	facade        jvm.JavaFacade
-	taskScheduler chrono.TaskScheduler
-	applications  sync.Map // map[Pid int32]dataSourceApplication
-	tasks         sync.Map // map[Pid int32]discoveryTask
+	facade       jvm.JavaFacade
+	scheduler    chrono.TaskScheduler
+	applications sync.Map // map[Pid int32]dataSourceApplication
+	tasks        sync.Map // map[Pid int32]discoveryTask
 }
 
 func newDataSourceDiscovery(facade jvm.JavaFacade) *DataSourceDiscovery {
-	return &DataSourceDiscovery{facade: facade, taskScheduler: chrono.NewDefaultTaskScheduler()}
+	return &DataSourceDiscovery{facade: facade, scheduler: chrono_utils.NewContextTaskScheduler()}
 }
 
 func (d *DataSourceDiscovery) Attached(jvm jvm.JavaVm) {
@@ -67,7 +68,7 @@ func (d *DataSourceDiscovery) start() {
 func (d *DataSourceDiscovery) stop() {
 	d.facade.RemoveAttachedListener(d)
 	d.facade.RemoveAutoloadAgentPlugin(dataSourcePlugin, dataSourceMarkerClass)
-	<-d.taskScheduler.Shutdown()
+	<-d.scheduler.Shutdown()
 	d.tasks = sync.Map{}
 }
 
@@ -80,7 +81,7 @@ func (d *DataSourceDiscovery) cancelDiscover(vm jvm.JavaVm) {
 func (d *DataSourceDiscovery) scheduleDiscover(javaVm jvm.JavaVm) {
 	t := &discoveryTask{}
 
-	err := t.scheduleOn(d.taskScheduler, func() {
+	err := t.scheduleOn(d.scheduler, func() {
 		d.discover(javaVm)
 	})
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/v4/process"
+	"github.com/steadybit/extension-jvm/chrono_utils"
 	"github.com/steadybit/extension-jvm/extjvm/container"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/hsperf"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
@@ -31,7 +32,7 @@ type JavaProcessInspector struct {
 }
 
 func (i *JavaProcessInspector) Start() {
-	i.scheduler = chrono.NewDefaultTaskScheduler()
+	i.scheduler = chrono_utils.NewContextTaskScheduler()
 	ch := make(chan JavaVm)
 	i.ch = ch
 	i.JavaVms = ch
@@ -43,18 +44,20 @@ func (i *JavaProcessInspector) Stop() {
 }
 
 func (i *JavaProcessInspector) Inspect(p *process.Process, retries int, source string) {
-	delay := 0 * time.Second
+	startTime := time.Now()
 	createTime, _ := p.CreateTime()
-	age := time.Since(time.UnixMilli(createTime))
+	age := startTime.Sub(time.UnixMilli(createTime))
 	if age < i.minProcessAgeBeforeInspect {
-		delay = i.minProcessAgeBeforeInspect - age
+		startTime = startTime.Add(i.minProcessAgeBeforeInspect - age)
 	}
 
-	if _, err := i.scheduler.ScheduleWithFixedDelay(func(ctx context.Context) {
+	if _, err := i.scheduler.Schedule(func(ctx context.Context) {
 		log.Trace().Msgf("Inspecting process %d reported by %s (retries: %d)", p.Pid, source, retries)
-		if javaVm, err := i.createJvm(ctx, p, source); err == nil {
-			if ctx.Err() == nil {
-				i.ch <- javaVm
+		if javaVm, err := i.createJvm(ctx, p, source, retries == 0); err == nil {
+			log.Trace().Str("jvm", fmt.Sprintf("%v", javaVm)).Msgf("Successfully inpsected JVM for process %d", p.Pid)
+			select {
+			case i.ch <- javaVm:
+			case <-ctx.Done():
 			}
 		} else if retries > 0 {
 			log.Trace().Err(err).Msgf("Failed to create JVM for process %d. Retrying. Retries left: %d", p.Pid, retries)
@@ -62,33 +65,33 @@ func (i *JavaProcessInspector) Inspect(p *process.Process, retries int, source s
 		} else {
 			log.Warn().Err(err).Msgf("Failed to create JVM for process %d. No more retries left", p.Pid)
 		}
-	}, delay); err != nil {
+	}, chrono.WithTime(startTime)); err != nil {
 		log.Warn().Err(err).Msgf("Failed to schedule process insecoption. Pid: %d", p.Pid)
 	}
 }
 
-func (i *JavaProcessInspector) createJvm(ctx context.Context, p *process.Process, source string) (JavaVm, error) {
+func (i *JavaProcessInspector) createJvm(ctx context.Context, p *process.Process, source string, fallbackToProcessOnInaccessibleHsperfdata bool) (JavaVm, error) {
 	containerId := container.GetContainerIdForProcess(p)
 	if containerId == "" {
-		return i.createJvmOnHost(ctx, p, source)
+		return i.createJvmOnHost(ctx, p, source, fallbackToProcessOnInaccessibleHsperfdata)
 	}
 
 	if containerPid := container.FindMappedPidInContainer(p.Pid); containerPid > 0 {
 		log.Trace().Msgf("Found JVM %d is running in container %s with in-container-PID %d", p.Pid, containerId, containerPid)
-		return i.createJvmInContainer(ctx, p, source, containerId, containerPid)
+		return i.createJvmInContainer(ctx, p, source, containerId, containerPid, fallbackToProcessOnInaccessibleHsperfdata)
 	}
 
 	return nil, errors.New("container pid is not available")
 }
 
-func (i *JavaProcessInspector) createJvmOnHost(ctx context.Context, p *process.Process, source string) (JavaVm, error) {
+func (i *JavaProcessInspector) createJvmOnHost(ctx context.Context, p *process.Process, source string, fallbackToProcessOnInaccessibleHsperfdata bool) (JavaVm, error) {
 	var javaVm *defaultJavaVm
 	var err error
 
 	if hsPerfDataPath := hsperf.FindHsperfdataFile(ctx, p); hsPerfDataPath != "" {
 		log.Trace().Msgf("hsperfdata found for pid %d", p.Pid)
 		javaVm, err = i.createJvmUsingHsperfdata(ctx, p, source, hsPerfDataPath)
-		if err != nil {
+		if err != nil && !(fallbackToProcessOnInaccessibleHsperfdata && strings.Contains("not accessible", err.Error())) {
 			return nil, err
 		}
 	} else {
@@ -102,14 +105,14 @@ func (i *JavaProcessInspector) createJvmOnHost(ctx context.Context, p *process.P
 	return javaVm, err
 }
 
-func (i *JavaProcessInspector) createJvmInContainer(ctx context.Context, p *process.Process, source, containerId string, pidInContainer int32) (JavaVmInContainer, error) {
+func (i *JavaProcessInspector) createJvmInContainer(ctx context.Context, p *process.Process, source, containerId string, pidInContainer int32, fallbackToProcessOnInaccessibleHsperfdata bool) (JavaVmInContainer, error) {
 	var javaVm *defaultJavaVm
 	var err error
 
 	if hsperfdataFile := hsperf.FindHsperfdataFileContainer(ctx, p, pidInContainer); hsperfdataFile != "" {
 		log.Trace().Msgf("hsperfdata found for pid %d in container %s", pidInContainer, containerId)
 		javaVm, err = i.createJvmUsingHsperfdata(ctx, p, source, hsperfdataFile)
-		if err != nil {
+		if err != nil && !(fallbackToProcessOnInaccessibleHsperfdata && strings.Contains("not accessible", err.Error())) {
 			return nil, err
 		}
 	} else {
@@ -131,10 +134,13 @@ func (i *JavaProcessInspector) createJvmInContainer(ctx context.Context, p *proc
 	}, nil
 }
 
+var ErrorNotAttachable = errors.New("not attachable")
+
 func (i *JavaProcessInspector) createJvmUsingHsperfdata(ctx context.Context, p *process.Process, source, path string) (*defaultJavaVm, error) {
 	if i.ignoreHsperfData {
 		return nil, nil
 	}
+
 	tempFile := filepath.Join(os.TempDir(), fmt.Sprintf("hsperfdata_%d", p.Pid))
 	if err := utils.RootCommandContext(ctx, "cp", path, tempFile).Run(); err != nil {
 		return nil, fmt.Errorf("error while copying hsperfdata: %w", err)
@@ -148,12 +154,11 @@ func (i *JavaProcessInspector) createJvmUsingHsperfdata(ctx context.Context, p *
 
 	data, err := hsperf.ReadData(tempFile)
 	if err != nil {
-		return nil, fmt.Errorf("error while reading hsperfdata: %s", err)
+		return nil, fmt.Errorf("error while reading hsperfdata: %w", err)
 	}
-	log.Trace().Any("data", data).Msgf("hsperfdata read for PID %d", p.Pid)
 
 	if !data.IsAttachable() {
-		return nil, errors.New("not attachable")
+		return nil, ErrorNotAttachable
 	}
 
 	vm, err := createJvmFromProcess(ctx, p, source)

@@ -8,6 +8,7 @@ import (
 	"context"
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/v4/process"
+	"github.com/steadybit/extension-jvm/chrono_utils"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"path/filepath"
 	"strconv"
@@ -20,19 +21,17 @@ type ProcessWatcher struct {
 	scheduler     chrono.TaskScheduler
 	Processes     <-chan *process.Process
 	ch            chan<- *process.Process
+	Interval      time.Duration
 }
 
 func (w *ProcessWatcher) Start() {
-	w.StartWithInterval(5 * time.Second)
-}
+	w.scheduler = chrono_utils.NewContextTaskScheduler()
 
-func (w *ProcessWatcher) StartWithInterval(interval time.Duration) {
-	w.scheduler = chrono.NewDefaultTaskScheduler()
 	ch := make(chan *process.Process)
 	w.ch = ch
 	w.Processes = ch
 
-	if _, err := w.scheduler.ScheduleWithFixedDelay(func(ctx context.Context) { w.lookForNewProcesses(ctx) }, interval); err == nil {
+	if _, err := w.scheduler.ScheduleWithFixedDelay(w.lookForNewProcesses, w.Interval); err == nil {
 		log.Info().Msg("Watching for new Java processes.")
 	} else {
 		log.Error().Err(err).Msg("Failed to schedule Java Process Watcher Task.")
@@ -52,7 +51,6 @@ func (w *ProcessWatcher) lookForNewProcesses(ctx context.Context) {
 		return
 	}
 
-	count := 0
 	lastSeenStartTime := w.seenStartTime
 	for _, p := range processes {
 		if !isJavaProcess(ctx, p) {
@@ -72,9 +70,11 @@ func (w *ProcessWatcher) lookForNewProcesses(ctx context.Context) {
 			w.seenStartTime = startTime
 		}
 
-		log.Trace().Msgf("Found new java processes with PID %d", p.Pid)
-		count++
-		w.ch <- p
+		log.Trace().Msgf("Found new java processe with PID %d", p.Pid)
+		select {
+		case w.ch <- p:
+		case <-ctx.Done():
+		}
 	}
 
 }
