@@ -5,43 +5,26 @@
 package extjvm
 
 import (
-	"context"
+	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/extension-jvm/extjvm/attack"
+	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
 )
 
-type javaMethodException struct{}
-
-type JavaMethodExceptionState struct {
-	ClassName         string
-	MethodName        string
-	ErroneousCallRate int
-	Validate          bool
-	*AttackState
-}
-
-// Make sure action implements all required interfaces
-var (
-	_ action_kit_sdk.Action[JavaMethodExceptionState]         = (*javaMethodException)(nil)
-	_ action_kit_sdk.ActionWithStop[JavaMethodExceptionState] = (*javaMethodException)(nil)
-)
-
-func NewJavaMethodException() action_kit_sdk.Action[JavaMethodExceptionState] {
-	return &javaMethodException{}
-}
-
-func (l *javaMethodException) NewEmptyState() JavaMethodExceptionState {
-	return JavaMethodExceptionState{
-		AttackState: &AttackState{},
+func NewJavaMethodException(facade jvm.JavaFacade) action_kit_sdk.Action[JavaagentActionState] {
+	return &javaagentAction{
+		pluginJar:      utils.GetJarPath("attack-java-javaagent.jar"),
+		description:    methodExceptionDescribe(),
+		configProvider: methodExceptionConfigProvider,
+		facade:         facade,
 	}
 }
 
-// Describe returns the action description for the platform with all required information.
-func (l *javaMethodException) Describe() action_kit_api.ActionDescription {
+func methodExceptionDescribe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          ActionIDPrefix + ".java-method-exception-attack",
 		Label:       "Java Method Exception",
@@ -109,64 +92,19 @@ func (l *javaMethodException) Describe() action_kit_api.ActionDescription {
 	}
 }
 
-// Prepare is called before the action is started.
-// It can be used to validate the parameters and prepare the action.
-// It must not cause any harmful effects.
-// The passed in state is included in the subsequent calls to start/status/stop.
-// So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *javaMethodException) Prepare(_ context.Context, state *JavaMethodExceptionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-
-	errResult := extractDuration(request, state.AttackState)
-	if errResult != nil {
-		return errResult, nil
-	}
-
-	state.ClassName = extutil.ToString(request.Config["className"])
-	state.MethodName = extutil.ToString(request.Config["methodName"])
-	state.ErroneousCallRate = extutil.ToInt(request.Config["erroneousCallRate"])
-	state.Validate = extutil.ToBool(request.Config["validate"])
-
-	errResult = extractPid(request, state.AttackState)
-	if errResult != nil {
-		return errResult, nil
-	}
-
-	var config = map[string]interface{}{
-		"attack-class":      "com.steadybit.attacks.javaagent.instrumentation.JavaMethodExceptionInstrumentation",
-		"duration":          int(state.Duration / time.Millisecond),
-		"erroneousCallRate": state.ErroneousCallRate,
-		"methods":           []string{state.ClassName + "#" + state.MethodName},
-	}
-
-	return commonPrepareEnd(config, state.AttackState, request)
-}
-
-// Start is called to start the action
-// You can mutate the state here.
-// You can use the result to return messages/errors/metrics or artifacts
-func (l *javaMethodException) Start(_ context.Context, state *JavaMethodExceptionState) (*action_kit_api.StartResult, error) {
-	result, err := commonStart(state.AttackState)
+func methodExceptionConfigProvider(request action_kit_api.PrepareActionRequestBody) (map[string]interface{}, error) {
+	duration, err := extractDuration(request)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
-	if state.Validate {
-		status := attack.GetAttackStatus(state.Pid)
-		if status.AdviceApplied != "APPLIED" {
-			return &action_kit_api.StartResult{
-				Error: extutil.Ptr(action_kit_api.ActionKitError{
-					Title:  "The given class and method did not match anything in the target JVM.",
-					Status: extutil.Ptr(action_kit_api.Failed),
-				}),
-			}, nil
-		}
-	}
-	return result, err
-}
 
-// Stop is called to stop the action
-// It will be called even if the start method did not complete successfully.
-// It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
-// You can use the result to return messages/errors/metrics or artifacts
-func (l *javaMethodException) Stop(_ context.Context, state *JavaMethodExceptionState) (*action_kit_api.StopResult, error) {
-	return commonStop(state.AttackState)
+	className := extutil.ToString(request.Config["className"])
+	methodName := extutil.ToString(request.Config["methodName"])
+
+	return map[string]interface{}{
+		"attack-class":      "com.steadybit.attacks.javaagent.instrumentation.JavaMethodExceptionInstrumentation",
+		"duration":          int(duration / time.Millisecond),
+		"erroneousCallRate": extutil.ToInt(request.Config["erroneousCallRate"]),
+		"methods":           []string{fmt.Sprintf("%s#%s", className, methodName)},
+	}, nil
 }

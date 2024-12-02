@@ -21,6 +21,7 @@ import (
 	"github.com/steadybit/extension-kit/extsignals"
 	_ "go.uber.org/automaxprocs" // Importing automaxprocs automatically adjusts GOMAXPROCS.
 	_ "net/http/pprof"           //allow pprof
+	"os"
 )
 
 func main() {
@@ -50,25 +51,27 @@ func main() {
 	exthttp.RegisterHttpHandler("/", exthttp.GetterAsHandler(getExtensionList))
 
 	// The registration of HTTP handlers for the extension.
-	discovery_kit_sdk.Register(extjvm.NewJvmDiscovery())
-	action_kit_sdk.RegisterAction(extjvm.NewControllerDelay())
-	action_kit_sdk.RegisterAction(extjvm.NewControllerException())
-	action_kit_sdk.RegisterAction(extjvm.NewJdbcTemplateException())
-	action_kit_sdk.RegisterAction(extjvm.NewJdbcTemplateDelay())
-	action_kit_sdk.RegisterAction(extjvm.NewHttpClientStatus())
-	action_kit_sdk.RegisterAction(extjvm.NewHttpClientDelay())
-	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodDelay())
-	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodException())
+	stop, facade, datasource, spring := extjvm.StartJvmInfrastructure()
 
-	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
+	//This will install a signal handler, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	extsignals.AddSignalHandler(extsignals.SignalHandler{
-		Handler: extjvm.SignalHandler,
-		Order:   extsignals.OrderStopCustom,
-		Name:    "extjvm.SignalHandler",
+		Handler: func(_ os.Signal) {
+			stop()
+		},
+		Order: extsignals.OrderStopCustom,
+		Name:  "extjvm.SignalHandler",
 	})
 	extsignals.ActivateSignalHandlers()
 
-	extjvm.StartJvmInfrastructure()
+	discovery_kit_sdk.Register(extjvm.NewJvmDiscovery(facade, datasource, spring))
+	action_kit_sdk.RegisterAction(extjvm.NewControllerDelay(facade, spring))
+	action_kit_sdk.RegisterAction(extjvm.NewControllerException(facade, spring))
+	action_kit_sdk.RegisterAction(extjvm.NewJdbcTemplateException(facade))
+	action_kit_sdk.RegisterAction(extjvm.NewJdbcTemplateDelay(facade))
+	action_kit_sdk.RegisterAction(extjvm.NewHttpClientStatus(facade))
+	action_kit_sdk.RegisterAction(extjvm.NewHttpClientDelay(facade))
+	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodDelay(facade))
+	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodException(facade))
 
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)

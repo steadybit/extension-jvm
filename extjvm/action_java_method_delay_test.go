@@ -6,14 +6,22 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func Test_Java_Method_Delay_Prepare(t *testing.T) {
+	facade := &mockJavaFacade{}
+	fake, err := facade.startFakeJvm()
+	require.NoError(t, err)
+	defer func(fake *FakeJvm) {
+		_ = fake.stop()
+	}(fake)
+
 	tests := []struct {
 		name        string
 		requestBody action_kit_api.PrepareActionRequestBody
-		wantedState *JavaMethodDelayState
+		wantedState *JavaagentActionState
 	}{
 		{
 			name: "Should return config",
@@ -28,38 +36,28 @@ func Test_Java_Method_Delay_Prepare(t *testing.T) {
 					"validate":    "true",
 				},
 				ExecutionId: uuid.New(),
-				Target: extutil.Ptr(action_kit_api.Target{
-					Attributes: map[string][]string{
-						"process.pid": {"42"},
-					},
-				}),
+				Target:      extutil.Ptr(fake.getTarget()),
 			},
 
-			wantedState: &JavaMethodDelayState{
-				ClassName:  "com.steadybit.demo.CustomerController",
-				MethodName: "GetCustomers",
-				Validate:   true,
-				AttackState: &AttackState{
-					ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation\",\"delay\":500,\"delayJitter\":true,\"duration\":10000,\"methods\":[\"com.steadybit.demo.CustomerController#GetCustomers\"]}",
-				},
+			wantedState: &JavaagentActionState{
+				ValidateAdviceApplied: true,
+				ConfigJson:            "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation\",\"delay\":500,\"delayJitter\":true,\"duration\":10000,\"methods\":[\"com.steadybit.demo.CustomerController#GetCustomers\"]}",
 			},
 		},
 	}
-	action := NewJavaMethodDelay()
+	action := NewJavaMethodDelay(facade)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//Given
 			state := action.NewEmptyState()
 			request := tt.requestBody
-			InitTestJVM()
 
 			//When
-			action.Prepare(context.Background(), &state, request)
+			_, err := action.Prepare(context.Background(), &state, request)
+			assert.NoError(t, err)
 			//Then
 			if tt.wantedState != nil {
-				assert.Equal(t, tt.wantedState.ClassName, state.ClassName)
-				assert.Equal(t, tt.wantedState.MethodName, state.MethodName)
-				assert.Equal(t, tt.wantedState.Validate, state.Validate)
+				assert.Equal(t, tt.wantedState.ValidateAdviceApplied, state.ValidateAdviceApplied)
 				assert.Equal(t, tt.wantedState.ConfigJson, state.ConfigJson)
 			}
 		})
