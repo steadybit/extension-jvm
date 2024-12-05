@@ -4,7 +4,6 @@
 package internal
 
 import (
-	"github.com/rs/zerolog/log"
 	"path/filepath"
 	"slices"
 	"sync"
@@ -45,6 +44,5 @@ func (p *PluginMap) Has(pid int32, plugin string) bool {
 	if value, ok := p.plugins.Load(pid); ok {
 		return slices.Contains(value.([]string), normalized)
 	}
-	log.Trace().Msgf("No plugins found for pid %d", pid)
 	return false
 }

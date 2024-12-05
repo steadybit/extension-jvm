@@ -88,7 +88,9 @@ var (
 )
 
 func NewJavaFacade() JavaFacade {
-	return &defaultJavaFacade{}
+	return &defaultJavaFacade{
+		processWatcher: jvmprocess.ProcessWatcher{Interval: 5 * time.Second},
+	}
 }
 
 func (f *defaultJavaFacade) Start() {
@@ -111,6 +113,11 @@ func (f *defaultJavaFacade) Start() {
 	for w := 1; w <= 4; w++ {
 		go f.loadPluginWorker(f.loadPluginJobs)
 	}
+
+	f.inspector.minProcessAgeBeforeInspect = config.Config.MinProcessAgeBeforeInspect
+	f.inspector.Start()
+	f.hsperfWatcher.Start()
+	f.processWatcher.Start()
 
 	go func() {
 		for {
@@ -152,11 +159,6 @@ func (f *defaultJavaFacade) Start() {
 			}
 		}
 	}()
-
-	f.inspector.minProcessAgeBeforeInspect = config.Config.MinProcessAgeBeforeInspect
-	f.inspector.Start()
-	f.hsperfWatcher.Start()
-	f.processWatcher.Start()
 }
 
 func (f *defaultJavaFacade) Stop() {

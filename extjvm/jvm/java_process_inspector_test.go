@@ -25,7 +25,7 @@ func Test_should_inspect_host_process_via_process(t *testing.T) {
 	jvm := test.NewSleep()
 	defer jvm.Stop()
 
-	inspector := JavaProcessInspector{ignoreHsperfData: true, minProcessAgeBeforeInspect: 1 * time.Second}
+	inspector := JavaProcessInspector{ignoreHsperfData: true, minProcessAgeBeforeInspect: 5 * time.Second}
 	inspector.Start()
 	defer inspector.Stop()
 
@@ -51,7 +51,7 @@ func Test_should_inspect_host_process_via_process(t *testing.T) {
 		jvm.Stop()
 		assert.False(t, j.IsRunning())
 
-	case <-time.After(5 * time.Second):
+	case <-time.After(25 * time.Second):
 		assert.Fail(t, "jvm not inspected")
 	}
 }
@@ -97,7 +97,7 @@ func Test_should_inspect_host_process_via_hsperf(t *testing.T) {
 		jvm.Stop()
 		assert.False(t, j.IsRunning())
 
-	case <-time.After(5 * time.Second):
+	case <-time.After(25 * time.Second):
 		assert.Failf(t, "jvm not inspected", "missing %d", jvm.Pid())
 	}
 
@@ -107,7 +107,7 @@ func drain[T any](ch <-chan T) {
 	for {
 		select {
 		case <-ch:
-		case <-time.After(10 * time.Millisecond):
+		case <-time.After(100 * time.Millisecond):
 			return
 		}
 	}

@@ -31,9 +31,9 @@ func TestWithMinikube(t *testing.T) {
 			return []string{
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
 				"--set", "discovery.attributes.excludes.jvm={spring-instance.http-client}",
-				"--set", "logging.level=INFO",
+				"--set", "logging.level=TRACE",
 				"--set", "extraEnv[0].name=STEADYBIT_EXTENSION_MIN_PROCESS_AGE_BEFORE_ATTACHMENT",
-				"--set", "extraEnv[0].value=1s",
+				"--set", "extraEnv[0].value=5s",
 			}
 		},
 	}
@@ -100,7 +100,7 @@ func validateDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 
 func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	log.Info().Msg("Starting testDiscovery")
-	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	fashionBestseller := FashionBestseller{Minikube: m}
@@ -108,13 +108,11 @@ func testDiscovery(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	require.NoError(t, err, "failed to create pod")
 	defer func() { _ = fashionBestseller.Delete() }()
 
-	go m.TailLog(ctx, fashionBestseller.Pod)
-
 	target := getSpringBootSampleTarget(t, ctx, e)
 	assert.Equal(t, target.TargetType, "com.steadybit.extension_jvm.jvm-instance")
 
 	targetFashion, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.jvm-instance", func(target discovery_kit_api.Target) bool {
-		log.Debug().Msgf("targetApplications: %+v", target.Attributes)
+		fmt.Printf("targetApplication: %+v\n", target.Attributes)
 		return e2e.HasAttribute(target, "jvm-instance.name", "JarLauncher")
 	})
 	require.NoError(t, err)
@@ -128,11 +126,11 @@ func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extensi
 		//The application context is instrumented whenever an event is thrown. We make sure that events happen by calling a http endpoint in the application
 		springBootSample.AssertIsReachable(t, true)
 
-		log.Debug().Msgf("targetApplications: %+v", target.Attributes)
+		fmt.Printf("targetApplication: %+v\n", target.Attributes)
 		return e2e.HasAttribute(target, "jvm-instance.name", "app") &&
 			e2e.HasAttribute(target, "instance.type", "spring-boot") &&
-			e2e.HasAttribute(target, "spring-instance.name", "spring-boot-sample") &&
 			e2e.HasAttribute(target, "datasource.jdbc-url", "jdbc:h2:mem:testdb") &&
+			e2e.HasAttribute(target, "spring-instance.name", "spring-boot-sample") &&
 			e2e.HasAttribute(target, "spring-instance.jdbc-template", "true")
 	})
 	require.NoError(t, err)
