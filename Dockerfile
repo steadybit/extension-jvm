@@ -42,7 +42,7 @@ RUN apt-get -qq update \
     && apt-get -y autoremove \
     && rm -rf /var/lib/apt/lists/*
 
-USER $USERNAME
+USER $USER_UID
 
 WORKDIR /
 
