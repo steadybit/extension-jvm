@@ -91,7 +91,7 @@ func (a containerJvmAttachment) GetHostAddress() string {
 
 // getOutboundIP returns preferred outbound ip of this machine
 func getOutboundIP() net.IP {
-	if conn, err := net.Dial("ip:icmp", "google.com"); err != nil {
+	if conn, err := net.Dial("udp", "google.com:80"); err != nil {
 		log.Error().Err(err).Msgf("Error getting outbound IP")
 		return nil
 	} else {
