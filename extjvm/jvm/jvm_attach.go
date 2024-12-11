@@ -1,7 +1,6 @@
 package jvm
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/rs/zerolog/log"
@@ -74,17 +73,10 @@ func externalAttach(jvm JavaVm, agentJar string, initJar string, agentHTTPPort i
 	log.Debug().Msgf("Executing attach command on host: %s", attachCommand)
 	var ctx, cancel = context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
 	defer cancel()
-	cmd := utils.RootCommandContext(ctx, attachCommand[0], attachCommand[1:]...)
-	var outb, errb bytes.Buffer
-	cmd.Stdout = &outb
-	cmd.Stderr = &errb
-	err = cmd.Run()
-	log.Debug().Msgf("attach command output: %s", outb.String())
-	if errb.String() != "" {
-		log.Error().Msgf("attach command error: %s", errb.String())
-	}
+	outb, err := utils.RootCommandContext(ctx, attachCommand[0], attachCommand[1:]...).CombinedOutput()
+	log.Debug().Msgf("attach command output: %s", string(outb))
 	if err != nil {
-		log.Error().Err(err).Msgf("Error attaching to JVM %s: %s", jvm.ToInfoString(), err)
+		log.Error().Err(err).Str("output", string(outb)).Msgf("Error attaching to JVM %s: %s", jvm.ToInfoString(), err)
 		return false
 	}
 	return true
