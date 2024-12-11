@@ -10,7 +10,7 @@ type hostJvmAttachment struct {
 
 func (a hostJvmAttachment) attach(agentJar string, initJar string, agentHTTPPort int) bool {
 	if !a.jvm.IsRunning() {
-		log.Debug().Msgf("Process not running. Skipping a to JVM %+v", a.jvm)
+		log.Debug().Msgf("Process not running. Skipping a to JVM %s", a.jvm.ToDebugString())
 		return false
 	}
 	return externalAttach(a.jvm, agentJar, initJar, agentHTTPPort, a.GetHostAddress(), a.jvm.Pid(), a.jvm.Pid(), "")

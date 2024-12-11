@@ -207,14 +207,14 @@ func (f *defaultJavaFacade) loadPluginWorker(loadPluginJobs chan loadPluginJob) 
 
 func (f *defaultJavaFacade) doAttach(job attachJob) {
 	if err := f.attachInternal(job.jvm); err == nil {
-		log.Info().Msgf("Successful attachment to JVM  %+v", job.jvm)
+		log.Info().Msgf("Successful attachment to JVM %s", job.jvm.ToInfoString())
 
 		loglevel := getJvmExtensionLogLevel()
-		log.Trace().Msgf("Propagating Loglevel %s to Javaagent in JVM %+v", loglevel, job.jvm)
+		log.Trace().Msgf("Propagating Loglevel %s to Javaagent in JVM %s", loglevel, job.jvm.ToInfoString())
 		if f.setLogLevel(job.jvm, loglevel) {
-			log.Info().Msgf("Successfully set loglevel %s for JVM %+v", loglevel, job.jvm)
+			log.Info().Msgf("Successfully set loglevel %s for JVM %s", loglevel, job.jvm.ToInfoString())
 		} else {
-			log.Debug().Msgf("Error setting loglevel %s for JVM %+v", loglevel, job.jvm)
+			log.Debug().Msgf("Error setting loglevel %s for JVM %s", loglevel, job.jvm.ToDebugString())
 			f.attach(job.jvm, job.retries)
 		}
 
@@ -252,7 +252,7 @@ func (f *defaultJavaFacade) scheduleLoadAgentPlugin(javaVm JavaVm, plugin string
 
 func (f *defaultJavaFacade) loadAgentPluginJob(job loadPluginJob) {
 	if err := f.LoadAgentPlugin(job.jvm, job.plugin, job.args); err != nil {
-		log.Error().Msgf("Error loading plugin %s for JVM %+v: %s", job.plugin, job.jvm, err)
+		log.Error().Msgf("Error loading plugin %s for JVM %s: %s", job.plugin, job.jvm.ToInfoString(), err)
 		go func() {
 			time.Sleep(time.Duration(120/job.retries) * time.Second)
 			// do retry
@@ -263,7 +263,7 @@ func (f *defaultJavaFacade) loadAgentPluginJob(job loadPluginJob) {
 
 func (f *defaultJavaFacade) LoadAgentPlugin(javaVm JavaVm, plugin string, args string) error {
 	if f.HasAgentPlugin(javaVm, plugin) {
-		log.Trace().Msgf("Plugin %s already loaded for JVM %+v", plugin, javaVm)
+		log.Trace().Msgf("Plugin %s already loaded for JVM %s", plugin, javaVm.ToDebugString())
 		return nil
 	}
 
@@ -297,10 +297,10 @@ func (f *defaultJavaFacade) LoadAgentPlugin(javaVm JavaVm, plugin string, args s
 
 func (f *defaultJavaFacade) unloadAutoLoadPlugin(javaVm JavaVm, markerClass string, plugin string) {
 	if f.HasClassLoaded(javaVm, markerClass) {
-		log.Debug().Msgf("Unloading plugin %s for JVM %+v", plugin, javaVm)
+		log.Debug().Msgf("Unloading plugin %s for JVM %s", plugin, javaVm.ToDebugString())
 
 		if err := f.UnloadAgentPlugin(javaVm, plugin); err != nil {
-			log.Warn().Msgf("Unloading plugin %s for JVM %+v failed: %s", plugin, javaVm, err)
+			log.Warn().Msgf("Unloading plugin %s for JVM %s failed: %s", plugin, javaVm.ToInfoString(), err)
 		}
 	}
 }

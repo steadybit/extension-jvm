@@ -21,7 +21,7 @@ type containerJvmAttachment struct {
 
 func (a containerJvmAttachment) attach(agentJar string, initJar string, agentHTTPPort int) bool {
 	if !a.jvm.IsRunning() {
-		log.Debug().Msgf("Process not running. Skipping a to JVM %+v", a.jvm)
+		log.Debug().Msgf("Process not running. Skipping a to JVM %s", a.jvm.ToDebugString())
 		return false
 	}
 
