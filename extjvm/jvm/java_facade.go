@@ -510,7 +510,7 @@ func (f *defaultJavaFacade) RemoveAutoloadAgentPlugin(plugin string, markerClass
 		}
 	}
 	for _, jvm := range f.javaVms.getJvms() {
-		f.unloadAutoLoadPlugin(jvm, plugin, markerClass)
+		f.unloadAutoLoadPlugin(jvm, markerClass, plugin)
 	}
 }
 
