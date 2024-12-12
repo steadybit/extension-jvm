@@ -94,16 +94,22 @@ func StartJvmInfrastructure() (func(), jvm.JavaFacade, *DataSourceDiscovery, *Sp
 	datasource := newDataSourceDiscovery(facade)
 	spring := newSpringDiscovery(facade)
 
-	stop := func() {
-		log.Info().Msg("Stopping all active discoveries")
-		datasource.stop()
-		spring.stop()
-		facade.Stop()
-	}
+	stop := func() {}
 
-	facade.Start()
-	datasource.start()
-	spring.start()
+	if config.Config.JvmAttachmentEnabled {
+		stop = func() {
+			log.Info().Msg("Stopping all active discoveries")
+			datasource.stop()
+			spring.stop()
+			facade.Stop()
+		}
+
+		facade.Start()
+		datasource.start()
+		spring.start()
+	} else {
+		log.Warn().Msg("JVM attachment is disabled.")
+	}
 
 	return stop, facade, datasource, spring
 }
