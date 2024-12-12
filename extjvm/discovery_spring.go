@@ -18,7 +18,7 @@ import (
 
 const (
 	springMarkerClass                  = "org.springframework.context.ApplicationContext"
-	springBootMarkerClass              = "org.springframework.boot.ApplicationRunner"
+	springBootMarkerClass              = "org.springframework.boot.ApplicationContextFactory"
 	springJdbcTemplateBeanClass        = "org.springframework.jdbc.core.JdbcTemplate"
 	springRestTemplateBeanClass        = "org.springframework.web.client.RestTemplate"
 	springRestTemplateBuilderBeanClass = "org.springframework.boot.web.client.RestTemplateBuilder"
