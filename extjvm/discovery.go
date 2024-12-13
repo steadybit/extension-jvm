@@ -429,6 +429,7 @@ func (j *jvmDiscovery) enhanceTargetsWithSpringAttributes(targets []discovery_ki
 		if targetIndex != -1 {
 			if app.Name != "" {
 				targets[targetIndex].Attributes["jvm-instance.name"] = utils.AppendIfMissing(targets[targetIndex].Attributes["jvm-instance.name"], app.Name)
+				slices.Sort(targets[targetIndex].Attributes["jvm-instance.name"])
 				targets[targetIndex].Attributes["spring-instance.name"] = []string{app.Name}
 				targets[targetIndex].Label = app.Name
 			}
