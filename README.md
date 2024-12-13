@@ -56,6 +56,17 @@ WARNING: Dynamic loading of agents will be disallowed by default in a future rel
 To avoid this warning or be able to use this extension in future java releases you can use the
 `-XX:+EnableDynamicAgentLoading` flag in your JVM commandline to be able to load the javaagent dynamically.
 
+## Needed configuration for Spring Boot
+
+In order to discover the spring boot applications correctly you need to enable some JMX beans and set an application name.
+Add these to your `application.properties`:
+
+```properties
+spring.application.name=my-application-name
+spring.jmx.enabled=true
+management.endpoints.jmx.exposure.include=beans,mappings
+```
+
 ## Installation
 
 ### Kubernetes
