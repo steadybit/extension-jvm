@@ -47,7 +47,8 @@ public class BeanCommandHandler implements CommandHandler {
     }
 
     private String getMainContextName() {
-        return this.jmxBeanReader.getMainContextName();
+        String name = this.jmxBeanReader.getMainContextName();
+        return name != null ? name : "";
     }
 
     private boolean hasBeanOfType(String className) {
