@@ -5,10 +5,8 @@
 package com.steadybit.discovery.springboot.javaagent;
 
 import com.steadybit.discovery.springboot.javaagent.handlers.BeanCommandHandler;
-import com.steadybit.discovery.springboot.javaagent.handlers.EnvCommandHandler;
 import com.steadybit.discovery.springboot.javaagent.handlers.HttpClientCommandHandler;
 import com.steadybit.discovery.springboot.javaagent.handlers.HttpMappingsCommandHandler;
-import com.steadybit.discovery.springboot.javaagent.handlers.common.ApplicationContextScanner;
 import com.steadybit.discovery.springboot.javaagent.handlers.httpclient.HttpClientRequestScanner;
 import com.steadybit.javaagent.AgentPlugin;
 import com.steadybit.javaagent.CommandHandler;
@@ -23,26 +21,20 @@ import java.util.List;
  */
 public class SpringBootAgentPlugin implements AgentPlugin, CommandHandler {
     private final List<CommandHandler> commandHandlers;
-    private final ApplicationContextScanner contextScanner;
     private final HttpClientRequestScanner httpClientRequestScanner;
 
     public SpringBootAgentPlugin(Instrumentation instrumentation) {
-        this.contextScanner = new ApplicationContextScanner(instrumentation);
         this.httpClientRequestScanner = new HttpClientRequestScanner(instrumentation);
-        this.commandHandlers = Arrays.asList(new EnvCommandHandler(this.contextScanner::getApplicationContexts),
-                new HttpMappingsCommandHandler(this.contextScanner::getApplicationContexts),
-                new BeanCommandHandler(this.contextScanner::getApplicationContexts), new HttpClientCommandHandler(this.httpClientRequestScanner::getRequests));
+        this.commandHandlers = Arrays.asList(new HttpMappingsCommandHandler(), new BeanCommandHandler(), new HttpClientCommandHandler(this.httpClientRequestScanner::getRequests));
     }
 
     @Override
     public void start() {
-        this.contextScanner.install();
         this.httpClientRequestScanner.install();
     }
 
     @Override
     public void destroy() {
-        this.contextScanner.reset();
         this.httpClientRequestScanner.reset();
     }
 

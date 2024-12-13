@@ -8,6 +8,7 @@ import com.steadybit.javaagent.log.Logger;
 import com.steadybit.javaagent.log.RemoteAgentLogger;
 
 import javax.management.InstanceNotFoundException;
+import javax.management.MalformedObjectNameException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
@@ -16,10 +17,55 @@ import java.util.Map;
 public class JmxBeanReader {
     private static final Logger log = RemoteAgentLogger.getLogger(JmxBeanReader.class);
     private final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+    private final ObjectName objectName;
+
+    public JmxBeanReader() {
+        try {
+            this.objectName = new ObjectName("org.springframework.boot:type=Endpoint,name=Beans");
+        } catch (MalformedObjectNameException e) {
+            throw new RuntimeException("Could not create ObjectName for MBeans", e);
+        }
+    }
+
+    public String getMainContextName() {
+        try {
+            Map<?, ?> result = (Map<?, ?>) this.mBeanServer.invoke(objectName, "beans", new Object[0], new String[0]);
+            if (result == null || result.isEmpty()) {
+                return null;
+            }
+
+            Map<?, ?> contexts = (Map<?, ?>) result.get("contexts");
+            if (contexts == null || result.isEmpty()) {
+                return null;
+            }
+
+            for (Map.Entry<?, ?> contextEntry : contexts.entrySet()) {
+                Map<?, ?> context = (Map<?, ?>) contextEntry.getValue();
+                String parentId = (String) context.get("parentId");
+
+                String name = (String) contextEntry.getKey();
+                if (parentId == null && !"bootstrap".equals(name)) {
+                    return name;
+                } else if ("bootstrap".equals(parentId)) {
+                    return stripSuffix(name);
+                }
+            }
+            return null;
+        } catch (InstanceNotFoundException ex) {
+            log.trace("Could not find main context: MBean org.springframework.boot:type=Endpoint,name=Beans not found");
+            return null;
+        } catch (Exception e) {
+            log.debug("Could not find main context: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private String stripSuffix(String s) {
+        return s.replaceAll("-\\d+$", "");
+    }
 
     public Boolean hasBeanOfType(Class<?> clazz) {
         try {
-            ObjectName objectName = new ObjectName("org.springframework.boot:type=Endpoint,name=Beans");
             Map<?, ?> result = (Map<?, ?>) this.mBeanServer.invoke(objectName, "beans", new Object[0], new String[0]);
             if (result == null || result.isEmpty()) {
                 return null;

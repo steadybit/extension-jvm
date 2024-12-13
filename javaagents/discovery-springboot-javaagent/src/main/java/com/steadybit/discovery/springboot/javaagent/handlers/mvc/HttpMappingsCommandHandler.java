@@ -4,7 +4,6 @@
 
 package com.steadybit.discovery.springboot.javaagent.handlers;
 
-import com.steadybit.discovery.springboot.javaagent.handlers.mvc.ApplicationContextMappingDescriptionProvider;
 import com.steadybit.discovery.springboot.javaagent.handlers.mvc.JmxMappingDescriptionProvider;
 import com.steadybit.javaagent.CommandHandler;
 import org.json.JSONArray;
@@ -19,11 +18,9 @@ import java.util.function.Supplier;
 
 public class HttpMappingsCommandHandler implements CommandHandler {
     private static final char BYTE_ORDER_MARK = '\ufeff';
-    private final ApplicationContextMappingDescriptionProvider applicationContextMappingDescriptionProvider;
     private final JmxMappingDescriptionProvider jmxMappingDescriptionProvider;
 
-    public HttpMappingsCommandHandler(Supplier<Collection<ApplicationContext>> applicationContextProvider) {
-        this.applicationContextMappingDescriptionProvider = new ApplicationContextMappingDescriptionProvider(applicationContextProvider);
+    public HttpMappingsCommandHandler() {
         this.jmxMappingDescriptionProvider = new JmxMappingDescriptionProvider();
     }
 
@@ -37,9 +34,6 @@ public class HttpMappingsCommandHandler implements CommandHandler {
         JSONArray mappings = new JSONArray();
 
         this.jmxMappingDescriptionProvider.describeMappings(mappings);
-        if (mappings.isEmpty()) {
-            this.applicationContextMappingDescriptionProvider.describeMappings(mappings);
-        }
 
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8));
         writer.write(RC_OK);

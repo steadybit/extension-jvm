@@ -105,11 +105,11 @@ func (j *javaVms) removeStopped() {
 
 func isIgnored(jvm JavaVm) bool {
 	if utils.ContainsPartOfString(ClasspathExcludes, jvm.ClassPath()) {
-		log.Trace().Msgf("%s is excluded by classpath", jvm.ToDebugString())
+		log.Trace().Msgf("Excluded by classpath: %s", jvm.ToDebugString())
 		return true
 	}
 	if utils.ContainsPartOfString(CommandlineExcludes, jvm.CommandLine()) || utils.ContainsPartOfString(CommandlineExcludes, jvm.VmArgs()) {
-		log.Trace().Msgf("%s is excluded by command", jvm.ToDebugString())
+		log.Trace().Msgf("Excluded by command: %s", jvm.ToDebugString())
 		return true
 	}
 	return false

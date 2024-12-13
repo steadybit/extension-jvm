@@ -206,9 +206,9 @@ func (d *SpringDiscovery) hasSpringBean(javaVm jvm.JavaVm, beanClass string) boo
 }
 
 func (d *SpringDiscovery) readSpringApplicationName(javaVm jvm.JavaVm) string {
-	name, err := d.facade.SendCommandToAgentWithHandler(javaVm, "spring-env", "spring.application.name", func(response io.Reader) (any, error) {
+	name, err := d.facade.SendCommandToAgentWithHandler(javaVm, "spring-main-context", "", func(response io.Reader) (any, error) {
 		result, err := jvm.GetCleanSocketCommandResult(response)
-		log.Debug().Msgf("Result from command spring-env:spring.application.name agent on PID %d: %s", javaVm.Pid(), result)
+		log.Debug().Msgf("Result from command spring-main-context agent on PID %d: %s", javaVm.Pid(), result)
 		return result, err
 	})
 	if err != nil {

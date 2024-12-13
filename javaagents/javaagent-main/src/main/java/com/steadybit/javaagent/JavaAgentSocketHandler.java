@@ -51,8 +51,6 @@ public class JavaAgentSocketHandler {
                 return;
             }
 
-            log.trace(String.format("Received command: %s ", command));
-
             this.handleCommand(command, os);
         }
     }
@@ -68,9 +66,9 @@ public class JavaAgentSocketHandler {
             pw.write(CommandHandler.RC_ERROR);
             pw.println("Invalid command: " + line);
         } else {
+            log.trace("Received command: {}", line);
             String command = line.substring(0, commandSeparator);
             String argument = line.substring(commandSeparator + 1);
-            log.trace("Received command: {}", command);
 
             for (CommandHandler commandHandler : this.commandHandlers) {
                 if (commandHandler.canHandle(command)) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/dimchansky/utfbom"
 	"github.com/rs/zerolog/log"
+	"github.com/shirou/gopsutil/v4/process"
 	"github.com/steadybit/extension-jvm/config"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/hsperf"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/internal"
@@ -94,11 +95,6 @@ func NewJavaFacade() JavaFacade {
 }
 
 func (f *defaultJavaFacade) Start() {
-	if !config.Config.JvmAttachmentEnabled {
-		log.Warn().Msg("JVM attachment is disabled.")
-		return
-	}
-
 	f.minProcessAgeBeforeAttach = config.Config.MinProcessAgeBeforeAttach
 	f.http = &javaagentHttpServer{connections: &f.connections}
 	f.http.listen()
@@ -120,12 +116,19 @@ func (f *defaultJavaFacade) Start() {
 	f.processWatcher.Start()
 
 	go func() {
+		source := ""
+		ok := false
+		var p *process.Process
+
 		for {
 			select {
-			case p := <-f.hsperfWatcher.Processes:
-				f.inspector.Inspect(p, 5, "hsperfdata")
-			case p := <-f.processWatcher.Processes:
-				f.inspector.Inspect(p, 5, "os-process")
+			case p, ok = <-f.hsperfWatcher.Processes:
+				source = "hsperfdata"
+			case p, ok = <-f.processWatcher.Processes:
+				source = "process"
+			}
+			if ok {
+				f.inspector.Inspect(p, 5, source)
 			}
 		}
 	}()

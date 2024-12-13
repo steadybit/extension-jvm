@@ -27,7 +27,7 @@ class JmxBeanReaderITest {
         //TODO: Replace with testcontainer and spring-boot-sample?
         this.context = (ConfigurableWebServerApplicationContext) SpringApplication.run(TestBootApplication.class, "--spring.jmx.enabled=true",
                 "--server.port=0");
-        this.handler = new BeanCommandHandler(Collections::emptyList);
+        this.handler = new BeanCommandHandler();
     }
 
     @AfterEach
@@ -51,6 +51,12 @@ class JmxBeanReaderITest {
     void should_not_return_bean_invalid_class() {
         String response = this.command("spring-bean", "class.does.not.exist");
         assertThat(response).isEqualTo("false\n");
+    }
+
+    @Test
+    void should_return_main_context_name() {
+        String response = this.command("spring-main-context","");
+        assertThat(response).isEqualTo("application\n");
     }
 
     private String command(String command, String arg) {

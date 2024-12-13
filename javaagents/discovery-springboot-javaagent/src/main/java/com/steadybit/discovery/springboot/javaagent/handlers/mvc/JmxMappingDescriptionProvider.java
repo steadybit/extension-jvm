@@ -9,6 +9,7 @@ import com.steadybit.javaagent.log.RemoteAgentLogger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.management.MalformedObjectNameException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
@@ -20,11 +21,19 @@ import java.util.stream.Collectors;
 public class JmxMappingDescriptionProvider {
     private static final Logger log = RemoteAgentLogger.getLogger(JmxMappingDescriptionProvider.class);
     private final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+    private final ObjectName objectName;
+
+    public JmxMappingDescriptionProvider() {
+        try {
+            this.objectName = new ObjectName("org.springframework.boot:type=Endpoint,name=Mappings");
+        } catch (MalformedObjectNameException e) {
+            throw new RuntimeException("Could not create ObjectName for MBeans", e);
+        }
+    }
 
     @SuppressWarnings("unchecked")
     public void describeMappings(JSONArray result) {
         try {
-            ObjectName objectName = new ObjectName("org.springframework.boot:type=Endpoint,name=Mappings");
             Map<?, ?> applicationMappings = (Map<?, ?>) this.mBeanServer.invoke(objectName, "mappings", new Object[0], new String[0]);
             if (applicationMappings == null) {
                 return;
@@ -72,18 +81,25 @@ public class JmxMappingDescriptionProvider {
         if (details != null) {
             JSONObject json = new JSONObject();
             Map<?, ?> handlerMethod = (Map<?, ?>) details.get("handlerMethod");
-            json.put("handlerClass", handlerMethod.get("className"));
-            json.put("handlerName", handlerMethod.get("name"));
-            json.put("handlerDescriptor", handlerMethod.get("descriptor"));
+            if (handlerMethod != null) {
+                json.put("handlerClass", handlerMethod.get("className"));
+                json.put("handlerName", handlerMethod.get("name"));
+                json.put("handlerDescriptor", handlerMethod.get("descriptor"));
+            }
 
             Map<?, ?> requestMappingConditions = (Map<?, ?>) details.get("requestMappingConditions");
-            putNotEmpty(json, "consumes", this.mediaTypeAsStringList((Collection<Map<?, ?>>) requestMappingConditions.get("consumes")));
-            putNotEmpty(json, "headers", this.nameValueAsStringList((Collection<Map<?, ?>>) requestMappingConditions.get("headers")));
-            putNotEmpty(json, "methods", requestMappingConditions.get("methods"));
-            putNotEmpty(json, "params", this.nameValueAsStringList((Collection<Map<?, ?>>) requestMappingConditions.get("params")));
-            putNotEmpty(json, "patterns", requestMappingConditions.get("patterns"));
-            putNotEmpty(json, "produces", this.mediaTypeAsStringList((Collection<Map<?, ?>>) requestMappingConditions.get("produces")));
-            mappings.put(json);
+            if (requestMappingConditions != null) {
+                putNotEmpty(json, "consumes", this.mediaTypeAsStringList((Collection<Map<?, ?>>) requestMappingConditions.get("consumes")));
+                putNotEmpty(json, "headers", this.nameValueAsStringList((Collection<Map<?, ?>>) requestMappingConditions.get("headers")));
+                putNotEmpty(json, "methods", requestMappingConditions.get("methods"));
+                putNotEmpty(json, "params", this.nameValueAsStringList((Collection<Map<?, ?>>) requestMappingConditions.get("params")));
+                putNotEmpty(json, "patterns", requestMappingConditions.get("patterns"));
+                putNotEmpty(json, "produces", this.mediaTypeAsStringList((Collection<Map<?, ?>>) requestMappingConditions.get("produces")));
+            }
+
+            if (json.length() > 0) {
+                mappings.put(json);
+            }
         }
     }
 

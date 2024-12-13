@@ -21,12 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class JmxMappingDescriptionProviderITest {
     private ConfigurableWebServerApplicationContext context;
-    private CommandHandler handler;
-
-    @BeforeEach
-    void setUp() {
-        this.handler = new HttpMappingsCommandHandler(Collections::emptyList);
-    }
+    private CommandHandler handler = new HttpMappingsCommandHandler();
 
     @AfterEach
     void tearDown() {
