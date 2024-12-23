@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.1
+
+- Update dependencies
+
 ## v1.2.0
 - Breaking Change: Remove unreliable capturing of application context for spring boot applications
 - Fix: more reliable discovery for jvm processes
