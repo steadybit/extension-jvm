@@ -151,18 +151,3 @@ Add the `steadybit.agent.disable-jvm-attachment` flag to your JVM commandline li
 ```
 java -Dsteadybit.agent.disable-jvm-attachment -jar spring-boot-sample.jar --server.port=0
 ```
-
-#### The Spring discovery is not showing my application name
-
-The extension uses the `spring.application.name` property to determine the application name. The extension will try to
-look up the property by the JMX Environment.
-
-If JMX is not enabled or the values are sanitized
-by [Spring Boot](https://docs.spring.io/spring-boot/reference/actuator/endpoints.html#actuator.endpoints.sanitization),
-the extension will try to instrument the application context and get the value from there. This might not work in an
-unused application, as the instrumentation needs some events to discover the application context.
-
-Workarounds:
- - Calling any HTTP endpoint is sufficient to trigger the application context instrumentation.
- - Provide a [SanitizingFunction](https://docs.spring.io/spring-boot/how-to/actuator.html#howto.actuator.customizing-sanitization) and exclude the `spring.application.name` from sanitization.
- - Set `management.endpoint.env.show-values` to `always` to expose the environment values. (Be careful, this will disable springs default sanitization!)
