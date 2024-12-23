@@ -31,15 +31,15 @@ When installed as linux package this configuration is in`/etc/steadybit/extensio
 
 The capabilities needed by this extension are: (which are provided by the helm chart)
 
-- SYS_ADMIN
-- SYS_RESOURCE
-- SYS_PTRACE
-- KILL
-- NET_ADMIN
-- DAC_OVERRIDE
-- SETUID
-- SETGID
-- AUDIT_WRITE
+- `SYS_ADMIN`
+- `SYS_RESOURCE`
+- `SYS_PTRACE`
+- `KILL`
+- `NET_ADMIN`
+- `DAC_OVERRIDE`
+- `SETUID`
+- `SETGID`
+- `AUDIT_WRITE`
 
 ## Needed access to the java process
 
@@ -126,19 +126,21 @@ information about extension registration and how to verify.
 
 ## Anatomy of the extension / Security
 
-We try to limit the needed access needed for the extension to the absolute minimum. So the extension itself can run as a
-non-root user on a read-only root file-system and will by default if deployed using the provided helm-chart.
-In order do execute certain actions the extension needs certain capabilities.
+We try to limit the access needed for the extension to the absolute minimum. So the extension itself can run as a
+non-root user on a read-only root file-system and will, by default, if deployed using the provided helm chart.
 
-### discovery / state attacks
+In order to execute certain actions the extension needs extended capabilities, see details below.
+
+### Discovery / state attacks
 
 For discovery the extension needs access to the container runtime socket.
 
-### resource and network attacks
+### Resource and network attacks
 
-The jvm attachment reuses the target container's linux namespace(s), control group(s) and user.
-This requires the following capabilities: SYS_ADMIN, SYS_RESOURCE, SYS_PTRACE, KILL, NET_ADMIN, DAC_OVERRIDE, SETUID,
-SETGID, AUDIT_WRITE.
+The JVM attachment reuses the target container's linux namespace(s), control group(s) and user.
+
+This requires the following capabilities:
+`SYS_ADMIN`, `SYS_RESOURCE`, `SYS_PTRACE`, `KILL`, `NET_ADMIN`, `DAC_OVERRIDE`, `SETUID`, `SETGID`, `AUDIT_WRITE`
 
 ## FAQ
 
@@ -153,7 +155,7 @@ java -Dsteadybit.agent.disable-jvm-attachment -jar spring-boot-sample.jar --serv
 #### The Spring discovery is not showing my application name
 
 The extension uses the `spring.application.name` property to determine the application name. The extension will try to
-lookup the property by the JMX Environment.
+look up the property by the JMX Environment.
 
 If JMX is not enabled or the values are sanitized
 by [Spring Boot](https://docs.spring.io/spring-boot/reference/actuator/endpoints.html#actuator.endpoints.sanitization),
