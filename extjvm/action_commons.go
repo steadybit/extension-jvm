@@ -29,7 +29,7 @@ var (
 	}
 	targetSelectionTemplates = []action_kit_api.TargetSelectionTemplate{
 		{
-			Label:       "by instance name",
+			Label:       "instance name",
 			Description: extutil.Ptr("Find instance by name."),
 			Query:       "jvm-instance.name=\"\"",
 		},
