@@ -2,7 +2,7 @@
 
 # Steadybit extension-jvm
 
-This [Steadybit](https://www.steadybit.com/) extension provides a jvm instance discovery and the various actions for jvm
+This [Steadybit](https://www.steadybit.com/) extension provides a JVM instance discovery and the various actions for JVM
 instances targets.
 
 Learn about the capabilities of this extension in
@@ -137,7 +137,8 @@ For discovery the extension needs access to the container runtime socket.
 
 ### Resource and network attacks
 
-The JVM attachment reuses the target container's linux namespace(s), control group(s) and user.
+To `attach` to the target JVM the extension starts an attachment process in the target's linux namespace(s),
+control group(s), using the root user (`uid=0`, `gid=0`). This process is short-lived and terminates after attachment.
 
 This requires the following capabilities:
 `SYS_ADMIN`, `SYS_RESOURCE`, `SYS_PTRACE`, `KILL`, `NET_ADMIN`, `DAC_OVERRIDE`, `SETUID`, `SETGID`, `AUDIT_WRITE`
