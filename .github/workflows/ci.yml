@@ -47,7 +47,7 @@ jobs:
     needs:
       - build_jars
     runs-on:
-      labels: steadybit_runner_ubuntu_latest_4cores_16GB
+      labels: steadybit_runner_ubuntu_latest_4cores_16GB_ARM
     timeout-minutes: 60
     env:
       sonar_available: ${{ secrets.SONAR_TOKEN  != '' && 'true' || 'false' }}
