@@ -14,7 +14,6 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm/container"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/hsperf"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
-	"github.com/steadybit/extension-kit/extruntime"
 	"math"
 	"os"
 	"path/filepath"
@@ -99,7 +98,7 @@ func (i *JavaProcessInspector) createJvmOnHost(ctx context.Context, p *process.P
 	}
 
 	if javaVm == nil {
-		javaVm, err = createJvmFromProcess(ctx, p, source)
+		javaVm = createJvmFromProcess(p, source)
 	}
 
 	return javaVm, err
@@ -120,7 +119,7 @@ func (i *JavaProcessInspector) createJvmInContainer(ctx context.Context, p *proc
 	}
 
 	if javaVm == nil {
-		javaVm, err = createJvmFromProcess(ctx, p, source)
+		javaVm = createJvmFromProcess(p, source)
 	}
 
 	if javaVm == nil {
@@ -161,11 +160,7 @@ func (i *JavaProcessInspector) createJvmUsingHsperfdata(ctx context.Context, p *
 		return nil, ErrorNotAttachable
 	}
 
-	vm, err := createJvmFromProcess(ctx, p, source)
-	if err != nil {
-		return nil, err
-	}
-
+	vm := createJvmFromProcess(p, source)
 	if source == "hsperfdata" {
 		vm.discoveredVia = "hsperfdata"
 	} else {
@@ -183,49 +178,12 @@ func (i *JavaProcessInspector) createJvmUsingHsperfdata(ctx context.Context, p *
 	return vm, nil
 }
 
-func createJvmFromProcess(ctx context.Context, p *process.Process, source string) (*defaultJavaVm, error) {
-	cmdline, _ := p.Cmdline()
-	exePath, _ := p.Exe()
-
-	hostname, fqdn, _ := extruntime.GetHostname()
-
-	vm := &defaultJavaVm{
-		p:           p,
-		commandLine: cmdline,
-		path:        exePath,
-		hostname:    hostname,
-		hostFQDN:    fqdn,
+func createJvmFromProcess(p *process.Process, source string) *defaultJavaVm {
+	discoveredVia := "os-process"
+	if source != "os-process" {
+		discoveredVia = fmt.Sprintf("%s/os-process", source)
 	}
-
-	if source == "os-process" {
-		vm.discoveredVia = "os-process"
-	} else {
-		vm.discoveredVia = fmt.Sprintf("%s/os-process", source)
-	}
-
-	if uids, err := p.Uids(); err == nil && len(uids) > 0 {
-		vm.userId = fmt.Sprintf("%d", uids[0])
-	}
-
-	if gids, err := p.Gids(); err == nil && len(gids) > 0 {
-		vm.groupId = fmt.Sprintf("%d", gids[0])
-	}
-
-	if processPath, err := getProcessPath(ctx, p); err == nil && processPath != "" {
-		vm.path = processPath
-	} else {
-		log.Debug().Err(err).Msgf("Failed to get process path for pid %d", p.Pid)
-	}
-
-	args := strings.Split(cmdline, " ")
-	for i, arg := range args {
-		if arg == "-cp" || arg == "-classpath" {
-			vm.classPath = args[i+1]
-			break
-		}
-	}
-
-	return vm, nil
+	return newJavaVm(p, discoveredVia)
 }
 
 func getMainClass(commandLine string) string {

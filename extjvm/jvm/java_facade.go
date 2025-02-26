@@ -11,6 +11,7 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm/jvm/hsperf"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/internal"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/jvmprocess"
+	"github.com/steadybit/extension-jvm/extjvm/jvm/starttime"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extutil"
 	"io"
@@ -142,7 +143,7 @@ func (f *defaultJavaFacade) Start() {
 	go func() {
 		for javaVm := range f.javaVms.Added {
 			sleep := 0 * time.Millisecond
-			age := time.Since(javaVm.CreateTime())
+			age := starttime.Since(javaVm.StartTime())
 			if age < f.minProcessAgeBeforeAttach {
 				sleep = f.minProcessAgeBeforeAttach - age
 			}
