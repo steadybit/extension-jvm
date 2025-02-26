@@ -1,9 +1,14 @@
 package jvm
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/v4/process"
-	"time"
+	"github.com/steadybit/extension-jvm/extjvm/jvm/starttime"
+	"github.com/steadybit/extension-kit/extruntime"
+	"strings"
 )
 
 type JavaVm interface {
@@ -19,7 +24,7 @@ type JavaVm interface {
 	IsRunning() bool
 	ToInfoString() string
 	ToDebugString() string
-	CreateTime() time.Time
+	StartTime() starttime.Time
 	VmArgs() string
 }
 
@@ -44,6 +49,7 @@ type defaultJavaVm struct {
 	discoveredVia string
 	hostname      string
 	hostFQDN      string
+	startTime     starttime.Time
 }
 
 func (vm defaultJavaVm) Pid() int32 {
@@ -87,13 +93,65 @@ func (vm defaultJavaVm) VmArgs() string {
 }
 
 func (vm defaultJavaVm) IsRunning() bool {
-	running, _ := vm.p.IsRunning()
-	return running
+	p2, err := process.NewProcess(vm.p.Pid)
+	if errors.Is(err, process.ErrorProcessNotRunning) {
+		return false
+	}
+	startTime2, err := starttime.ForProcess(p2)
+	if err != nil {
+		return false
+	}
+	return vm.startTime == startTime2
 }
 
-func (vm defaultJavaVm) CreateTime() time.Time {
-	createTime, _ := vm.p.CreateTime()
-	return time.UnixMilli(createTime)
+func newJavaVm(p *process.Process, via string) *defaultJavaVm {
+	cmdline, _ := p.Cmdline()
+	exePath, _ := p.Exe()
+
+	hostname, fqdn, _ := extruntime.GetHostname()
+
+	vm := &defaultJavaVm{
+		p:             p,
+		commandLine:   cmdline,
+		path:          exePath,
+		hostname:      hostname,
+		hostFQDN:      fqdn,
+		discoveredVia: via,
+	}
+
+	if startTime, err := starttime.ForProcess(p); err == nil {
+		vm.startTime = startTime
+	} else {
+		log.Debug().Err(err).Msgf("Failed to get starttime for pid %d", p.Pid)
+	}
+
+	if uids, err := p.Uids(); err == nil && len(uids) > 0 {
+		vm.userId = fmt.Sprintf("%d", uids[0])
+	}
+
+	if gids, err := p.Gids(); err == nil && len(gids) > 0 {
+		vm.groupId = fmt.Sprintf("%d", gids[0])
+	}
+
+	if processPath, err := getProcessPath(context.Background(), p); err == nil && processPath != "" {
+		vm.path = processPath
+	} else {
+		log.Debug().Err(err).Msgf("Failed to get process path for pid %d", p.Pid)
+	}
+
+	args := strings.Split(cmdline, " ")
+	for i, arg := range args {
+		if arg == "-cp" || arg == "-classpath" {
+			vm.classPath = args[i+1]
+			break
+		}
+	}
+
+	return vm
+}
+
+func (vm defaultJavaVm) StartTime() starttime.Time {
+	return vm.startTime
 }
 
 func (vm defaultJavaVm) ToDebugString() string {

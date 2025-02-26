@@ -21,7 +21,7 @@ func Test_should_track_jvm(t *testing.T) {
 	go added.drain(jvms.Added)
 	go removed.drain(jvms.Removed)
 
-	javaVm := defaultJavaVm{p: sleep.Process()}
+	javaVm := newJavaVm(sleep.Process(), "test")
 	jvms.addJvm(javaVm)
 	assert.EventuallyWithT(t, func(c *assert.CollectT) {
 		assert.Contains(c, added.list(), javaVm)

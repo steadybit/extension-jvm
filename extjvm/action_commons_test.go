@@ -5,6 +5,7 @@ import (
 	"github.com/shirou/gopsutil/v4/process"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
+	"github.com/steadybit/extension-jvm/extjvm/jvm/starttime"
 	"github.com/stretchr/testify/mock"
 	"io"
 	"os/exec"
@@ -109,9 +110,9 @@ type FakeJvm struct {
 	p *process.Process
 }
 
-func (f *FakeJvm) CreateTime() time.Time {
-	t, _ := f.p.CreateTime()
-	return time.UnixMilli(t)
+func (f *FakeJvm) StartTime() starttime.Time {
+	t, _ := starttime.ForProcess(f.p)
+	return t
 }
 
 func (f *FakeJvm) IsRunning() bool {

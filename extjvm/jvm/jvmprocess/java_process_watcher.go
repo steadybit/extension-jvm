@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/v4/process"
 	"github.com/steadybit/extension-jvm/chrono_utils"
+	"github.com/steadybit/extension-jvm/extjvm/jvm/starttime"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"path/filepath"
 	"strconv"
@@ -17,7 +18,7 @@ import (
 )
 
 type ProcessWatcher struct {
-	seenStartTime int64 //start time of the last seen process in clock ticks
+	seenStartTime starttime.Time
 	scheduler     chrono.TaskScheduler
 	Processes     <-chan *process.Process
 	ch            chan<- *process.Process
@@ -57,16 +58,13 @@ func (w *ProcessWatcher) lookForNewProcesses(ctx context.Context) {
 			continue
 		}
 
-		startTime, _ := p.CreateTime()
-		if startTime <= lastSeenStartTime {
-			log.Trace().
-				Int64("startTime", startTime).
-				Int64("lastSeenStartTime", lastSeenStartTime).
-				Msgf("Ignoring java process with PID %d", p.Pid)
+		startTime, _ := starttime.ForProcess(p)
+		if !startTime.After(lastSeenStartTime) {
+			log.Trace().Msgf("Ignoring java process with PID %d", p.Pid)
 			continue
 		}
 
-		if startTime > w.seenStartTime {
+		if startTime.After(w.seenStartTime) {
 			w.seenStartTime = startTime
 		}
 
