@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.2.2
+
+- Update dependencies
+- Fix: JVM processes are lost in discovery when wall clock changes
+
+## v1.2.1
+
+- Update dependencies
 ## v1.2.1
 
 - Update dependencies
