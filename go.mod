@@ -6,7 +6,7 @@ toolchain go1.23.2
 
 require (
 	codnect.io/chrono v1.1.3
-	github.com/KimMachineGun/automemlimit v0.7.0
+	github.com/KimMachineGun/automemlimit v0.7.1
 	github.com/dimchansky/utfbom v1.1.1
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/google/uuid v1.6.0
