@@ -14,7 +14,6 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"runtime"
 	"testing"
 	"time"
 )
@@ -45,10 +44,6 @@ func TestWithMinikube(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 			return nil
 		})
-
-	if runtime.GOOS == "linux" {
-		mOpts = mOpts.WithDriver("kvm2")
-	}
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
 		{
