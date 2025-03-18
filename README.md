@@ -152,3 +152,10 @@ Add the `steadybit.agent.disable-jvm-attachment` flag to your JVM commandline li
 ```
 java -Dsteadybit.agent.disable-jvm-attachment -jar spring-boot-sample.jar --server.port=0
 ```
+
+## Version and Revision
+
+The version and revision of the extension:
+- are printed during the startup of the extension
+- are added as a Docker label to the image
+- are available via the `version.txt`/`revision.txt` files in the root of the image
