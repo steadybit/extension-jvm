@@ -17,8 +17,8 @@ ifeq ($(SKIP_LICENSES_REPORT), true)
 else
 	@echo "Generating licenses report"
 	rm -rf ./licenses
-	go run github.com/google/go-licenses@v1.6.0 save . --save_path ./licenses
-	go run github.com/google/go-licenses@v1.6.0 report . > ./licenses/THIRD-PARTY.csv
+	go run github.com/google/go-licenses@v1.6.0 save . --save_path ./licenses --ignore std
+	go run github.com/google/go-licenses@v1.6.0 report . --ignore std > ./licenses/THIRD-PARTY.csv
 	cp LICENSE ./licenses/LICENSE.txt
 endif
 
