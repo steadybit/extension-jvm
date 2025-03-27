@@ -210,7 +210,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go_version: '1.24.1'
+          go_version: '1.24'
 
       - name: Export GPG key
         run: |
