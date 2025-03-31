@@ -2,8 +2,6 @@ module github.com/steadybit/extension-jvm
 
 go 1.24
 
-toolchain go1.24.1
-
 require (
 	codnect.io/chrono v1.1.3
 	github.com/KimMachineGun/automemlimit v0.7.1
@@ -25,7 +23,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.15
 	github.com/xin053/hsperfdata v0.2.3
 	go.uber.org/automaxprocs v1.6.0
-	golang.org/x/net v0.37.0
+	golang.org/x/net v0.38.0
 	golang.org/x/sys v0.31.0
 	k8s.io/api v0.32.3
 	k8s.io/apimachinery v0.32.3
