@@ -2,8 +2,6 @@ module github.com/steadybit/extension-jvm
 
 go 1.24
 
-toolchain go1.24.1
-
 require (
 	codnect.io/chrono v1.1.3
 	github.com/KimMachineGun/automemlimit v0.7.1
@@ -11,7 +9,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/google/uuid v1.6.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/rs/zerolog v1.33.0
+	github.com/rs/zerolog v1.34.0
 	github.com/shirou/gopsutil/v4 v4.25.2
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.9.7
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.15
