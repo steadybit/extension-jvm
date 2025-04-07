@@ -6,7 +6,7 @@ require (
 	codnect.io/chrono v1.1.3
 	github.com/KimMachineGun/automemlimit v0.7.1
 	github.com/dimchansky/utfbom v1.1.1
-	github.com/fsnotify/fsnotify v1.8.0
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/google/uuid v1.6.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.34.0
