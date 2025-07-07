@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.2.3 (next)
+## v1.2.3
 
 - Updated dependencies
 
