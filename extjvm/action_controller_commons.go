@@ -14,7 +14,7 @@ var (
 		Name:        "pattern",
 		Label:       "Request Mapping",
 		Description: extutil.Ptr("Which request mapping pattern should be used to match the requests?"),
-		Type:        action_kit_api.String,
+		Type:        action_kit_api.ActionParameterTypeString,
 		Required:    extutil.Ptr(true),
 		Options: extutil.Ptr([]action_kit_api.ParameterOption{
 			action_kit_api.ParameterOptionsFromTargetAttribute{
@@ -26,7 +26,7 @@ var (
 		Name:               "method",
 		Label:              "Http Method",
 		Description:        extutil.Ptr("Which HTTP method should be attacked?"),
-		Type:               action_kit_api.String,
+		Type:               action_kit_api.ActionParameterTypeString,
 		Options:            methodsOptions,
 		Deprecated:         extutil.Ptr(true),
 		DeprecationMessage: extutil.Ptr("Use the 'Http Methods' parameter instead."),
@@ -35,7 +35,7 @@ var (
 		Name:         "methods",
 		Label:        "Http Methods",
 		Description:  extutil.Ptr("Which HTTP methods should be attacked?"),
-		Type:         action_kit_api.StringArray,
+		Type:         action_kit_api.ActionParameterTypeStringArray,
 		Required:     extutil.Ptr(true),
 		DefaultValue: extutil.Ptr("*"),
 		Options:      methodsOptions,

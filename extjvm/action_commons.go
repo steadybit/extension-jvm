@@ -20,7 +20,7 @@ var (
 		Name:         "erroneousCallRate",
 		Label:        "Erroneous Call Rate",
 		Description:  extutil.Ptr("How many percent of requests should trigger an exception?"),
-		Type:         action_kit_api.Percentage,
+		Type:         action_kit_api.ActionParameterTypePercentage,
 		MinValue:     extutil.Ptr(0),
 		MaxValue:     extutil.Ptr(100),
 		DefaultValue: extutil.Ptr("100"),
