@@ -213,9 +213,11 @@ jobs:
           go-version: '1.24.1'
 
       - name: Export GPG key
+        env:
+          SECRET: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         run: |
           mkdir -p gpg
-          echo -n "${{ secrets.MAVEN_GPG_PRIVATE_KEY }}" > gpg.key
+          echo -n "$SECRET" > gpg.key
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6 # NOSONAR githubactions:S7637 - verified action creator
