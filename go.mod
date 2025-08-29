@@ -21,7 +21,7 @@ require (
 	github.com/steadybit/discovery-kit/go/discovery_kit_sdk v1.3.1
 	github.com/steadybit/discovery-kit/go/discovery_kit_test v1.2.0
 	github.com/steadybit/extension-kit v1.10.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/tklauser/go-sysconf v0.3.15
 	github.com/xin053/hsperfdata v0.2.3
 	go.uber.org/automaxprocs v1.6.0
