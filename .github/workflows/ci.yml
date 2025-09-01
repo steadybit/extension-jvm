@@ -232,7 +232,7 @@ jobs:
 
       - name: Google Auth
         id: auth
-        uses: google-github-actions/auth@v2  # NOSONAR githubactions:S7637 - verified action creator
+        uses: google-github-actions/auth@v3  # NOSONAR githubactions:S7637 - verified action creator
         with:
           token_format: 'access_token'
           project_id: ${{ vars.GCP_ARTIFACT_REGISTRY_PROJECT_ID }}
