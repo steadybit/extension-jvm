@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"io"
 	"net"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 type javaagentHttpServer struct {
@@ -21,14 +22,14 @@ type javaagentHttpServer struct {
 	port        int
 }
 
-func (b *javaagentHttpServer) listen() {
+func (b *javaagentHttpServer) listen(address string) {
 	mux := http.NewServeMux()
 	mux.Handle("/javaagent", http.HandlerFunc(b.javaagentHandler))
 	mux.Handle("/log", http.HandlerFunc(logHandler))
 
 	b.server = &http.Server{Handler: mux}
 
-	listener, err := net.Listen("tcp", ":0")
+	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Err(err).Msg("Failed to start HTTP server.")
 		return

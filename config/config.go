@@ -5,9 +5,10 @@
 package config
 
 import (
+	"time"
+
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
-	"time"
 )
 
 // Specification is the configuration specification for the extension. Configuration values can be applied
@@ -21,6 +22,7 @@ type Specification struct {
 	MinProcessAgeBeforeAttach      time.Duration `json:"minProcessAgeBeforeAttach" split_words:"true" required:"false" default:"15s"`
 	MinProcessAgeBeforeInspect     time.Duration `json:"MinProcessAgeBeforeInspect" split_words:"true" required:"false" default:"5s"`
 	JvmAttachmentEnabled           bool          `json:"jvmAttachmentEnabled" split_words:"true" required:"false" default:"true"`
+	JvmAttachmentPort              uint          `json:"jvmAttachmentPort" split_words:"true" required:"false" default:"0"`
 	JavaAgentLogLevel              string        `json:"javaAgentLogLevel" split_words:"true" required:"false" default:"INFO"`
 }
 

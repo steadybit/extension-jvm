@@ -4,6 +4,15 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/dimchansky/utfbom"
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/v4/process"
@@ -14,14 +23,6 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm/jvm/starttime"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extutil"
-	"io"
-	"net"
-	"os"
-	"path/filepath"
-	"slices"
-	"strings"
-	"sync"
-	"time"
 )
 
 type JavaFacade interface {
@@ -98,7 +99,7 @@ func NewJavaFacade() JavaFacade {
 func (f *defaultJavaFacade) Start() {
 	f.minProcessAgeBeforeAttach = config.Config.MinProcessAgeBeforeAttach
 	f.http = &javaagentHttpServer{connections: &f.connections}
-	f.http.listen()
+	f.http.listen(fmt.Sprintf(":%d", config.Config.JvmAttachmentPort))
 	f.javaVms = newJavaVms()
 
 	f.attachJobs = make(chan attachJob, 50)
