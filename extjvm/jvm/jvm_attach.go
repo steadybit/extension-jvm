@@ -3,21 +3,33 @@ package jvm
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/user"
+	"runtime"
+	"time"
+
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/extjvm/container"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
-	"os"
-	"os/user"
-	"path/filepath"
-	"runtime"
-	"time"
 )
 
 type Attachment interface {
-	attach(agentJar string, initJar string, port int) bool
-	copyFiles(dstPath string, files map[string]string) (map[string]string, error)
-	canAccessHostFiles() bool
+	attach(port int) bool
+	resolveFile(f string) string
 	GetHostAddress() string
+}
+
+const (
+	mainJarName = "javaagent-main.jar"
+	initJarName = "javaagent-init.jar"
+)
+
+func javaagentPath() string {
+	pathByEnv := os.Getenv("STEADYBIT_EXTENSION_JAVA_AGENT_PATH")
+	if pathByEnv != "" {
+		return pathByEnv
+	}
+	panic("STEADYBIT_EXTENSION_JAVA_AGENT_PATH not set")
 }
 
 func GetAttachment(jvm JavaVm) Attachment {
@@ -32,16 +44,6 @@ func GetAttachment(jvm JavaVm) Attachment {
 }
 
 func externalAttach(jvm JavaVm, agentJar string, initJar string, agentHTTPPort int, host string, pid int32, hostpid int32, containerId string) bool {
-	initJarAbsPath, err := filepath.Abs(initJar)
-	if err != nil {
-		log.Error().Err(err).Msgf("Could not determine absolute path of init jar %s", initJar)
-		return false
-	}
-	agentJarAbsPath, err := filepath.Abs(agentJar)
-	if err != nil {
-		log.Error().Err(err).Msgf("Could not determine absolute path of agent jar %s", agentJar)
-		return false
-	}
 	attachCommand := []string{
 		getExecutable(jvm),
 		"-Xms16m",
@@ -51,12 +53,12 @@ func externalAttach(jvm JavaVm, agentJar string, initJar string, agentHTTPPort i
 		"-Dsun.tools.attach.attachTimeout=30000",
 		"-Dsteadybit.agent.disable-jvm-attachment",
 		"-jar",
-		initJarAbsPath,
+		initJar,
 		fmt.Sprintf("pid=%d", pid),
 		fmt.Sprintf("hostpid=%d", hostpid),
 		"host=" + host,
 		fmt.Sprintf("port=%d", agentHTTPPort),
-		"agentJar=" + agentJarAbsPath,
+		"agentJar=" + agentJar,
 	}
 
 	if containerId != "" {

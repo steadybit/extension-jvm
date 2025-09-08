@@ -1,23 +1,20 @@
 package extjvm
 
 import (
-	"codnect.io/chrono"
 	"encoding/json"
 	"fmt"
+	"io"
+	"sync"
+
+	"codnect.io/chrono"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/chrono_utils"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
-	"github.com/steadybit/extension-jvm/extjvm/utils"
-	"io"
-	"sync"
 )
 
 const (
 	dataSourceMarkerClass = "javax.sql.DataSource"
-)
-
-var (
-	dataSourcePlugin = utils.GetJarPath("discovery-java-javaagent.jar")
+	dataSourcePlugin      = "discovery-java-javaagent.jar"
 )
 
 type dataSourceConnection struct {

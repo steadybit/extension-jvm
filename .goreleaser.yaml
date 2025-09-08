@@ -2,7 +2,6 @@ project_name: steadybit-extension-jvm
 version: 2
 before:
   hooks:
-    - go mod download
     - make licenses-report
 
 release:
@@ -16,6 +15,7 @@ builds:
   - binary: extension-jvm
     env:
       - CGO_ENABLED=0
+      - NSMOUNT_VERSION=v1.0.0
     goos:
       - linux
     goarch:
@@ -29,6 +29,8 @@ builds:
       - -X github.com/steadybit/extension-kit/extbuild.ExtensionName={{.ProjectName}}
       - -X github.com/steadybit/extension-kit/extbuild.Version={{.Version}}
       - -X github.com/steadybit/extension-kit/extbuild.Revision={{.Commit}}
+    hooks:
+      post: sh -c "curl -sfL \"https://github.com/steadybit/nsmount/releases/download/${NSMOUNT_VERSION}/nsmount.{{ .Arch }}\" -o \"./dist/nsmount.{{ .Arch }}\" && chmod a+x \"./dist/nsmount.{{ .Arch }}\""
 
 archives:
   - name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
@@ -71,6 +73,8 @@ nfpms:
       - src: ./linuxpkg/config
         dst: /etc
         type: config
+      - src: ./dist/nsmount.{{ .Arch }}
+        dst: /opt/steadybit/extension-jvm/nsmount
       - src: ./javaagents/download/target/javaagent
         dst: /opt/steadybit/extension-jvm/javaagent
       - src: ./licenses

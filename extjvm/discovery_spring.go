@@ -4,16 +4,16 @@
 package extjvm
 
 import (
-	"codnect.io/chrono"
 	"encoding/json"
 	"fmt"
+	"io"
+	"sync"
+
+	"codnect.io/chrono"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/chrono_utils"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
-	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extutil"
-	"io"
-	"sync"
 )
 
 const (
@@ -24,10 +24,7 @@ const (
 	springRestTemplateBuilderBeanClass = "org.springframework.boot.web.client.RestTemplateBuilder"
 	springWebclientBeanClass           = "org.springframework.web.reactive.function.client.WebClient"
 	springWebclientBuilderBeanClass    = "org.springframework.web.reactive.function.client.WebClient$Builder"
-)
-
-var (
-	springPlugin = utils.GetJarPath("discovery-springboot-javaagent.jar")
+	springPlugin                       = "discovery-springboot-javaagent.jar"
 )
 
 type SpringMvcMapping struct {
