@@ -32,7 +32,7 @@ public class JavaAgentSocket {
     private static final int REGISTER_READ_TIMEOUT = 5_000;
     private static final long REGISTER_BACKOFF = 1000L;
     private static final long REGISTER_BACKOFF_MULTIPLIER = 3L;
-    private static final long REGISTER_BACKOFF_MAX = REGISTER_BACKOFF_MULTIPLIER * 3L;
+    private static final long REGISTER_BACKOFF_MAX = REGISTER_BACKOFF_MULTIPLIER * 3L * REGISTER_BACKOFF;
     private static final long HEARTBEAT_MAX_AGE = 30_000;
     private final String pid;
     private final AtomicBoolean connected = new AtomicBoolean(false);
@@ -80,7 +80,6 @@ public class JavaAgentSocket {
                 }
 
                 backoff(attempts++);
-
             }
         } catch (Exception e) {
             log.error("Could not init and listen", e);
