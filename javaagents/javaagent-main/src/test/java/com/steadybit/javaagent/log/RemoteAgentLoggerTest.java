@@ -31,10 +31,12 @@ class RemoteAgentLoggerTest {
         wireMock.start();
         RemoteAgentLogger.init("2", URI.create(wireMock.url("/log")).toURL());
         RemoteAgentLogger.setLevel(LogLevel.ERROR);
+        RemoteAgentLogger.setConnectedToRemote(true);
     }
 
     @AfterAll
     static void afterAll() {
+        RemoteAgentLogger.setConnectedToRemote(false);
         wireMock.stop();
     }
 

@@ -23,10 +23,11 @@ public class RemoteAgentLogger implements Logger {
     private static URL remoteLogUrl;
     private static boolean logToSystemOut;
     private final String name;
+    private static volatile boolean connectedToRemote;
 
     static {
         String logLevelString = System.getProperty("STEADYBIT_LOG_LEVEL", System.getenv("STEADYBIT_LOG_LEVEL"));
-        RemoteAgentLogger.logLevel = logLevelString != null ? LogLevel.fromString(logLevelString) : LogLevel.INFO;
+        RemoteAgentLogger.logLevel = logLevelString != null ? LogLevel.fromString(logLevelString) : LogLevel.WARN;
         String logToSystemOutEnabledString = System.getProperty("STEADYBIT_LOG_JAVAAGENT_STDOUT", System.getenv("STEADYBIT_LOG_JAVAAGENT_STDOUT"));
         RemoteAgentLogger.logToSystemOut = Boolean.parseBoolean(logToSystemOutEnabledString);
     }
@@ -126,6 +127,10 @@ public class RemoteAgentLogger implements Logger {
 
     }
 
+    public static void setConnectedToRemote(boolean connectedToRemote) {
+        RemoteAgentLogger.connectedToRemote = connectedToRemote;
+    }
+
     public boolean isLogEnabled(LogLevel level) {
         return RemoteAgentLogger.logLevel.getLevel() >= level.getLevel();
     }
@@ -209,43 +214,28 @@ public class RemoteAgentLogger implements Logger {
 
     private void sendLog(URL remoteLogUrl, LogLevel level, String msg, Throwable t) {
         byte[] request = this.convertToJson(level.toString(), msg, t);
-        OutputStream outputStream = null;
         boolean successful = false;
-        try {
-            HttpURLConnection connection = (HttpURLConnection) remoteLogUrl.openConnection(Proxy.NO_PROXY);
-            connection.setUseCaches(false);
-            connection.setConnectTimeout(500);
-            connection.setReadTimeout(1000);
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Content-Length", Integer.toString(request.length));
-            connection.setDoOutput(true);
-            outputStream = connection.getOutputStream();
-            outputStream.write(request);
-            outputStream.flush();
-
+        if (RemoteAgentLogger.connectedToRemote) {
             try {
-                //to support keep-alive read the response fully
-                this.consumeAndClose(connection.getInputStream());
-                int status = connection.getResponseCode();
-                successful = status >= 200 && status < 300;
-                if (!successful) {
-                    System.err.println("Javaagent log could not be sent over HTTP to " + remoteLogUrl + ". status:" + status);
+                HttpURLConnection connection = (HttpURLConnection) remoteLogUrl.openConnection(Proxy.NO_PROXY);
+                connection.setUseCaches(false);
+                connection.setConnectTimeout(500);
+                connection.setReadTimeout(1000);
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setRequestProperty("Content-Length", Integer.toString(request.length));
+                connection.setDoOutput(true);
+                try (OutputStream outputStream = connection.getOutputStream()) {
+                    outputStream.write(request);
+                    outputStream.flush();
+                    this.consumeAndClose(connection.getInputStream()); //to support keep-alive read the response fully
+                    int status = connection.getResponseCode();
+                    successful = status >= 200 && status < 300;
+                } catch (IOException e) {
+                    this.consumeAndClose(connection.getErrorStream()); //to support keep-alive read the response fully
                 }
             } catch (IOException e) {
-                //to support keep-alive read the response fully
-                this.consumeAndClose(connection.getErrorStream());
-            }
-
-        } catch (IOException e) {
-            System.err.println("Javaagent log could not be sent over HTTP to " + remoteLogUrl + ": " + e.getMessage());
-        } finally {
-            if (outputStream != null) {
-                try {
-                    outputStream.close();
-                } catch (IOException e) {
-                    //ignore - we can't do a thing about it.
-                }
+                //ignore - we can't do a thing about it.
             }
         }
         if (!successful && !RemoteAgentLogger.logToSystemOut) {

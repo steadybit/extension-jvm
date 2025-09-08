@@ -106,12 +106,14 @@ public class JavaAgentSocket {
         if (responseCode != null && responseCode >= 200 && responseCode <= 299) {
             log.debug(String.format("Javaagent successfully registered to %s with HTTP Code %s", this.registerUrl, responseCode));
             if (!this.shutdown.get() && !this.connected.getAndSet(true)) {
+                RemoteAgentLogger.setConnectedToRemote(true);
                 log.debug(String.format("Established connection to %s.", this.registerUrl));
             }
             return true;
         }
 
         if (this.connected.getAndSet(false)) {
+            RemoteAgentLogger.setConnectedToRemote(false);
             log.error(String.format("Lost connection to %s", this.registerUrl));
             this.socketHandler.disconnected();
         } else {
@@ -158,7 +160,6 @@ public class JavaAgentSocket {
     private Integer registerAgent() {
         log.debug(String.format("Registering javaagent on %s with %s", this.registerUrl, this.remoteAddress));
 
-        OutputStream outputStream = null;
         try {
             byte[] content = this.remoteAddress.getBytes(StandardCharsets.UTF_8);
             HttpURLConnection connection = (HttpURLConnection) this.registerUrl.openConnection(Proxy.NO_PROXY);
@@ -169,19 +170,12 @@ public class JavaAgentSocket {
             connection.setRequestProperty("Content-Length", Integer.toString(content.length));
             connection.setRequestProperty("Content-Type", "text/plain");
             connection.setDoOutput(true);
-            outputStream = connection.getOutputStream();
-            outputStream.write(content);
+            try (OutputStream outputStream = connection.getOutputStream()) {
+                outputStream.write(content);
+            }
             return connection.getResponseCode();
         } catch (IOException e) {
             log.error(String.format("Javaagent could not be registered on %s: %s", this.registerUrl, e.getMessage()), e);
-        } finally {
-            if (outputStream != null) {
-                try {
-                    outputStream.close();
-                } catch (IOException e) {
-                    log.debug(String.format("Could not close OutputStream: %s", e.getMessage()));
-                }
-            }
         }
         return null;
     }
@@ -202,6 +196,7 @@ public class JavaAgentSocket {
         if (!this.shutdown.getAndSet(true)) {
             log.debug("Shutting down JavaAgentSocket.");
             if (this.connected.getAndSet(false)) {
+                RemoteAgentLogger.setConnectedToRemote(false);
                 this.socketHandler.disconnected();
             }
 
