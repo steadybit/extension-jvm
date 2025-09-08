@@ -53,6 +53,15 @@ class RemoteAgentLoggerTest {
     }
 
     @Test
+    void should_not_send_log_when_not_connected() {
+        RemoteAgentLogger.setConnectedToRemote(false);
+        RemoteAgentLogger.getLogger(Object.class).error("This is  debug message");
+
+        wireMock.verify(0, anyRequestedFor(urlEqualTo("/log")));
+    }
+
+
+    @Test
     void should_send_log() {
         wireMock.stubFor(WireMock.post("/log").willReturn(WireMock.aResponse().withStatus(200)));
 
