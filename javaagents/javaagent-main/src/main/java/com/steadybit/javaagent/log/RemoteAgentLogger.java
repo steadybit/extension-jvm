@@ -12,13 +12,11 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 public class RemoteAgentLogger implements Logger {
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
     private static final String DELIM_STR = "\\{\\}";
     private static LogLevel logLevel;
     private static String pid;
@@ -74,13 +72,9 @@ public class RemoteAgentLogger implements Logger {
         return this.isLogEnabled(LogLevel.ERROR);
     }
 
-    public static void init(String pid, String agentHost, String agentPort) {
+    public static void init(String pid, URL remoteLogUrl) {
         RemoteAgentLogger.pid = pid;
-        try {
-            RemoteAgentLogger.remoteLogUrl = new URL("http://" + agentHost + ":" + agentPort + "/" + "log");
-        } catch (MalformedURLException e) {
-            System.err.printf("Could not set up remote log url: %s", e.getMessage());
-        }
+        RemoteAgentLogger.remoteLogUrl = remoteLogUrl;
     }
 
     public static void setLogToSystem(boolean b) {
@@ -172,7 +166,7 @@ public class RemoteAgentLogger implements Logger {
     private void doLogToSystemOut(LogLevel level, String msg, Throwable t) {
         String msgFormatted = String.format("%-12tT %-5s [%-16s] | %-16s | %s", System.currentTimeMillis(), level.toString(), Thread.currentThread().getName(),
                 this.name, msg);
-        System.out.print(msgFormatted + LINE_SEPARATOR);
+        System.out.print(msgFormatted + System.lineSeparator());
         if (t != null) {
             t.printStackTrace(System.out);
         }

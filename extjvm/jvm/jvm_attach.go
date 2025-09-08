@@ -14,7 +14,7 @@ import (
 )
 
 type Attachment interface {
-	attach(port int) bool
+	attach(port int, heartbeatFile string) bool
 	resolveFile(f string) string
 	GetHostAddress() string
 }
@@ -43,7 +43,7 @@ func GetAttachment(jvm JavaVm) Attachment {
 	}
 }
 
-func externalAttach(jvm JavaVm, agentJar string, initJar string, agentHTTPPort int, host string, pid int32, hostpid int32, containerId string) bool {
+func externalAttach(jvm JavaVm, agentJar, initJar string, heartbeatFile string, agentHTTPPort int, host string, pid, hostpid int32, containerId string) bool {
 	attachCommand := []string{
 		getExecutable(jvm),
 		"-Xms16m",
@@ -56,9 +56,10 @@ func externalAttach(jvm JavaVm, agentJar string, initJar string, agentHTTPPort i
 		initJar,
 		fmt.Sprintf("pid=%d", pid),
 		fmt.Sprintf("hostpid=%d", hostpid),
-		"host=" + host,
+		fmt.Sprintf("host=%s", host),
 		fmt.Sprintf("port=%d", agentHTTPPort),
-		"agentJar=" + agentJar,
+		fmt.Sprintf("agentJar=%s", agentJar),
+		fmt.Sprintf("heartbeat=%s", heartbeatFile),
 	}
 
 	if containerId != "" {

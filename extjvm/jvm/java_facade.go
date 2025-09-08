@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/v4/process"
 	"github.com/steadybit/extension-jvm/config"
+	"github.com/steadybit/extension-jvm/extjvm/jvm/heartbeat"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/hsperf"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/internal"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/jvmprocess"
@@ -56,6 +57,7 @@ type defaultJavaFacade struct {
 	inspector                 JavaProcessInspector
 	plugins                   internal.PluginMap
 	minProcessAgeBeforeAttach time.Duration
+	heartbeat                 *heartbeat.Heartbeat
 }
 
 type attachJob struct {
@@ -87,10 +89,15 @@ const (
 func NewJavaFacade() JavaFacade {
 	return &defaultJavaFacade{
 		processWatcher: jvmprocess.ProcessWatcher{Interval: 5 * time.Second},
+		heartbeat:      heartbeat.NewHeartbeat(path.Join(javaagentPath(), ".heartbeat"), 10*time.Second),
 	}
 }
 
 func (f *defaultJavaFacade) Start() {
+	if err := f.heartbeat.Start(); err != nil {
+		log.Error().Msgf("Error starting heartbeat: %s", err)
+	}
+
 	f.minProcessAgeBeforeAttach = config.Config.MinProcessAgeBeforeAttach
 	f.http = &javaagentHttpServer{connections: &f.connections}
 	f.http.listen(fmt.Sprintf(":%d", config.Config.JvmAttachmentPort))
@@ -167,6 +174,7 @@ func (f *defaultJavaFacade) Stop() {
 	if f.http != nil {
 		f.http.shutdown()
 	}
+	f.heartbeat.Stop()
 }
 
 func (f *defaultJavaFacade) AddAttachedListener(attachedListener AttachListener) {
@@ -434,7 +442,7 @@ func (f *defaultJavaFacade) attachInternal(javaVm JavaVm) error {
 
 	log.Debug().Msgf("RemoteJvmConnection to JVM not found. Attaching now. %s", javaVm.ToInfoString())
 
-	if ok := GetAttachment(javaVm).attach(f.http.port); !ok {
+	if ok := GetAttachment(javaVm).attach(f.http.port, f.heartbeat.File()); !ok {
 		return errors.New("could not attach to JVM")
 	}
 

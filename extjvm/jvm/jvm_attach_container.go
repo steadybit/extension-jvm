@@ -40,7 +40,7 @@ type containerJvmAttachment struct {
 	jvm JavaVmInContainer
 }
 
-func (a containerJvmAttachment) attach(agentHTTPPort int) bool {
+func (a containerJvmAttachment) attach(agentHTTPPort int, heartbeatFile string) bool {
 	if !a.jvm.IsRunning() {
 		log.Debug().Msgf("Process not running. Skipping a to JVM %s", a.jvm.ToDebugString())
 		return false
@@ -54,6 +54,7 @@ func (a containerJvmAttachment) attach(agentHTTPPort int) bool {
 	return externalAttach(a.jvm,
 		a.resolveFile(mainJarName),
 		a.resolveFile(initJarName),
+		a.resolveFile(heartbeatFile),
 		agentHTTPPort,
 		a.GetHostAddress(),
 		a.jvm.PidInContainer(),
