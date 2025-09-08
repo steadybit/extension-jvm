@@ -40,6 +40,9 @@ RUN echo "$VERSION" > /version.txt && echo "$REVISION" > /revision.txt
 ARG USERNAME=steadybit
 ARG USER_UID=10000
 ARG USER_GID=$USER_UID
+ARG TARGETARCH
+
+ENV STEADYBIT_EXTENSION_NSMOUNT_PATH="/nsmount"
 
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
@@ -55,9 +58,13 @@ USER $USER_UID
 
 WORKDIR /
 
+COPY --from=build /app/dist/nsmount.${TARGETARCH} /nsmount
 COPY --from=build /app/extension /extension
 COPY --from=build /app/licenses /licenses
-COPY javaagents/download/target/javaagent /javaagent
+
+#We declare the javaagent directory a volume, so we can write the heartbeat to it, when read only
+VOLUME /javaagent
+COPY --chown=$USER_UID:$USER_GID javaagents/download/target/javaagent /javaagent
 
 
 ENV STEADYBIT_EXTENSION_JAVA_AGENT_PATH=/javaagent

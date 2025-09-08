@@ -7,7 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
-	"path/filepath"
+	"path"
 	"slices"
 	"strings"
 	"sync"
@@ -17,11 +17,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/v4/process"
 	"github.com/steadybit/extension-jvm/config"
+	"github.com/steadybit/extension-jvm/extjvm/jvm/heartbeat"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/hsperf"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/internal"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/jvmprocess"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/starttime"
-	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extutil"
 )
 
@@ -57,6 +57,7 @@ type defaultJavaFacade struct {
 	inspector                 JavaProcessInspector
 	plugins                   internal.PluginMap
 	minProcessAgeBeforeAttach time.Duration
+	heartbeat                 *heartbeat.Heartbeat
 }
 
 type attachJob struct {
@@ -85,18 +86,18 @@ const (
 	socketTimeout = 10 * time.Second
 )
 
-var (
-	javaagentInitJar = utils.GetJarPath("javaagent-init.jar")
-	javaagentMainJar = utils.GetJarPath("javaagent-main.jar")
-)
-
 func NewJavaFacade() JavaFacade {
 	return &defaultJavaFacade{
 		processWatcher: jvmprocess.ProcessWatcher{Interval: 5 * time.Second},
+		heartbeat:      heartbeat.NewHeartbeat(path.Join(javaagentPath(), ".heartbeat"), 10*time.Second),
 	}
 }
 
 func (f *defaultJavaFacade) Start() {
+	if err := f.heartbeat.Start(); err != nil {
+		log.Error().Msgf("Error starting heartbeat: %s", err)
+	}
+
 	f.minProcessAgeBeforeAttach = config.Config.MinProcessAgeBeforeAttach
 	f.http = &javaagentHttpServer{connections: &f.connections}
 	f.http.listen(fmt.Sprintf(":%d", config.Config.JvmAttachmentPort))
@@ -173,6 +174,7 @@ func (f *defaultJavaFacade) Stop() {
 	if f.http != nil {
 		f.http.shutdown()
 	}
+	f.heartbeat.Stop()
 }
 
 func (f *defaultJavaFacade) AddAttachedListener(attachedListener AttachListener) {
@@ -272,25 +274,12 @@ func (f *defaultJavaFacade) LoadAgentPlugin(javaVm JavaVm, plugin string, args s
 		return nil
 	}
 
-	if _, err := os.Stat(plugin); err != nil {
+	if _, err := os.Stat(path.Join(javaagentPath(), plugin)); err != nil {
 		log.Error().Msgf("Plugin %s not found: %s", plugin, err)
 		return err
 	}
 
-	var pluginPath string
-	var attachment = GetAttachment(javaVm)
-	if !attachment.canAccessHostFiles() {
-		file := fmt.Sprintf("steadybit-%s", filepath.Base(plugin))
-		files, err := attachment.copyFiles("/tmp", map[string]string{file: plugin})
-		if err != nil {
-			log.Error().Msgf("Error copying plugin %s to container: %s", plugin, err)
-			return err
-		}
-		pluginPath = files[file]
-	} else {
-		pluginPath = plugin
-	}
-
+	pluginPath := GetAttachment(javaVm).resolveFile(plugin)
 	if success, err := f.SendCommandToAgentWithTimeout(javaVm, "load-agent-plugin", fmt.Sprintf("%s,%s", pluginPath, args), time.Duration(30)*time.Second); success {
 		log.Debug().Msgf("Plugin %s loaded for JVM %s", plugin, javaVm.ToInfoString())
 		f.plugins.Add(javaVm.Pid(), plugin)
@@ -311,20 +300,14 @@ func (f *defaultJavaFacade) unloadAutoLoadPlugin(javaVm JavaVm, markerClass stri
 }
 
 func (f *defaultJavaFacade) UnloadAgentPlugin(javaVm JavaVm, plugin string) error {
-	_, err := os.Stat(plugin)
+	_, err := os.Stat(path.Join(javaagentPath(), plugin))
 	if err != nil {
 		log.Error().Msgf("Plugin %s not found: %s", plugin, err)
 		return err
 	}
 
-	var args string
-	if !GetAttachment(javaVm).canAccessHostFiles() {
-		args = fmt.Sprintf("/tmp/steadybit-%s,deleteFile=true", filepath.Base(plugin))
-	} else {
-		args = plugin
-	}
-
-	if ok, err := f.SendCommandToAgent(javaVm, "unload-agent-plugin", args); ok {
+	pluginPath := GetAttachment(javaVm).resolveFile(plugin)
+	if ok, err := f.SendCommandToAgent(javaVm, "unload-agent-plugin", pluginPath); ok {
 		f.plugins.Remove(javaVm.Pid(), plugin)
 		return nil
 	} else {
@@ -459,17 +442,7 @@ func (f *defaultJavaFacade) attachInternal(javaVm JavaVm) error {
 
 	log.Debug().Msgf("RemoteJvmConnection to JVM not found. Attaching now. %s", javaVm.ToInfoString())
 
-	if _, err := os.Stat(javaagentMainJar); err != nil {
-		log.Error().Msgf("javaagentMainJar not found: %s", javaagentMainJar)
-		return err
-	}
-
-	if _, err := os.Stat(javaagentInitJar); err != nil {
-		log.Error().Msgf("javaagentInitJar not found: %s", javaagentInitJar)
-		return err
-	}
-
-	if ok := GetAttachment(javaVm).attach(javaagentMainJar, javaagentInitJar, f.http.port); !ok {
+	if ok := GetAttachment(javaVm).attach(f.http.port, f.heartbeat.File()); !ok {
 		return errors.New("could not attach to JVM")
 	}
 

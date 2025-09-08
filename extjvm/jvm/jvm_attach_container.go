@@ -3,77 +3,81 @@ package jvm
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"net"
 	"os"
+	"os/exec"
+	"path"
 	"path/filepath"
 	"strconv"
+
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
 )
 
 var (
 	publicAddress string
+	nsmountPath   = initNsMountPath()
 )
+
+const (
+	javaagentPathInContainer = "/tmp/.steadybit"
+)
+
+func initNsMountPath() string {
+	p := "nsmount"
+	if fromEnv := os.Getenv("STEADYBIT_EXTENSION_NSMOUNT_PATH"); fromEnv != "" {
+		p = fromEnv
+	}
+
+	if lookupPath, err := exec.LookPath(p); err == nil {
+		return lookupPath
+	} else {
+		return p
+	}
+}
 
 type containerJvmAttachment struct {
 	jvm JavaVmInContainer
 }
 
-func (a containerJvmAttachment) attach(agentJar string, initJar string, agentHTTPPort int) bool {
+func (a containerJvmAttachment) attach(agentHTTPPort int, heartbeatFile string) bool {
 	if !a.jvm.IsRunning() {
 		log.Debug().Msgf("Process not running. Skipping a to JVM %s", a.jvm.ToDebugString())
 		return false
 	}
 
-	files := map[string]string{
-		"steadybit-javaagent-main.jar": agentJar,
-		"steadybit-javaagent-init.jar": initJar,
-	}
-	copiedFiles, err := a.copyFiles("/tmp", files)
-	if err != nil {
-		log.Error().Err(err).Msgf("Error copying files to container")
+	if err := a.mountDirectory(javaagentPath(), javaagentPathInContainer); err != nil {
+		log.Error().Err(err).Msgf("Error mounting files to container")
 		return false
 	}
-	return externalAttach(a.jvm, copiedFiles["steadybit-javaagent-main.jar"], copiedFiles["steadybit-javaagent-init.jar"], agentHTTPPort, a.GetHostAddress(), a.jvm.PidInContainer(), a.jvm.Pid(), a.jvm.ContainerId())
+
+	return externalAttach(a.jvm,
+		a.resolveFile(mainJarName),
+		a.resolveFile(initJarName),
+		a.resolveFile(heartbeatFile),
+		agentHTTPPort,
+		a.GetHostAddress(),
+		a.jvm.PidInContainer(),
+		a.jvm.Pid(),
+		a.jvm.ContainerId(),
+	)
 }
 
-func (a containerJvmAttachment) canAccessHostFiles() bool {
-	return false
+func (a containerJvmAttachment) resolveFile(f string) string {
+	return path.Join(javaagentPathInContainer, f)
 }
 
-func (a containerJvmAttachment) copyFiles(dstPath string, files map[string]string) (map[string]string, error) {
-	processRoot := filepath.Join("/proc", strconv.Itoa(int(a.jvm.Pid())), "root")
-	result := make(map[string]string)
-
-	for filename, srcFile := range files {
-		destFile := filepath.Join(processRoot, dstPath, filename)
-		result[filename] = filepath.Join(dstPath, filename)
-
-		srcFileStat, err := os.Stat(srcFile)
-		if err != nil {
-			log.Error().Msgf("Error reading file %s: %s", srcFile, err)
-			return nil, err
-		}
-
-		if destStat, _ := os.Stat(destFile); destStat != nil && srcFileStat.ModTime() == destStat.ModTime() {
-			log.Trace().Msgf("File %s already exists and is up to date. Skipping copy.", destFile)
-			continue
-		}
-
-		ctx := context.Background()
-		if out, err := utils.RootCommandContext(ctx, "cp", srcFile, destFile).CombinedOutput(); err != nil {
-			return nil, fmt.Errorf("error copying file %s: %s - %s", srcFile, err, out)
-		}
-
-		if out, err := utils.RootCommandContext(ctx, "chmod", "a+rwx", destFile).CombinedOutput(); err != nil {
-			log.Warn().Msgf("error setting file permissions for %s: %s - %s", destFile, err, out)
-		}
-
-		if out, err := utils.RootCommandContext(ctx, "touch", "-m", "-d", srcFileStat.ModTime().Format("2006-01-02T15:04:05"), destFile).CombinedOutput(); err != nil {
-			log.Warn().Msgf("error setting file modification time for %s: %s - %s", destFile, err, out)
-		}
+func (a containerJvmAttachment) mountDirectory(srcPath, dstPath string) error {
+	fullDestPath := filepath.Join("/proc", strconv.Itoa(int(a.jvm.Pid())), "root", dstPath)
+	if err := os.MkdirAll(fullDestPath, 0755); err != nil {
+		return fmt.Errorf("error creating destination path %s: %w", fullDestPath, err)
 	}
-	return result, nil
+
+	cmd := utils.RootCommandContext(context.Background(), nsmountPath, strconv.Itoa(os.Getpid()), srcPath, strconv.Itoa(int(a.jvm.Pid())), dstPath)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("error mounting %s to %s for pid %d: %w - %s", srcPath, dstPath, a.jvm.Pid(), err, out)
+	}
+	return nil
 }
 
 func (a containerJvmAttachment) GetHostAddress() string {

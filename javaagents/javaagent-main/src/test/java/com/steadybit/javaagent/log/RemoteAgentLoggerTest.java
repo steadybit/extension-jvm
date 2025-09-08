@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
+import java.net.URI;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.anyRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -24,10 +26,10 @@ class RemoteAgentLoggerTest {
     private static WireMockServer wireMock;
 
     @BeforeAll
-    static void beforeAll() {
+    static void beforeAll() throws MalformedURLException {
         wireMock = new WireMockServer(options().dynamicPort());
         wireMock.start();
-        RemoteAgentLogger.init("2", "127.0.0.1", Integer.toString(wireMock.port()));
+        RemoteAgentLogger.init("2", URI.create(wireMock.url("/log")).toURL());
         RemoteAgentLogger.setLevel(LogLevel.ERROR);
     }
 

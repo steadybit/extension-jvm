@@ -14,7 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,16 +39,20 @@ public class JavaAgent {
         String pid = getValueFromArgument(agentArguments, "pid");
         String host = getValueFromArgument(agentArguments, "host");
         String port = getValueFromArgument(agentArguments, "port");
-        RemoteAgentLogger.init(pid, host, port);
+        URL url = new URL(String.format("http://%s:%s/javaagent", host, port));
+        RemoteAgentLogger.init(pid, new URL(url + "/log"));
+
+        String heartbeat = getValueFromArgument(agentArguments, "heartbeat");
+        File heartbeatFile = heartbeat != null ? new File(heartbeat) : null;
 
         boolean previousAgentStopped = stopPreviousAgent(previousAgent);
         if (previousAgentStopped) {
-            startThread(pid, host, port, instrumentation);
+            startThread(pid, url, heartbeatFile, instrumentation);
         }
     }
 
-    private static void startThread(String pid, String host, String port, Instrumentation instrumentation) throws MalformedURLException {
-        javaAgentSocket = new JavaAgentSocket(pid, host, port, new JavaAgentSocketHandler(instrumentation));
+    private static void startThread(String pid, URL url, File heartbeat, Instrumentation instrumentation) {
+        javaAgentSocket = new JavaAgentSocket(pid, url, heartbeat, new JavaAgentSocketHandler(instrumentation));
         javaAgentSocket.start();
         log.debug(String.format("JavaAgent started for PID %s.", pid));
     }
@@ -68,28 +72,16 @@ public class JavaAgent {
     }
 
     public static void stop() {
-        if (javaAgentSocket == null || !javaAgentSocket.isAlive()) {
+        if (javaAgentSocket == null || javaAgentSocket.isAlive()) {
             return;
         }
 
         log.debug("Stopping Agent thread");
 
         try {
-            javaAgentSocket.shutdown();
+            javaAgentSocket.shutdown(true);
         } catch (Throwable ex) {
             log.error("Failed shutdown JavaAgent", ex);
-        }
-
-        if (javaAgentSocket.getState() == Thread.State.TIMED_WAITING) {
-            javaAgentSocket.interrupt();
-        }
-        try {
-            javaAgentSocket.join(5000L);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
-        if (javaAgentSocket.isAlive()) {
-            log.error("Failed shutdown JavaAgent - still alive");
         }
     }
 
