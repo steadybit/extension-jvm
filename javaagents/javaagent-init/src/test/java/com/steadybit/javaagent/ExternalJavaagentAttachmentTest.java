@@ -30,7 +30,7 @@ class ExternalJavaagentAttachmentTest {
                 ExternalJavaagentAttachment.main(args);
             }).doesNotThrowAnyException();
 
-            agent.verify(() -> ByteBuddyAgent.attach(ownJar, "1", "agentJar=" + this.tempDir + ",pid=1234,host=127.0.0.1,port=42899"));
+            agent.verify(() -> ByteBuddyAgent.attach(ownJar, "1", "agentJar=" + this.tempDir + ",host=127.0.0.1,port=42899,pid=1234"));
         }
     }
 
@@ -44,7 +44,7 @@ class ExternalJavaagentAttachmentTest {
                 ExternalJavaagentAttachment.main(args);
             }).doesNotThrowAnyException();
 
-            agent.verify(() -> ByteBuddyAgent.attach(ownJar, "1", "agentJar=" + this.tempDir + ",pid=1,host=127.0.0.1,port=42899"));
+            agent.verify(() -> ByteBuddyAgent.attach(ownJar, "1", "agentJar=" + this.tempDir + ",host=127.0.0.1,port=42899,pid=1"));
         }
     }
 }
