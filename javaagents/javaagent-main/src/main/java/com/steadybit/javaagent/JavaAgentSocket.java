@@ -9,6 +9,7 @@ import com.steadybit.javaagent.log.RemoteAgentLogger;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
@@ -27,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class JavaAgentSocket {
     private static final Logger log = RemoteAgentLogger.getLogger(JavaAgentSocket.class);
-    private final int acceptTimeout = (int) TimeUnit.SECONDS.toMillis(60L);
+    private static final int ACCEPT_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(30L);
     private static final int REGISTER_CONNECT_TIMEOUT = 2000;
     private static final int REGISTER_READ_TIMEOUT = 5_000;
     private static final long REGISTER_BACKOFF = 1000L;
@@ -40,7 +41,6 @@ public class JavaAgentSocket {
     private final URL registerUrl;
     private final JavaAgentSocketHandler socketHandler;
     private final File heartbeat;
-    private final long heartbeatOffset;
     private ServerSocket serverSocket;
     private String remoteAddress;
     private final Thread thread;
@@ -52,112 +52,94 @@ public class JavaAgentSocket {
         this.thread = new Thread(this::run, "steadybit-javaagent");
         this.thread.setUncaughtExceptionHandler((t, e) -> log.error("Uncaught exception", e));
         this.heartbeat = heartbeat;
-        this.heartbeatOffset = this.getHeartbeatOffset();
     }
 
     public void start() {
         this.thread.start();
     }
 
-    public boolean isAlive() {
-        return this.thread.isAlive();
-    }
-
     private void run() {
         try {
             this.init();
 
-            int attempts = 0;
-            while (!this.shutdown.get()) {
-                if (this.heartbeatTimeoutReached()) {
-                    log.error("Heartbeat timeout reached, shutting down JavaAgentSocket.");
-                    break;
-                }
+            int attempt = 0;
+            while (!(this.shutdown.get() || this.heartbeatTimeoutReached())) {
 
                 if (this.announce()) {
-                    attempts = 0;
-                    this.listen();
-                }
+                    attempt = 0;
 
-                backoff(attempts++);
+                    while (!(this.shutdown.get() || this.heartbeatTimeoutReached())) {
+                        this.accept();
+                    }
+                } else {
+                    backoff(attempt++);
+                }
             }
+        } catch (InterruptedException | InterruptedIOException e) {
+            Thread.currentThread().interrupt();
+            log.trace("Interrupted - shutting down %s", this.toString());
         } catch (Exception e) {
-            log.error("Could not init and listen", e);
+            if (!this.shutdown.get()) {
+                log.error("Could not init and listen", e);
+            }
         } finally {
             this.shutdown(false);
         }
     }
 
-
     private void init() throws IOException {
         this.serverSocket = new ServerSocket(0, 0);
-        this.serverSocket.setSoTimeout(this.acceptTimeout);
+        this.serverSocket.setSoTimeout(ACCEPT_TIMEOUT);
         if ("127.0.0.1".equals(this.registerUrl.getHost())) {
             this.remoteAddress = String.format("%s=%s:%s", this.pid, "127.0.0.1", this.serverSocket.getLocalPort());
         } else {
             this.remoteAddress = String.format("%s=%s", this.pid, this.serverSocket.getLocalPort());
         }
-        log.debug(String.format("Created ServerSocket with remote address %s", this.remoteAddress));
+        log.debug("Created ServerSocket with remote address %s", this.remoteAddress);
     }
 
     private boolean announce() {
         Integer responseCode = this.registerAgent();
         if (responseCode != null && responseCode >= 200 && responseCode <= 299) {
-            log.debug(String.format("Javaagent successfully registered to %s with HTTP Code %s", this.registerUrl, responseCode));
             if (!this.shutdown.get() && !this.connected.getAndSet(true)) {
                 RemoteAgentLogger.setConnectedToRemote(true);
-                log.debug(String.format("Established connection to %s.", this.registerUrl));
+                log.debug("Javaagent successfully registered to %s with HTTP Code %s", this.registerUrl, responseCode);
             }
             return true;
         }
 
         if (this.connected.getAndSet(false)) {
             RemoteAgentLogger.setConnectedToRemote(false);
-            log.error(String.format("Lost connection to %s", this.registerUrl));
+            log.error("Lost connection to %s", this.registerUrl);
             this.socketHandler.disconnected();
         } else {
-            log.debug(String.format("Javaagent failed register with HTTP Code %s", responseCode));
+            log.debug("Javaagent failed register with HTTP Code %s", responseCode);
         }
         return false;
     }
 
-    private void listen() {
-        try {
-            this.accept();
+    private void accept() {
+        try (Socket socket = this.serverSocket.accept()) {
+            log.trace(
+                    "Accepting data for JVM with PID %s on %s:%s", this.pid,
+                    this.serverSocket.getInetAddress().getHostAddress(),
+                    this.serverSocket.getLocalPort()
+            );
+            this.socketHandler.accept(socket);
         } catch (SocketTimeoutException ex) {
-            log.trace(String.format("Could not accept remote connection: %s", ex.getMessage()));
+            log.trace(String.format("Exception while listening for commands: %s", ex.getMessage()));
+        } catch (InterruptedIOException ex) {
+            log.trace(String.format("Exception while listening for commands: %s", ex.getMessage()));
+            Thread.currentThread().interrupt();
         } catch (IOException ex) {
             if (!this.shutdown.get()) {
-                log.debug(String.format("Could not accept remote connection: %s", ex.getMessage()));
-            }
-        } catch (Exception ex) {
-            log.debug("Exception while listening for commands: ", ex);
-        }
-    }
-
-    private void accept() throws IOException {
-        Socket socket = null;
-        try {
-            log.trace(
-                    String.format("Accepting data for JVM with PID %s on %s:%s", this.pid,
-                            this.serverSocket.getInetAddress().getHostAddress(),
-                            this.serverSocket.getLocalPort())
-            );
-            socket = this.serverSocket.accept();
-            this.socketHandler.accept(socket);
-        } finally {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    log.warn("Could not close Socket:" + e.getMessage());
-                }
+                log.warn("Exception while listening for commands: ", ex);
             }
         }
     }
 
     private Integer registerAgent() {
-        log.debug(String.format("Registering javaagent on %s with %s", this.registerUrl, this.remoteAddress));
+        log.debug("Registering javaagent on %s with %s", this.registerUrl, this.remoteAddress);
 
         try {
             byte[] content = this.remoteAddress.getBytes(StandardCharsets.UTF_8);
@@ -181,7 +163,7 @@ public class JavaAgentSocket {
 
     private static void backoff(int attempts) throws InterruptedException {
         long backoff = Math.min(REGISTER_BACKOFF_MAX, (long) (Math.pow(REGISTER_BACKOFF_MULTIPLIER, attempts) * REGISTER_BACKOFF));
-        log.debug(String.format("Waiting for %sms until next registration attempt.", backoff));
+        log.debug("Waiting for %sms until next registration attempt.", backoff);
 
         try {
             Thread.sleep(backoff);
@@ -193,7 +175,8 @@ public class JavaAgentSocket {
 
     public void shutdown(boolean wait) {
         if (!this.shutdown.getAndSet(true)) {
-            log.debug("Shutting down JavaAgentSocket.");
+            log.debug("Shutting down %s.", this.toString());
+
             if (this.connected.getAndSet(false)) {
                 RemoteAgentLogger.setConnectedToRemote(false);
                 this.socketHandler.disconnected();
@@ -221,14 +204,6 @@ public class JavaAgentSocket {
         }
     }
 
-    private long getHeartbeatOffset() {
-        if (this.heartbeat == null) {
-            return 0;
-        }
-        long lastModified = this.heartbeat.lastModified();
-        return lastModified != 0 ? System.currentTimeMillis() - lastModified : 0;
-    }
-
     private boolean heartbeatTimeoutReached() {
         if (this.heartbeat == null) {
             return false;
@@ -236,17 +211,22 @@ public class JavaAgentSocket {
 
         long lastModified = this.heartbeat.lastModified();
         if (lastModified == 0) {
-            log.warn("Heartbeat file does not exist, shutting down.");
+            log.warn("Heartbeat file '%s' does not exist, shutting down.", this.heartbeat.getPath());
             return true;
         }
 
         //in case the jvm process has a different clock then the extension
         //we substract the first age.
-        long age = System.currentTimeMillis() - lastModified - this.heartbeatOffset;
+        long age = System.currentTimeMillis() - lastModified;
         if (age > HEARTBEAT_MAX_AGE) {
-            log.warn(String.format("Heartbeat file is too old (%dms), shutting down.", age));
+            log.warn("Heartbeat file '%s' is too old (%dms), shutting down.", this.heartbeat.getPath(), age);
             return true;
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return JavaAgentSocket.class.getSimpleName() + '[' + this.registerUrl + ']';
     }
 }

@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
@@ -68,13 +69,20 @@ func (a containerJvmAttachment) resolveFile(f string) string {
 }
 
 func (a containerJvmAttachment) mountDirectory(srcPath, dstPath string) error {
-	fullDestPath := filepath.Join("/proc", strconv.Itoa(int(a.jvm.Pid())), "root", dstPath)
-	if err := os.MkdirAll(fullDestPath, 0755); err != nil {
-		return fmt.Errorf("error creating destination path %s: %w", fullDestPath, err)
+	jvmPid := strconv.Itoa(int(a.jvm.Pid()))
+	fullDestPath := filepath.Join("/proc", jvmPid, "root", dstPath)
+
+	if out, err := utils.RootCommandContext(context.Background(), "rmdir", fullDestPath).CombinedOutput(); err != nil {
+		if !strings.Contains(string(out), "No such file or directory") {
+			log.Debug().Err(err).Bytes("out", out).Msgf("error removing path %s", fullDestPath)
+		}
 	}
 
-	cmd := utils.RootCommandContext(context.Background(), nsmountPath, strconv.Itoa(os.Getpid()), srcPath, strconv.Itoa(int(a.jvm.Pid())), dstPath)
-	if out, err := cmd.CombinedOutput(); err != nil {
+	if out, err := utils.RootCommandContext(context.Background(), "mkdir", "-p", fullDestPath).CombinedOutput(); err != nil {
+		return fmt.Errorf("error creating path %s: %w - %s", fullDestPath, err, out)
+	}
+
+	if out, err := utils.RootCommandContext(context.Background(), nsmountPath, strconv.Itoa(os.Getpid()), srcPath, jvmPid, dstPath).CombinedOutput(); err != nil {
 		return fmt.Errorf("error mounting %s to %s for pid %d: %w - %s", srcPath, dstPath, a.jvm.Pid(), err, out)
 	}
 	return nil

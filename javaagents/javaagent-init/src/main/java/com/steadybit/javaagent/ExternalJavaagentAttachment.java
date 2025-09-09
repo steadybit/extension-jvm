@@ -29,9 +29,21 @@ public class ExternalJavaagentAttachment {
         String hostpid = arguments.get("hostpid");
         String host = arguments.get("host");
         String port = arguments.get("port");
+        String heartbeat = arguments.get("heartbeat");
+
+        StringBuilder options = new StringBuilder()
+                .append("agentJar=").append(agentJar)
+                .append(",host=").append(host)
+                .append(",port=").append(port)
+                .append(",pid=").append(hostpid != null ? hostpid : pid);
+        if (heartbeat != null) {
+            options.append(",heartbeat=").append(heartbeat);
+        }
+
+        System.out.println("Attaching to JVM with PID " + pid + " with options: " + options);
+
         String groupId = arguments.get("gid");
         String userId = arguments.get("uid");
-
         if (groupId != null && userId != null) {
             System.out.println("Switching to uid:gid " + userId + ":" + groupId);
             if (Platform.isLinux()) {
@@ -43,14 +55,6 @@ public class ExternalJavaagentAttachment {
             }
         }
 
-        String options;
-        if (hostpid != null) {
-            options = String.format("agentJar=%s,pid=%s,host=%s,port=%s", agentJar, hostpid, host, port);
-            System.out.println("Attaching to JVM with PID " + pid + " and Host PID " + hostpid);
-        } else {
-            options = String.format("agentJar=%s,pid=%s,host=%s,port=%s", agentJar, pid, host, port);
-            System.out.println("Attaching to JVM with PID " + pid);
-        }
         File ownJar = getOwnJar();
         if (!ownJar.exists()) {
             throw new IllegalStateException("Could not find own jar file: " + ownJar.getAbsolutePath());
@@ -59,11 +63,11 @@ public class ExternalJavaagentAttachment {
             throw new IllegalStateException("Could not find agentJar file to load: " + ownJar.getAbsolutePath());
         }
         try {
-            ByteBuddyAgent.attach(ownJar, pid, options);
+            ByteBuddyAgent.attach(ownJar, pid, options.toString());
         } catch (Exception e) {
             //Fallback on Emulated Attach
             System.out.println("Fallback on Emulated Attach");
-            ByteBuddyAgent.attach(ownJar, pid, options, new ByteBuddyAgent.AttachmentProvider.Compound(ByteBuddyAgent.AttachmentProvider.ForEmulatedAttachment.INSTANCE));
+            ByteBuddyAgent.attach(ownJar, pid, options.toString(), new ByteBuddyAgent.AttachmentProvider.Compound(ByteBuddyAgent.AttachmentProvider.ForEmulatedAttachment.INSTANCE));
         }
     }
 

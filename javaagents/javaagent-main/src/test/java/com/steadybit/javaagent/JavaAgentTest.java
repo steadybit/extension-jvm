@@ -61,7 +61,7 @@ class JavaAgentTest {
         System.setProperty("STEADYBIT_LOG_LEVEL", "DEBUG");
 
         //When
-        JavaAgent.init("heartbeat=/missing-file,disableBootstrapLoaderInjection=true,pid=6,host=127.0.0.1,port=" + wireMock.port(), ByteBuddyAgent.install(), null);
+        JavaAgent.init("heartbeat=/tmp/.steadybit/missing-heartbeat,disableBootstrapLoaderInjection=true,pid=6,host=127.0.0.1,port=" + wireMock.port(), ByteBuddyAgent.install(), null);
         //Then
         await().pollDelay(Duration.ofSeconds(5))
                 .untilAsserted(() -> wireMock.verify(0, putRequestedFor(urlMatching("/javaagent"))));

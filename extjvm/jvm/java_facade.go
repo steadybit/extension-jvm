@@ -89,7 +89,7 @@ const (
 func NewJavaFacade() JavaFacade {
 	return &defaultJavaFacade{
 		processWatcher: jvmprocess.ProcessWatcher{Interval: 5 * time.Second},
-		heartbeat:      heartbeat.NewHeartbeat(path.Join(javaagentPath(), ".heartbeat"), 10*time.Second),
+		heartbeat:      heartbeat.NewHeartbeat(path.Join(javaagentPath(), "heartbeat"), 10*time.Second),
 	}
 }
 
@@ -442,7 +442,7 @@ func (f *defaultJavaFacade) attachInternal(javaVm JavaVm) error {
 
 	log.Debug().Msgf("RemoteJvmConnection to JVM not found. Attaching now. %s", javaVm.ToInfoString())
 
-	if ok := GetAttachment(javaVm).attach(f.http.port, f.heartbeat.File()); !ok {
+	if ok := GetAttachment(javaVm).attach(f.http.port, strings.TrimPrefix(f.heartbeat.File(), javaagentPath())); !ok {
 		return errors.New("could not attach to JVM")
 	}
 

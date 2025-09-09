@@ -54,7 +54,7 @@ public class JavaAgent {
     private static void startThread(String pid, URL url, File heartbeat, Instrumentation instrumentation) {
         javaAgentSocket = new JavaAgentSocket(pid, url, heartbeat, new JavaAgentSocketHandler(instrumentation));
         javaAgentSocket.start();
-        log.debug(String.format("JavaAgent started for PID %s.", pid));
+        log.debug("JavaAgent started for PID %s.", pid);
     }
 
     private static boolean stopPreviousAgent(ClassLoader previousAgent) throws ClassNotFoundException {
@@ -72,16 +72,16 @@ public class JavaAgent {
     }
 
     public static void stop() {
-        if (javaAgentSocket == null || javaAgentSocket.isAlive()) {
+        if (javaAgentSocket == null) {
             return;
         }
-
-        log.debug("Stopping Agent thread");
 
         try {
             javaAgentSocket.shutdown(true);
         } catch (Throwable ex) {
             log.error("Failed shutdown JavaAgent", ex);
+        } finally {
+            javaAgentSocket = null;
         }
     }
 
@@ -98,7 +98,8 @@ public class JavaAgent {
     }
 
     private static void injectClassesIntoBootstrapLoader(Instrumentation instrumentation) throws IOException {
-        Map<String, byte[]> classes = locateAndFilterClasses(instrumentation, "com.steadybit.javaagent.instrumentation.InstrumentationPluginDispatcher",
+        Map<String, byte[]> classes = locateAndFilterClasses(instrumentation,
+                "com.steadybit.javaagent.instrumentation.InstrumentationPluginDispatcher",
                 "com.steadybit.javaagent.instrumentation.InstrumentationPlugin");
         if (classes.isEmpty()) {
             log.warn("No Steadybit classes eligible for injecting");

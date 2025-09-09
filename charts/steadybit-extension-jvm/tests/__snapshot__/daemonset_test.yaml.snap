@@ -34,6 +34,12 @@ manifest should match snapshot using containerd and resources:
                   value: "8087"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -161,6 +167,12 @@ manifest should match snapshot using crio using podAnnotations and Labels:
                   value: "8087"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -286,6 +298,12 @@ manifest should match snapshot using docker:
                   value: "8087"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -411,6 +429,12 @@ manifest should match snapshot with TLS:
                   value: "8087"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -546,6 +570,12 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                   value: "8087"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -673,6 +703,12 @@ manifest should match snapshot with different containerPorts:
                   value: "9090"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "9091"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -798,6 +834,12 @@ manifest should match snapshot with extra env vars:
                   value: "8087"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -932,6 +974,12 @@ manifest should match snapshot with extra labels:
                   value: "8087"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -1057,6 +1105,12 @@ manifest should match snapshot with mutual TLS:
                   value: "8087"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -1202,6 +1256,12 @@ manifest should match snapshot with mutual TLS using containerPaths:
                   value: "8087"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -1333,6 +1393,12 @@ manifest should match snapshot with podSecurityContext:
                   value: "8087"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -1459,6 +1525,12 @@ manifest should match snapshot with priority class:
                   value: "8087"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -1585,6 +1657,12 @@ manifest should match snapshot with update strategy:
                   value: "8087"
                 - name: STEADYBIT_EXTENSION_HEALTH_PORT
                   value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT

@@ -72,6 +72,12 @@ spec:
               value: {{ .Values.containerPorts.http | quote }}
             - name: STEADYBIT_EXTENSION_HEALTH_PORT
               value: {{ .Values.containerPorts.health | quote }}
+            - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+              value: {{ .Values.javaagent.logging.level | quote }}
+            - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+              value: {{ .Values.javaagent.attachment.enabled | quote }}
+            - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+              value: {{ .Values.javaagent.attachment.port | quote }}
             {{- if .Values.discovery.attributes.excludes.jvm }}
             - name: STEADYBIT_EXTENSION_DISCOVERY_ATTRIBUTES_EXCLUDES_JVM
               value: {{ join "," .Values.discovery.attributes.excludes.jvm | quote }}
@@ -115,7 +121,7 @@ spec:
           {{- end }}
       volumes:
         - name: tmp-dir
-          emptyDir: { }
+          emptyDir: {}
         - name: cgroup-root
           hostPath:
             path: /sys/fs/cgroup
