@@ -6,6 +6,9 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
@@ -14,8 +17,6 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 var (
@@ -260,14 +261,14 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			delay:         200,
 			jitter:        false,
 			expectedDelay: true,
-			hostAddress:   "demo.steadybit.io",
+			hostAddress:   "shop.demo-develop.steadybit.com",
 		},
 		{
 			name:          "should not delay http client traffic on host",
 			delay:         200,
 			jitter:        false,
 			expectedDelay: false,
-			hostAddress:   "demo.steadybit.io",
+			hostAddress:   "shop.demo-develop.steadybit.com",
 		},
 		{
 			name:          "should delay http client traffic with jitter",
@@ -299,16 +300,16 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			springBootSample.AssertIsReachable(t, true)
 
 			//measure customer endpoint
-			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/remote/blocking?url=https://demo.steadybit.io/products")
+			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/remote/blocking?url=https://shop.demo-develop.steadybit.com/products")
 			require.NoError(t, err, "failed to measure customers endpoint")
 
 			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-httpclient-delay-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.expectedDelay {
-				springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://demo.steadybit.io/products", unaffectedLatency)
+				springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://shop.demo-develop.steadybit.com/products", unaffectedLatency)
 			} else {
-				springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, "/remote/blocking?url=https://demo.steadybit.io/products", 0)
+				springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, "/remote/blocking?url=https://shop.demo-develop.steadybit.com/products", 0)
 			}
 			require.NoError(t, action.Cancel())
 		})
