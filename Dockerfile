@@ -27,7 +27,7 @@ RUN GOOS=$TARGETOS GOARCH=$TARGETARCH goreleaser build --snapshot="${BUILD_SNAPS
 ##
 ## Runtime
 ##
-FROM debian:bookworm-slim
+FROM debian:13-slim
 
 ARG VERSION=unknown
 ARG REVISION=unknown
