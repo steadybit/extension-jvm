@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
 	"runtime"
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-jvm/extjvm/container"
-	"github.com/steadybit/extension-jvm/extjvm/utils"
 )
 
 type Attachment interface {
@@ -43,9 +42,10 @@ func GetAttachment(jvm JavaVm) Attachment {
 	}
 }
 
-func externalAttach(jvm JavaVm, agentJar, initJar string, heartbeatFile string, agentHTTPPort int, host string, pid, hostpid int32, containerId string) bool {
+type cmdSupplier func(ctx context.Context, name string, args ...string) *exec.Cmd
+
+func externalAttach(jvm JavaVm, agentJar, initJar string, heartbeatFile string, agentHTTPPort int, host string, pid, hostpid int32, cmdFn cmdSupplier) bool {
 	attachCommand := []string{
-		getExecutable(jvm),
 		"-Xms16m",
 		"-Xmx16m",
 		"-XX:+UseSerialGC",
@@ -62,26 +62,23 @@ func externalAttach(jvm JavaVm, agentJar, initJar string, heartbeatFile string, 
 		fmt.Sprintf("heartbeat=%s", heartbeatFile),
 	}
 
-	if containerId != "" {
-		// We first enter the init process of the host and then execute the runc exec command because otherwise we fail with "exec failed: container_linux.go:367: starting container process caused: process_linux.go:96: starting setns process caused: fork/ │
-		//│ exec /proc/self/exe: no such file or directory"  "
-		runcExecCommand := []string{"nsenter", "-t", "1", "-m", "-n", "-i", "-p", "-r", "-u", "-C", "--", "runc", "--root", container.GetRuncRoot(), "exec", containerId}
-		attachCommand = append(runcExecCommand, attachCommand...)
-	}
-
 	if needsUserSwitch(jvm) {
 		attachCommand = append(attachCommand, "uid="+jvm.UserId(), "gid="+jvm.GroupId())
 	}
 
-	log.Debug().Msgf("Executing attach command on host: %s", attachCommand)
 	var ctx, cancel = context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
 	defer cancel()
-	outb, err := utils.RootCommandContext(ctx, attachCommand[0], attachCommand[1:]...).CombinedOutput()
-	log.Debug().Msgf("attach command output: %s", string(outb))
+
+	cmd := cmdFn(ctx, getExecutable(jvm), attachCommand...)
+	log.Debug().Strs("args", cmd.Args).Msg("executing attach command")
+	outb, err := cmd.CombinedOutput()
+
 	if err != nil {
 		log.Error().Err(err).Str("output", string(outb)).Msgf("Error attaching to JVM %s: %s", jvm.ToInfoString(), err)
 		return false
 	}
+
+	log.Debug().Msgf("attach command output: %s", string(outb))
 	return true
 }
 

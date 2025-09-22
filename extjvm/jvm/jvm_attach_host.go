@@ -4,6 +4,7 @@ import (
 	"path"
 
 	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
 )
 
 type hostJvmAttachment struct {
@@ -24,7 +25,7 @@ func (a hostJvmAttachment) attach(agentHTTPPort int, heartbeatFile string) bool 
 		a.GetHostAddress(),
 		a.jvm.Pid(),
 		a.jvm.Pid(),
-		"",
+		utils.RootCommandContext,
 	)
 }
 

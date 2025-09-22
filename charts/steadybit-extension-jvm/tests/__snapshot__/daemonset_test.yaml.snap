@@ -40,6 +40,12 @@ manifest should match snapshot using containerd and resources:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -98,10 +104,8 @@ manifest should match snapshot using containerd and resources:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/containerd/containerd.sock
-                  name: runtime-socket
                 - mountPath: /run/containerd/runc/k8s.io
-                  name: runtime-runc-root
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -118,13 +122,9 @@ manifest should match snapshot using containerd and resources:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /run/containerd/containerd.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -173,6 +173,12 @@ manifest should match snapshot using crio using podAnnotations and Labels:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/runc
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -231,10 +237,8 @@ manifest should match snapshot using crio using podAnnotations and Labels:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /var/run/crio/crio.sock
-                  name: runtime-socket
                 - mountPath: /run/runc
-                  name: runtime-runc-root
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -251,13 +255,9 @@ manifest should match snapshot using crio using podAnnotations and Labels:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /var/run/crio/crio.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/runc
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -304,6 +304,12 @@ manifest should match snapshot using docker:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/docker/runtime-runc/moby
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -362,10 +368,8 @@ manifest should match snapshot using docker:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /var/run/docker.sock
-                  name: runtime-socket
                 - mountPath: /run/docker/runtime-runc/moby
-                  name: runtime-runc-root
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -382,13 +386,9 @@ manifest should match snapshot using docker:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /var/run/docker.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/docker/runtime-runc/moby
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -435,6 +435,12 @@ manifest should match snapshot with TLS:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -497,10 +503,8 @@ manifest should match snapshot with TLS:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/containerd/containerd.sock
-                  name: runtime-socket
                 - mountPath: /run/containerd/runc/k8s.io
-                  name: runtime-runc-root
+                  name: ociruntime-root
                 - mountPath: /etc/extension/certificates/server-cert
                   name: certificate-server-cert
                   readOnly: true
@@ -520,13 +524,9 @@ manifest should match snapshot with TLS:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /run/containerd/containerd.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
             - name: certificate-server-cert
               secret:
                 optional: false
@@ -576,6 +576,12 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -636,10 +642,8 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/containerd/containerd.sock
-                  name: runtime-socket
                 - mountPath: /run/containerd/runc/k8s.io
-                  name: runtime-runc-root
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -656,13 +660,9 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /run/containerd/containerd.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -709,6 +709,12 @@ manifest should match snapshot with different containerPorts:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -767,10 +773,8 @@ manifest should match snapshot with different containerPorts:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/containerd/containerd.sock
-                  name: runtime-socket
                 - mountPath: /run/containerd/runc/k8s.io
-                  name: runtime-runc-root
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -787,13 +791,9 @@ manifest should match snapshot with different containerPorts:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /run/containerd/containerd.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -840,6 +840,12 @@ manifest should match snapshot with extra env vars:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -905,10 +911,8 @@ manifest should match snapshot with extra env vars:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/containerd/containerd.sock
-                  name: runtime-socket
                 - mountPath: /run/containerd/runc/k8s.io
-                  name: runtime-runc-root
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -925,13 +929,9 @@ manifest should match snapshot with extra env vars:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /run/containerd/containerd.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -980,6 +980,12 @@ manifest should match snapshot with extra labels:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -1038,10 +1044,8 @@ manifest should match snapshot with extra labels:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/containerd/containerd.sock
-                  name: runtime-socket
                 - mountPath: /run/containerd/runc/k8s.io
-                  name: runtime-runc-root
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1058,13 +1062,9 @@ manifest should match snapshot with extra labels:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /run/containerd/containerd.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1111,6 +1111,12 @@ manifest should match snapshot with mutual TLS:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -1175,10 +1181,8 @@ manifest should match snapshot with mutual TLS:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/containerd/containerd.sock
-                  name: runtime-socket
                 - mountPath: /run/containerd/runc/k8s.io
-                  name: runtime-runc-root
+                  name: ociruntime-root
                 - mountPath: /etc/extension/certificates/client-cert-a
                   name: certificate-client-cert-a
                   readOnly: true
@@ -1201,13 +1205,9 @@ manifest should match snapshot with mutual TLS:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /run/containerd/containerd.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
             - name: certificate-client-cert-a
               secret:
                 optional: false
@@ -1262,6 +1262,12 @@ manifest should match snapshot with mutual TLS using containerPaths:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -1326,10 +1332,8 @@ manifest should match snapshot with mutual TLS using containerPaths:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/containerd/containerd.sock
-                  name: runtime-socket
                 - mountPath: /run/containerd/runc/k8s.io
-                  name: runtime-runc-root
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1346,13 +1350,9 @@ manifest should match snapshot with mutual TLS using containerPaths:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /run/containerd/containerd.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1399,6 +1399,12 @@ manifest should match snapshot with podSecurityContext:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -1457,10 +1463,8 @@ manifest should match snapshot with podSecurityContext:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/containerd/containerd.sock
-                  name: runtime-socket
                 - mountPath: /run/containerd/runc/k8s.io
-                  name: runtime-runc-root
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1478,13 +1482,9 @@ manifest should match snapshot with podSecurityContext:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /run/containerd/containerd.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1531,6 +1531,12 @@ manifest should match snapshot with priority class:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -1589,10 +1595,8 @@ manifest should match snapshot with priority class:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/containerd/containerd.sock
-                  name: runtime-socket
                 - mountPath: /run/containerd/runc/k8s.io
-                  name: runtime-runc-root
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1610,13 +1614,9 @@ manifest should match snapshot with priority class:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /run/containerd/containerd.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1663,6 +1663,12 @@ manifest should match snapshot with update strategy:
                   value: "true"
                 - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
                   value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_LOG_LEVEL
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
@@ -1721,10 +1727,8 @@ manifest should match snapshot with update strategy:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/containerd/containerd.sock
-                  name: runtime-socket
                 - mountPath: /run/containerd/runc/k8s.io
-                  name: runtime-runc-root
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1741,14 +1745,10 @@ manifest should match snapshot with update strategy:
                 type: Directory
               name: cgroup-root
             - hostPath:
-                path: /run/containerd/containerd.sock
-                type: Socket
-              name: runtime-socket
-            - hostPath:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
-              name: runtime-runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
-          maxUnavailable: 1
+          maxUnavailable: 5
         type: RollingUpdate

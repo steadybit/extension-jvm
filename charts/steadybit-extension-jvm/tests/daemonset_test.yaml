@@ -41,13 +41,13 @@ tests:
         some-label: "some-label-value"
     asserts:
       - matchSnapshot: { }
-  - it: manifest should fail without runtime
+  - it: manifest should fail without container engine
     set:
       container:
-        runtime: null
+        engine: null
     asserts:
       - failedTemplate:
-          errorMessage: "unknown container runtime: <nil> (must be one of containerd, cri-o, docker)"
+          errorMessage: "unknown container.engine: <nil> (must be one of containerd, cri-o, docker)"
   - it: manifest should match snapshot with TLS
     set:
       tls:

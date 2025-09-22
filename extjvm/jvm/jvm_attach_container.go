@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/extjvm/container"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 )
 
@@ -60,8 +61,12 @@ func (a containerJvmAttachment) attach(agentHTTPPort int, heartbeatFile string) 
 		a.GetHostAddress(),
 		a.jvm.PidInContainer(),
 		a.jvm.Pid(),
-		a.jvm.ContainerId(),
+		a.run,
 	)
+}
+
+func (a containerJvmAttachment) run(ctx context.Context, name string, args ...string) *exec.Cmd {
+	return container.Exec(ctx, a.jvm.ContainerId(), name, args...)
 }
 
 func (a containerJvmAttachment) resolveFile(f string) string {
@@ -85,6 +90,8 @@ func (a containerJvmAttachment) mountDirectory(srcPath, dstPath string) error {
 	if out, err := utils.RootCommandContext(context.Background(), nsmountPath, strconv.Itoa(os.Getpid()), srcPath, jvmPid, dstPath).CombinedOutput(); err != nil {
 		return fmt.Errorf("error mounting %s to %s for pid %d: %w - %s", srcPath, dstPath, a.jvm.Pid(), err, out)
 	}
+
+	log.Debug().Str("srcPath", srcPath).Str("dstPath", dstPath).Str("containerId", a.jvm.ContainerId()).Msg("mounted directory in container")
 	return nil
 }
 
