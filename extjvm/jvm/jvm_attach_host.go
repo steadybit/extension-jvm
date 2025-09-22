@@ -1,9 +1,11 @@
 package jvm
 
 import (
+	"context"
 	"path"
 
 	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
 )
 
 type hostJvmAttachment struct {
@@ -24,8 +26,12 @@ func (a hostJvmAttachment) attach(agentHTTPPort int, heartbeatFile string) bool 
 		a.GetHostAddress(),
 		a.jvm.Pid(),
 		a.jvm.Pid(),
-		"",
+		a.run,
 	)
+}
+
+func (a hostJvmAttachment) run(ctx context.Context, name string, args ...string) ([]byte, error) {
+	return utils.RootCommandContext(ctx, name, args...).CombinedOutput()
 }
 
 func (a hostJvmAttachment) resolveFile(f string) string {

@@ -2,8 +2,8 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 container:
-  # container.runtime -- The container runtime to use. Valid values are: docker, containerd, crio
-  runtime: containerd
+  # container.engine -- The container engine to use. Valid values are: docker, containerd, crio
+  engine: containerd
 
 image:
   # image.name -- The container image to use for the Steadybit scaffold extension.
@@ -164,16 +164,22 @@ extraEnv: []
 #    name: env-secrets
 extraEnvFrom: []
 
-containerRuntimes:
+containerEngines:
   docker:
-    socket: /var/run/docker.sock
-    runcRoot: /run/docker/runtime-runc/moby
+    ociRuntime:
+      path: runc
+      root: /run/docker/runtime-runc/moby
+      debug: false
   containerd:
-    socket: /run/containerd/containerd.sock
-    runcRoot: /run/containerd/runc/k8s.io
+    ociRuntime:
+      path: runc
+      root: /run/containerd/runc/k8s.io
+      debug: false
   cri-o:
-    socket: /var/run/crio/crio.sock
-    runcRoot: /run/runc
+    ociRuntime:
+      path: runc
+      root: /run/runc
+      debug: false
 
 discovery:
   attributes:

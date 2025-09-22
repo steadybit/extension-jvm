@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/extjvm/container"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 )
 
@@ -60,8 +61,12 @@ func (a containerJvmAttachment) attach(agentHTTPPort int, heartbeatFile string) 
 		a.GetHostAddress(),
 		a.jvm.PidInContainer(),
 		a.jvm.Pid(),
-		a.jvm.ContainerId(),
+		a.run,
 	)
+}
+
+func (a containerJvmAttachment) run(ctx context.Context, name string, args ...string) ([]byte, error) {
+	return container.Exec(ctx, a.jvm.ContainerId(), name, args...).CombinedOutput()
 }
 
 func (a containerJvmAttachment) resolveFile(f string) string {
