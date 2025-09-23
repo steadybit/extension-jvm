@@ -4,21 +4,21 @@ metadata:
   name: {{ include "extensionlib.names.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
+  {{- include "extensionlib.labels" (list .) | nindent 4 }}
   {{- range $key, $value := .Values.extraLabels }}
     {{ $key }}: {{ $value }}
   {{- end }}
-  {{- include "extensionlib.labels" (list .) | nindent 4 }}
 spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "extensionlib.names.name" . }}
       app: {{ include "extensionlib.names.name" . }}
   updateStrategy:
-    # updateStrategy.type -- Specifies the strategy used to replace old Pods by new ones.
-    type: RollingUpdate
+    type: {{ .Values.updateStrategy.type }}
+    {{- if eq .Values.updateStrategy.type "RollingUpdate" }}
     rollingUpdate:
-      # updateStrategy.rollingUpdate.maxSurge -- The maximum number of DaemonSet pods that can be unavailable during the update.
-      maxUnavailable: 1
+      maxUnavailable: {{ .Values.updateStrategy.rollingUpdate.maxUnavailable }}
+    {{- end }}
   template:
     metadata:
       labels:
@@ -33,7 +33,7 @@ spec:
         {{- end }}
       annotations:
         {{- if semverCompare "<1.30-0" .Capabilities.KubeVersion.Version}}
-        "container.apparmor.security.beta.kubernetes.io/{{ include "extensionlib.names.name" . }}": unconfined
+        "container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm": unconfined
         {{- end }}
         {{- include "extensionlib.annotation" (list . .Values.containerPorts.http (.Values.daemonSet.extensionlib.list) ) | nindent 8 }}
         oneagent.dynatrace.com/injection: "false"
@@ -61,7 +61,7 @@ spec:
             limits:
               memory: {{ .Values.resources.limits.memory }}
               cpu: {{ .Values.resources.limits.cpu }}
-          name: {{ include "extensionlib.names.name" . }}
+          name: steadybit-extension-jvm
           ports:
             - name: http
               containerPort: {{ .Values.containerPorts.http }}
@@ -82,6 +82,12 @@ spec:
             - name: STEADYBIT_EXTENSION_DISCOVERY_ATTRIBUTES_EXCLUDES_JVM
               value: {{ join "," .Values.discovery.attributes.excludes.jvm | quote }}
             {{- end }}
+            - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+              value: {{ include "ociRuntime.get" (list . "debug") | quote }}
+            - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+              value: {{ include "ociRuntime.get" (list . "root") | quote }}
+            - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+              value: {{ include "ociRuntime.get" (list . "path") | quote }}
             {{- include "extensionlib.deployment.env" (list .) | nindent 12 }}
             {{- with .Values.extraEnv }}
               {{- toYaml . | nindent 12 }}
@@ -95,7 +101,8 @@ spec:
               mountPath: /tmp
             - name: cgroup-root
               mountPath: /sys/fs/cgroup
-                  {{- include "containerRuntime.volumeMounts" . | nindent 12 }}
+            - name: "ociruntime-root"
+              mountPath: {{ include "ociRuntime.get" (list . "root") | quote }}
                   {{- include "extensionlib.deployment.volumeMounts" (list .) | nindent 12 }}
           livenessProbe:
             initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
@@ -126,7 +133,10 @@ spec:
           hostPath:
             path: /sys/fs/cgroup
             type: Directory
-            {{- include "containerRuntime.volumes" . | nindent 8 }}
+        - name: "ociruntime-root"
+          hostPath:
+            path: {{ include "ociRuntime.get" (list . "root") | quote }}
+            type: Directory
             {{- include "extensionlib.deployment.volumes" (list .) | nindent 8 }}
       serviceAccountName: {{ .Values.serviceAccount.name }}
           {{- with .Values.nodeSelector }}

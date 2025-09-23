@@ -1,33 +1,37 @@
 package container
 
 import (
-	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/v4/process"
-	"github.com/steadybit/extension-kit/extutil"
+	"context"
 	"os"
+	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/rs/zerolog/log"
+	"github.com/shirou/gopsutil/v4/process"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
+	"github.com/steadybit/extension-kit/extutil"
 )
 
 var (
-	detectedRuntime       = autoDetectContainerRuntime()
 	regexSchedulerThreads = regexp.MustCompile(`^.+ \((\d+), #threads: \d+\)`)
 	regexContainerId      = regexp.MustCompile(`([a-f0-9]{64})`)
+	cfg                   = ociruntime.ConfigFromEnvironment()
 )
 
-func autoDetectContainerRuntime() runtime {
-	for _, r := range allRuntimes {
-		if _, err := os.Stat(r.defaultSocket()); err == nil {
-			return r
-		}
+func Exec(ctx context.Context, containerId string, name string, args ...string) *exec.Cmd {
+	runtime := path.Base(cfg.Path)
+	runtimeArgs := []string{"--root", cfg.Root, "exec", containerId, name}
+	if cfg.Debug {
+		runtimeArgs = append([]string{"--debug"}, runtimeArgs...)
 	}
-	return ""
-}
-
-func GetRuncRoot() string {
-	return detectedRuntime.defaultRuncRoot()
+	nsenterArgs := []string{"-t", "1", "-m", "-n", "-i", "-p", "-r", "-u", "-C", "--", runtime}
+	return utils.RootCommandContext(ctx, "nsenter", slices.Concat(nsenterArgs, runtimeArgs, args)...)
 }
 
 func GetContainerIdForProcess(process *process.Process) string {

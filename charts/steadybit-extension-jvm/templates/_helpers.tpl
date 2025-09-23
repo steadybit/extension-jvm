@@ -2,43 +2,26 @@
 {{/*
 checks the .Values.containerRuntime for valid values
 */}}
-{{- define "containerRuntime.valid" -}}
-{{- $valid := keys .Values.containerRuntimes | sortAlpha -}}
-{{- $runtime := .Values.container.runtime -}}
-{{- if has $runtime $valid -}}
-{{- $runtime  -}}
+{{- define "containerEngine.valid" -}}
+{{- $valid := keys .Values.containerEngines | sortAlpha -}}
+{{- if has .Values.container.runtime $valid -}}
+{{- .Values.container.runtime  -}}
+{{- else if has .Values.container.engine $valid -}}
+{{- .Values.container.engine  -}}
 {{- else -}}
-{{- fail (printf "unknown container runtime: %v (must be one of %s)" $runtime (join ", " $valid)) -}}
+{{- fail (printf "unknown container.engine: %v (must be one of %s)" .Values.container.engine (join ", " $valid)) -}}
 {{- end -}}
-{{- end -}}
-
-
-{{- /*
-containerRuntime.volumeMounts will render pod volume mounts(without indentation) for the selected container runtime
-*/}}
-{{- define "containerRuntime.volumeMounts" -}}
-{{- $runtime := (include "containerRuntime.valid" . )  -}}
-{{- $runtimeValues := get .Values.containerRuntimes $runtime  -}}
-- name: "runtime-socket"
-  mountPath: "{{ $runtimeValues.socket }}"
-- name: "runtime-runc-root"
-  mountPath: "{{ $runtimeValues.runcRoot }}"
 {{- end -}}
 
 {{- /*
-containerRuntime.volumes will render pod volumes (without indentation) for the selected container runtime
+ociRuntime.root will render the root for the selected container runtime
 */}}
-{{- define "containerRuntime.volumes" -}}
-{{- $runtime := (include "containerRuntime.valid" . )  -}}
-{{- $runtimeValues := get .Values.containerRuntimes $runtime  -}}
-- name: "runtime-socket"
-  hostPath:
-    path: "{{ $runtimeValues.socket }}"
-    type: Socket
-- name: "runtime-runc-root"
-  hostPath:
-    path: "{{ $runtimeValues.runcRoot }}"
-    type: Directory
+{{- define "ociRuntime.get" -}}
+{{- $top := index . 0 -}}
+{{- $field := index . 1 -}}
+{{- $engine := (include "containerEngine.valid" $top )  -}}
+{{- $engineValues := get $top.Values.containerEngines $engine  -}}
+{{- index $engineValues.ociRuntime $field -}}
 {{- end -}}
 
 {{- /*
@@ -54,3 +37,4 @@ will omit attribute from the passed in object depending on the KubeVersion
 {{- end -}}
 {{- $dict | toYaml -}}
 {{- end -}}
+
