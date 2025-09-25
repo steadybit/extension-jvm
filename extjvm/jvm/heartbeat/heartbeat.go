@@ -9,9 +9,10 @@ import (
 )
 
 type Heartbeat struct {
-	file     string
-	interval time.Duration
-	done     chan struct{}
+	file        string
+	fileCreated bool
+	interval    time.Duration
+	done        chan struct{}
 }
 
 func NewHeartbeat(file string, interval time.Duration) *Heartbeat {
@@ -22,7 +23,10 @@ func NewHeartbeat(file string, interval time.Duration) *Heartbeat {
 }
 
 func (h *Heartbeat) File() string {
-	return h.file
+	if h.fileCreated {
+		return h.file
+	}
+	return ""
 }
 
 func (h *Heartbeat) Start() error {
@@ -30,6 +34,7 @@ func (h *Heartbeat) Start() error {
 		return err
 	}
 
+	h.fileCreated = true
 	h.done = make(chan struct{}, 1)
 
 	go func(h *Heartbeat) {
@@ -48,8 +53,10 @@ func (h *Heartbeat) Start() error {
 }
 
 func (h *Heartbeat) Stop() {
-	h.done <- struct{}{}
-	close(h.done)
+	if h.done != nil {
+		h.done <- struct{}{}
+		close(h.done)
+	}
 	h.deleteFile()
 }
 
@@ -76,8 +83,12 @@ func (h *Heartbeat) createFile() error {
 }
 
 func (h *Heartbeat) deleteFile() {
+	if !h.fileCreated {
+		return
+	}
 	log.Trace().Str("file", h.file).Msg("Removing file for javaagent heartbeat")
 	if err := os.Remove(h.file); err != nil {
 		log.Warn().Err(err).Str("file", h.file).Msg("Failed to remove heartbeat file")
 	}
+	h.fileCreated = false
 }

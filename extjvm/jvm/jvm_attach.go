@@ -59,7 +59,10 @@ func externalAttach(jvm JavaVm, agentJar, initJar string, heartbeatFile string, 
 		fmt.Sprintf("host=%s", host),
 		fmt.Sprintf("port=%d", agentHTTPPort),
 		fmt.Sprintf("agentJar=%s", agentJar),
-		fmt.Sprintf("heartbeat=%s", heartbeatFile),
+	}
+
+	if heartbeatFile != "" {
+		attachCommand = append(attachCommand, fmt.Sprintf("heartbeatFile=%s", heartbeatFile))
 	}
 
 	if needsUserSwitch(jvm) {
