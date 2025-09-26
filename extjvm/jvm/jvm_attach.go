@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
 )
 
 type Attachment interface {
@@ -39,8 +40,8 @@ var (
 
 		// A single time we copy the javaagent files to a writable location, as there will be also the heartbeat file created
 		javaagentWorkDir = paths[1]
-		if err := os.MkdirAll(javaagentWorkDir, 0777); err != nil {
-			panic("Could not create javaagent working directory: " + err.Error())
+		if out, err := utils.RootCommandContext(context.Background(), "mkdir", "-p", javaagentWorkDir).CombinedOutput(); err != nil {
+			panic("Could not create javaagent working directory: " + err.Error() + ":\n" + string(out))
 		}
 
 		if err := os.CopyFS(javaagentWorkDir, os.DirFS(paths[0])); err != nil {
