@@ -2,15 +2,16 @@ package extjvm
 
 import (
 	"fmt"
+	"io"
+	"os/exec"
+	"strconv"
+	"time"
+
 	"github.com/shirou/gopsutil/v4/process"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/starttime"
 	"github.com/stretchr/testify/mock"
-	"io"
-	"os/exec"
-	"strconv"
-	"time"
 )
 
 type mockJavaFacade struct {
@@ -153,12 +154,12 @@ func (f *FakeJvm) VmArgs() string {
 	return ""
 }
 
-func (f *FakeJvm) UserId() string {
-	return ""
+func (f *FakeJvm) UserId() int {
+	return -1
 }
 
-func (f *FakeJvm) GroupId() string {
-	return ""
+func (f *FakeJvm) GroupId() int {
+	return -1
 }
 
 func (f *FakeJvm) Path() string {

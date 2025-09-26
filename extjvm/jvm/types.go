@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/v4/process"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/starttime"
 	"github.com/steadybit/extension-kit/extruntime"
-	"strings"
 )
 
 type JavaVm interface {
@@ -16,8 +17,8 @@ type JavaVm interface {
 	CommandLine() string
 	MainClass() string
 	ClassPath() string
-	UserId() string
-	GroupId() string
+	UserId() int
+	GroupId() int
 	Path() string
 	Hostname() string
 	HostFQDN() string
@@ -43,8 +44,8 @@ type defaultJavaVm struct {
 	vmVendor      string
 	vmName        string
 	vmArgs        string
-	userId        string
-	groupId       string
+	userId        int
+	groupId       int
 	path          string
 	discoveredVia string
 	hostname      string
@@ -68,11 +69,11 @@ func (vm defaultJavaVm) ClassPath() string {
 	return vm.classPath
 }
 
-func (vm defaultJavaVm) UserId() string {
+func (vm defaultJavaVm) UserId() int {
 	return vm.userId
 }
 
-func (vm defaultJavaVm) GroupId() string {
+func (vm defaultJavaVm) GroupId() int {
 	return vm.groupId
 }
 
@@ -126,11 +127,15 @@ func newJavaVm(p *process.Process, via string) *defaultJavaVm {
 	}
 
 	if uids, err := p.Uids(); err == nil && len(uids) > 0 {
-		vm.userId = fmt.Sprintf("%d", uids[0])
+		vm.userId = int(uids[0])
+	} else {
+		vm.userId = -1
 	}
 
 	if gids, err := p.Gids(); err == nil && len(gids) > 0 {
-		vm.groupId = fmt.Sprintf("%d", gids[0])
+		vm.groupId = int(gids[0])
+	} else {
+		vm.groupId = -1
 	}
 
 	if processPath, err := getProcessPath(context.Background(), p); err == nil && processPath != "" {
@@ -155,13 +160,12 @@ func (vm defaultJavaVm) StartTime() starttime.Time {
 }
 
 func (vm defaultJavaVm) ToDebugString() string {
-	return fmt.Sprintf("JavaVm{pid=%d, discoveredVia=%s, commandLine=%s, mainClass=%s, classpath=%s, vmVersion=%s, vmVendor=%s, vmName=%s, vmArgs=%s, userId=%s, groupId=%s, path=%s}",
+	return fmt.Sprintf("JavaVm{pid=%d, discoveredVia=%s, commandLine=%s, mainClass=%s, classpath=%s, vmVersion=%s, vmVendor=%s, vmName=%s, vmArgs=%s, userId=%d, groupId=%d, path=%s}",
 		vm.p.Pid, vm.discoveredVia, vm.commandLine, vm.mainClass, vm.classPath, vm.vmVersion, vm.vmVendor, vm.vmName, vm.vmArgs, vm.userId, vm.groupId, vm.path)
 }
 
 func (vm defaultJavaVm) ToInfoString() string {
-	return fmt.Sprintf("JavaVm{pid=%d, discoveredVia=%s, mainClass=%s}",
-		vm.p.Pid, vm.discoveredVia, vm.mainClass)
+	return fmt.Sprintf("JavaVm{pid=%d (%d:%d), discoveredVia=%s, mainClass=%s}", vm.p.Pid, vm.userId, vm.groupId, vm.discoveredVia, vm.mainClass)
 }
 
 type defaultJavaVmInContainer struct {
@@ -179,11 +183,10 @@ func (vm defaultJavaVmInContainer) PidInContainer() int32 {
 }
 
 func (vm defaultJavaVmInContainer) ToDebugString() string {
-	return fmt.Sprintf("JavaVm{pid=%d, containerId=%s, pidInContainer=%d, discoveredVia=%s, commandLine=%s, mainClass=%s, classpath=%s, vmVersion=%s, vmVendor=%s, vmName=%s, vmArgs=%s, userId=%s, groupId=%s, path=%s}",
+	return fmt.Sprintf("JavaVm{pid=%d, containerId=%s, pidInContainer=%d, discoveredVia=%s, commandLine=%s, mainClass=%s, classpath=%s, vmVersion=%s, vmVendor=%s, vmName=%s, vmArgs=%s, userId=%d, groupId=%d, path=%s}",
 		vm.p.Pid, vm.containerId, vm.pidInContainer, vm.discoveredVia, vm.commandLine, vm.mainClass, vm.classPath, vm.vmVersion, vm.vmVendor, vm.vmName, vm.vmArgs, vm.userId, vm.groupId, vm.path)
 }
 
 func (vm defaultJavaVmInContainer) ToInfoString() string {
-	return fmt.Sprintf("JavaVm{pid=%d, containerId=%s, discoveredVia=%s, mainClass=%s}",
-		vm.p.Pid, vm.containerId, vm.discoveredVia, vm.mainClass)
+	return fmt.Sprintf("JavaVm{pid=%d (%d:%d), containerId=%s, discoveredVia=%s, mainClass=%s}", vm.p.Pid, vm.userId, vm.groupId, vm.containerId, vm.discoveredVia, vm.mainClass)
 }

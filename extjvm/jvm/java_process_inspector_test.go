@@ -1,15 +1,15 @@
 package jvm
 
 import (
+	"os"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/steadybit/extension-jvm/extjvm/jvm/hsperf"
 	"github.com/steadybit/extension-jvm/extjvm/jvm/test"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"strconv"
-	"strings"
-	"testing"
-	"time"
 )
 
 var hostname string
@@ -37,8 +37,8 @@ func Test_should_inspect_host_process_via_process(t *testing.T) {
 	case j := <-inspector.JavaVms:
 		assert.Equal(t, jvm.Pid(), j.Pid())
 		assert.Contains(t, j.CommandLine(), "60000")
-		assert.Equal(t, strconv.Itoa(os.Geteuid()), j.UserId())
-		assert.Equal(t, strconv.Itoa(os.Geteuid()), j.UserId())
+		assert.Equal(t, os.Getuid(), j.UserId())
+		assert.Equal(t, os.Getgid(), j.GroupId())
 		assert.Equal(t, hostname, j.Hostname())
 		assert.True(t, j.IsRunning())
 		assert.Condition(t, func() bool {
@@ -81,8 +81,8 @@ func Test_should_inspect_host_process_via_hsperf(t *testing.T) {
 	case j := <-inspector.JavaVms:
 		assert.Equal(t, jvm.Pid(), j.Pid())
 		assert.Contains(t, j.CommandLine(), "60000")
-		assert.Equal(t, strconv.Itoa(os.Geteuid()), j.UserId())
-		assert.Equal(t, strconv.Itoa(os.Geteuid()), j.UserId())
+		assert.Equal(t, os.Getuid, j.UserId())
+		assert.Equal(t, os.Getgid(), j.GroupId())
 		assert.Equal(t, hostname, j.Hostname())
 		assert.True(t, j.IsRunning())
 		assert.Condition(t, func() bool {

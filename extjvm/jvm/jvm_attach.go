@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"os/user"
 	"runtime"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -23,12 +24,36 @@ const (
 	initJarName = "javaagent-init.jar"
 )
 
+var (
+	javaagentWorkDir     string
+	javaagentWorkDirOnce = sync.OnceFunc(func() {
+		paths := strings.SplitN(os.Getenv("STEADYBIT_EXTENSION_JAVA_AGENT_PATH"), ":", 2)
+		if len(paths) == 0 {
+			panic("STEADYBIT_EXTENSION_JAVA_AGENT_PATH not set")
+		}
+
+		if len(paths) == 1 {
+			javaagentWorkDir = paths[0]
+			return
+		}
+
+		// A single time we copy the javaagent files to a writable location, as there will be also the heartbeat file created
+		javaagentWorkDir = paths[1]
+		if err := os.MkdirAll(javaagentWorkDir, 0777); err != nil {
+			panic("Could not create javaagent working directory: " + err.Error())
+		}
+
+		if err := os.CopyFS(javaagentWorkDir, os.DirFS(paths[0])); err != nil {
+			panic("Could not copy javaagent: " + err.Error())
+		}
+
+		log.Info().Str("dir", javaagentWorkDir).Msg("prepared javaagent directory")
+	})
+)
+
 func javaagentPath() string {
-	pathByEnv := os.Getenv("STEADYBIT_EXTENSION_JAVA_AGENT_PATH")
-	if pathByEnv != "" {
-		return pathByEnv
-	}
-	panic("STEADYBIT_EXTENSION_JAVA_AGENT_PATH not set")
+	javaagentWorkDirOnce()
+	return javaagentWorkDir
 }
 
 func GetAttachment(jvm JavaVm) Attachment {
@@ -66,7 +91,7 @@ func externalAttach(jvm JavaVm, agentJar, initJar string, heartbeatFile string, 
 	}
 
 	if needsUserSwitch(jvm) {
-		attachCommand = append(attachCommand, "uid="+jvm.UserId(), "gid="+jvm.GroupId())
+		attachCommand = append(attachCommand, fmt.Sprintf("uid=%d", jvm.UserId()), fmt.Sprintf("gid=%d", jvm.GroupId()))
 	}
 
 	var ctx, cancel = context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
@@ -86,16 +111,11 @@ func externalAttach(jvm JavaVm, agentJar, initJar string, heartbeatFile string, 
 }
 
 func needsUserSwitch(jvm JavaVm) bool {
-	if jvm.UserId() == "" || jvm.GroupId() == "" {
+	if jvm.UserId() == -1 || jvm.GroupId() == -1 {
 		return false
 	}
 
-	current, err := user.Current()
-	if err != nil {
-		log.Warn().Err(err).Msg("Could not determine current user")
-		return false
-	}
-	return jvm.UserId() != current.Uid || jvm.GroupId() != current.Gid
+	return jvm.UserId() != os.Getuid() || jvm.GroupId() != os.Getgid()
 }
 
 func getExecutable(jvm JavaVm) string {
