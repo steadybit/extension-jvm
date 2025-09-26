@@ -26,7 +26,7 @@ var (
 
 func Exec(ctx context.Context, containerId string, name string, args ...string) *exec.Cmd {
 	runtime := path.Base(cfg.Path)
-	runtimeArgs := []string{"--root", cfg.Root, "exec", containerId, name}
+	runtimeArgs := []string{"--root", cfg.Root, "exec", "--user", "0:0", containerId, name}
 	if cfg.Debug {
 		runtimeArgs = append([]string{"--debug"}, runtimeArgs...)
 	}
