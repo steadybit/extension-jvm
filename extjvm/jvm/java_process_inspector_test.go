@@ -81,7 +81,7 @@ func Test_should_inspect_host_process_via_hsperf(t *testing.T) {
 	case j := <-inspector.JavaVms:
 		assert.Equal(t, jvm.Pid(), j.Pid())
 		assert.Contains(t, j.CommandLine(), "60000")
-		assert.Equal(t, os.Getuid, j.UserId())
+		assert.Equal(t, os.Getuid(), j.UserId())
 		assert.Equal(t, os.Getgid(), j.GroupId())
 		assert.Equal(t, hostname, j.Hostname())
 		assert.True(t, j.IsRunning())
