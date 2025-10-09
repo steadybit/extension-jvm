@@ -166,16 +166,19 @@ extraEnvFrom: []
 
 containerEngines:
   docker:
+    socket: /var/run/docker.sock
     ociRuntime:
       path: runc
       root: /run/docker/runtime-runc/moby
       debug: false
   containerd:
+    socket: /run/containerd/containerd.sock
     ociRuntime:
       path: runc
       root: /run/containerd/runc/k8s.io
       debug: false
   cri-o:
+    socket: /var/run/crio/crio.sock
     ociRuntime:
       path: runc
       root: /run/runc

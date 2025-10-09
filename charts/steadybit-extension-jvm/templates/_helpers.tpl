@@ -13,8 +13,20 @@ checks the .Values.containerRuntime for valid values
 {{- end -}}
 {{- end -}}
 
+
 {{- /*
-ociRuntime.root will render the root for the selected container runtime
+containerEngine.get will select the attribute for the selected container engine
+*/}}
+{{- define "containerEngine.get" -}}
+{{- $top := index . 0 -}}
+{{- $field := index . 1 -}}
+{{- $engine := (include "containerEngine.valid" $top )  -}}
+{{- $engineValues := get $top.Values.containerEngines $engine  -}}
+{{- index $engineValues $field -}}
+{{- end -}}
+
+{{- /*
+ociRuntime.get will select the attribute for the selected container engine
 */}}
 {{- define "ociRuntime.get" -}}
 {{- $top := index . 0 -}}

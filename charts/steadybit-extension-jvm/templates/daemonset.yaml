@@ -101,6 +101,8 @@ spec:
               mountPath: /tmp
             - name: cgroup-root
               mountPath: /sys/fs/cgroup
+            - name: "containerengine-socket"
+              mountPath: {{ include "containerEngine.get" (list . "socket") | quote }}
             - name: "ociruntime-root"
               mountPath: {{ include "ociRuntime.get" (list . "root") | quote }}
                   {{- include "extensionlib.deployment.volumeMounts" (list .) | nindent 12 }}
@@ -137,6 +139,10 @@ spec:
           hostPath:
             path: {{ include "ociRuntime.get" (list . "root") | quote }}
             type: Directory
+        - name: "containerengine-socket"
+          hostPath:
+            path: {{ include "containerEngine.get" (list . "socket") | quote }}
+            type: Socket
             {{- include "extensionlib.deployment.volumes" (list .) | nindent 8 }}
       serviceAccountName: {{ .Values.serviceAccount.name }}
           {{- with .Values.nodeSelector }}

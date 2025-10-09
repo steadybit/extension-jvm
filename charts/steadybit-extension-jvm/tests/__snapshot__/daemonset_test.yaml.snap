@@ -104,6 +104,8 @@ manifest should match snapshot using containerd and resources:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
                 - mountPath: /run/containerd/runc/k8s.io
                   name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
@@ -125,6 +127,10 @@ manifest should match snapshot using containerd and resources:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -237,6 +243,8 @@ manifest should match snapshot using crio using podAnnotations and Labels:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /var/run/crio/crio.sock
+                  name: containerengine-socket
                 - mountPath: /run/runc
                   name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
@@ -258,6 +266,10 @@ manifest should match snapshot using crio using podAnnotations and Labels:
                 path: /run/runc
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /var/run/crio/crio.sock
+                type: Socket
+              name: containerengine-socket
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -368,6 +380,8 @@ manifest should match snapshot using docker:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /var/run/docker.sock
+                  name: containerengine-socket
                 - mountPath: /run/docker/runtime-runc/moby
                   name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
@@ -389,6 +403,10 @@ manifest should match snapshot using docker:
                 path: /run/docker/runtime-runc/moby
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /var/run/docker.sock
+                type: Socket
+              name: containerengine-socket
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -503,6 +521,8 @@ manifest should match snapshot with TLS:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
                 - mountPath: /run/containerd/runc/k8s.io
                   name: ociruntime-root
                 - mountPath: /etc/extension/certificates/server-cert
@@ -527,6 +547,10 @@ manifest should match snapshot with TLS:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
             - name: certificate-server-cert
               secret:
                 optional: false
@@ -642,6 +666,8 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
                 - mountPath: /run/containerd/runc/k8s.io
                   name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
@@ -663,6 +689,10 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -773,6 +803,8 @@ manifest should match snapshot with different containerPorts:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
                 - mountPath: /run/containerd/runc/k8s.io
                   name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
@@ -794,6 +826,10 @@ manifest should match snapshot with different containerPorts:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -911,6 +947,8 @@ manifest should match snapshot with extra env vars:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
                 - mountPath: /run/containerd/runc/k8s.io
                   name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
@@ -932,6 +970,10 @@ manifest should match snapshot with extra env vars:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1044,6 +1086,8 @@ manifest should match snapshot with extra labels:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
                 - mountPath: /run/containerd/runc/k8s.io
                   name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
@@ -1065,6 +1109,10 @@ manifest should match snapshot with extra labels:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1181,6 +1229,8 @@ manifest should match snapshot with mutual TLS:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
                 - mountPath: /run/containerd/runc/k8s.io
                   name: ociruntime-root
                 - mountPath: /etc/extension/certificates/client-cert-a
@@ -1208,6 +1258,10 @@ manifest should match snapshot with mutual TLS:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
             - name: certificate-client-cert-a
               secret:
                 optional: false
@@ -1332,6 +1386,8 @@ manifest should match snapshot with mutual TLS using containerPaths:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
                 - mountPath: /run/containerd/runc/k8s.io
                   name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
@@ -1353,6 +1409,10 @@ manifest should match snapshot with mutual TLS using containerPaths:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1463,6 +1523,8 @@ manifest should match snapshot with podSecurityContext:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
                 - mountPath: /run/containerd/runc/k8s.io
                   name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
@@ -1485,6 +1547,10 @@ manifest should match snapshot with podSecurityContext:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1595,6 +1661,8 @@ manifest should match snapshot with priority class:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
                 - mountPath: /run/containerd/runc/k8s.io
                   name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
@@ -1617,6 +1685,10 @@ manifest should match snapshot with priority class:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1727,6 +1799,8 @@ manifest should match snapshot with update strategy:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
                 - mountPath: /run/containerd/runc/k8s.io
                   name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
@@ -1748,6 +1822,10 @@ manifest should match snapshot with update strategy:
                 path: /run/containerd/runc/k8s.io
                 type: Directory
               name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 5
