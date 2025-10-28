@@ -61,7 +61,7 @@ manifest should match snapshot using containerd and resources:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 8087
                   name: http
@@ -200,7 +200,7 @@ manifest should match snapshot using crio using podAnnotations and Labels:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 8087
                   name: http
@@ -337,7 +337,7 @@ manifest should match snapshot using docker:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 8087
                   name: http
@@ -478,7 +478,7 @@ manifest should match snapshot with TLS:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 8087
                   name: http
@@ -621,7 +621,7 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 8087
                   name: http
@@ -760,7 +760,7 @@ manifest should match snapshot with different containerPorts:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 9090
                   name: http
@@ -904,7 +904,7 @@ manifest should match snapshot with extra env vars:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 8087
                   name: http
@@ -1043,7 +1043,7 @@ manifest should match snapshot with extra labels:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 8087
                   name: http
@@ -1186,7 +1186,7 @@ manifest should match snapshot with mutual TLS:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 8087
                   name: http
@@ -1343,7 +1343,7 @@ manifest should match snapshot with mutual TLS using containerPaths:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 8087
                   name: http
@@ -1480,7 +1480,7 @@ manifest should match snapshot with podSecurityContext:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 8087
                   name: http
@@ -1618,7 +1618,7 @@ manifest should match snapshot with priority class:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 8087
                   name: http
@@ -1756,7 +1756,7 @@ manifest should match snapshot with update strategy:
                 periodSeconds: 10
                 successThreshold: 1
                 timeoutSeconds: 5
-              name: steadybit-extension-jvm
+              name: extension
               ports:
                 - containerPort: 8087
                   name: http
