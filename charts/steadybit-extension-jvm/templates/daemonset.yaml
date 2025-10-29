@@ -33,7 +33,7 @@ spec:
         {{- end }}
       annotations:
         {{- if semverCompare "<1.30-0" .Capabilities.KubeVersion.Version}}
-        "container.apparmor.security.beta.kubernetes.io/steadybit-extension-jvm": unconfined
+        "container.apparmor.security.beta.kubernetes.io/extension": unconfined
         {{- end }}
         {{- include "extensionlib.annotation" (list . .Values.containerPorts.http (.Values.daemonSet.extensionlib.list) ) | nindent 8 }}
         oneagent.dynatrace.com/injection: "false"
