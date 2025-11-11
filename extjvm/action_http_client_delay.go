@@ -80,6 +80,15 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 				Advanced:     extutil.Ptr(true),
 			},
 			{
+				Name:        "httpMethods",
+				Label:       "Http Methods",
+				Description: extutil.Ptr("Which HTTP methods should be attacked?"),
+				Type:        action_kit_api.ActionParameterTypeStringArray,
+				Required:    extutil.Ptr(false),
+				Advanced:    extutil.Ptr(true),
+				Options:     methodsOptions,
+			},
+			{
 				Name:         "hostAddress",
 				Label:        "Host Address",
 				Description:  extutil.Ptr("Request to which host address should be attacked?"),
@@ -87,6 +96,7 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 				DefaultValue: extutil.Ptr("*"),
 				Required:     extutil.Ptr(false),
 				Advanced:     extutil.Ptr(true),
+				OptionsOnly:  extutil.Ptr(false),
 				Options: extutil.Ptr([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Any",
@@ -96,6 +106,15 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 						Attribute: "spring-instance.http-outgoing-calls",
 					},
 				}),
+			},
+			{
+				Name:         "urlPath",
+				Label:        "URL Path",
+				Description:  extutil.Ptr("Which URL paths should be attacked? Use '*' or empty for any."),
+				Type:         action_kit_api.ActionParameterTypeString,
+				DefaultValue: extutil.Ptr(""),
+				Required:     extutil.Ptr(false),
+				Advanced:     extutil.Ptr(true),
 			},
 		},
 		Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
@@ -114,6 +133,8 @@ func httpClientDelayConfigProvider(request action_kit_api.PrepareActionRequestBo
 		"duration":     int(duration / time.Millisecond),
 		"delay":        extutil.ToUInt64(request.Config["delay"]),
 		"delayJitter":  extutil.ToBool(request.Config["delayJitter"]),
+		"httpMethods":  extutil.ToStringArray(request.Config["httpMethods"]),
 		"hostAddress":  extutil.ToString(request.Config["hostAddress"]),
+		"urlPath":      extutil.ToString(request.Config["urlPath"]),
 	}, nil
 }

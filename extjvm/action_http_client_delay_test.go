@@ -5,12 +5,13 @@ package extjvm
 
 import (
 	"context"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_http_Client_Delay_Prepare(t *testing.T) {
@@ -31,7 +32,9 @@ func Test_http_Client_Delay_Prepare(t *testing.T) {
 			requestBody: action_kit_api.PrepareActionRequestBody{
 				Config: map[string]interface{}{
 					"action":      "prepare",
+					"httpMethods": []interface{}{"GET"},
 					"hostAddress": "*",
+					"urlPath":     "/test",
 					"duration":    "10000",
 					"delay":       "500",
 					"delayJitter": "true",
@@ -41,7 +44,7 @@ func Test_http_Client_Delay_Prepare(t *testing.T) {
 			},
 
 			wantedState: &JavaagentActionState{
-				ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.SpringHttpClientDelayInstrumentation\",\"delay\":500,\"delayJitter\":true,\"duration\":10000,\"hostAddress\":\"*\"}",
+				ConfigJson: "{\"attack-class\":\"com.steadybit.attacks.javaagent.instrumentation.SpringHttpClientDelayInstrumentation\",\"delay\":500,\"delayJitter\":true,\"duration\":10000,\"hostAddress\":\"*\",\"httpMethods\":[\"GET\"],\"urlPath\":\"/test\"}",
 			},
 		},
 	}
