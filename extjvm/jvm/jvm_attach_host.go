@@ -17,10 +17,13 @@ func (a hostJvmAttachment) attach(agentHTTPPort int, heartbeatFile string) bool 
 		return false
 	}
 
+	resolvedMainJar, _ := a.resolveFile(mainJarName)
+	resolvedInitJar, _ := a.resolveFile(initJarName)
+	resolvedHeartBeatFile, _ := a.resolveFile(heartbeatFile)
 	return externalAttach(a.jvm,
-		a.resolveFile(mainJarName),
-		a.resolveFile(initJarName),
-		a.resolveFile(heartbeatFile),
+		resolvedMainJar,
+		resolvedInitJar,
+		resolvedHeartBeatFile,
 		agentHTTPPort,
 		a.GetHostAddress(),
 		a.jvm.Pid(),
@@ -29,8 +32,8 @@ func (a hostJvmAttachment) attach(agentHTTPPort int, heartbeatFile string) bool 
 	)
 }
 
-func (a hostJvmAttachment) resolveFile(f string) string {
-	return path.Join(javaagentPath(), f)
+func (a hostJvmAttachment) resolveFile(f string) (string, error) {
+	return path.Join(javaagentPath(), f), nil
 }
 
 func (a hostJvmAttachment) GetHostAddress() string {

@@ -1,15 +1,16 @@
 package jvm
 
 import (
-	"github.com/steadybit/extension-jvm/extjvm/jvm/hsperf"
-	"github.com/steadybit/extension-jvm/extjvm/jvm/test"
-	"github.com/steadybit/extension-jvm/extjvm/utils"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/steadybit/extension-jvm/extjvm/jvm/hsperf"
+	"github.com/steadybit/extension-jvm/extjvm/jvm/test"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 var hostname string

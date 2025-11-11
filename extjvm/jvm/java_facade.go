@@ -279,7 +279,10 @@ func (f *defaultJavaFacade) LoadAgentPlugin(javaVm JavaVm, plugin string, args s
 		return err
 	}
 
-	pluginPath := GetAttachment(javaVm).resolveFile(plugin)
+	pluginPath, err := GetAttachment(javaVm).resolveFile(plugin)
+	if err != nil {
+		log.Error().Err(err).Msgf("failed to resolve plugin %s for JVM %s", plugin, javaVm.ToInfoString())
+	}
 	if success, err := f.SendCommandToAgentWithTimeout(javaVm, "load-agent-plugin", fmt.Sprintf("%s,%s", pluginPath, args), time.Duration(30)*time.Second); success {
 		log.Debug().Msgf("Plugin %s loaded for JVM %s", plugin, javaVm.ToInfoString())
 		f.plugins.Add(javaVm.Pid(), plugin)
@@ -306,7 +309,10 @@ func (f *defaultJavaFacade) UnloadAgentPlugin(javaVm JavaVm, plugin string) erro
 		return err
 	}
 
-	pluginPath := GetAttachment(javaVm).resolveFile(plugin)
+	pluginPath, err := GetAttachment(javaVm).resolveFile(plugin)
+	if err != nil {
+		log.Error().Err(err).Msgf("failed to resolve plugin %s for JVM %s", plugin, javaVm.ToInfoString())
+	}
 	if ok, err := f.SendCommandToAgent(javaVm, "unload-agent-plugin", pluginPath); ok {
 		f.plugins.Remove(javaVm.Pid(), plugin)
 		return nil

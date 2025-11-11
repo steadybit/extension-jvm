@@ -4,39 +4,32 @@
 
 package com.steadybit.attacks.javaagent.advice;
 
+import com.steadybit.javaagent.instrumentation.InstrumentationPluginDispatcher;
+import com.steadybit.javaagent.instrumentation.Registration;
 import com.steadybit.shaded.net.bytebuddy.asm.Advice;
 import okhttp3.OkHttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.protocol.HttpContext;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpRequest;
 
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URI;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class RestTemplateDelayAdvice {
     @Advice.OnMethodExit
-    static void exit(@Delay long delay, @Jitter boolean delayJitter, @HostAddress String hostAddress, @Advice.This ClientHttpRequest request)
-            throws SocketTimeoutException {
+    static void exit(@Registration int registration, @Advice.This ClientHttpRequest request) throws SocketTimeoutException {
+        URI uri = request.getURI();
+        HttpMethod method = request.getMethod();
 
-        if (!hostAddress.equals("*")) {
-            URI uri = request.getURI();
-            String requestHostAddress = uri.getPort() == -1 ? uri.getHost() : uri.getHost() + ":" + uri.getPort();
-
-            if (!requestHostAddress.equalsIgnoreCase(hostAddress)) {
-                return;
-            }
-        }
-
-        long millis;
-        if (delayJitter) {
-            double jitterValue = 1.3d - ThreadLocalRandom.current().nextDouble(0.6d);
-            millis = Math.round(jitterValue * delay);
-        } else {
-            millis = delay;
+        Long millis = (Long) InstrumentationPluginDispatcher
+                .find(registration)
+                .exec(2, method != null ? method.toString() : null, uri.getHost(), uri.getPort(), uri.getPath());
+        if (millis == null) {
+            return;
         }
 
         int readTimeout = 0;
