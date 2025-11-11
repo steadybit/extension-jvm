@@ -14,7 +14,7 @@ import (
 
 type Attachment interface {
 	attach(port int, heartbeatFile string) bool
-	resolveFile(f string) string
+	resolveFile(f string) (string, error)
 	GetHostAddress() string
 }
 

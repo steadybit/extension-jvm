@@ -11,7 +11,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <!-- NOTE: when updating to the next boot version please check if we can remove our override for snakeyaml.version -->
-        <version>2.7.14</version>
+        <version>2.7.18</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.steadybit</groupId>
@@ -38,28 +38,28 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!-- dependencies -->
-        <commons-io.version>2.20.0</commons-io.version>
+        <commons-io.version>2.21.0</commons-io.version>
         <commons-net.version>3.12.0</commons-net.version>
         <hystrix.version>1.5.18</hystrix.version>
-        <jna.version>5.17.0</jna.version>
+        <jna.version>5.18.1</jna.version>
         <junit-pioneer.version>2.3.0</junit-pioneer.version>
         <org-json.version>20250517</org-json.version>
         <resilience4j.version>1.7.1</resilience4j.version>
         <wiremock.version>3.13.1</wiremock.version>
 
         <ipaddress.version>5.5.1</ipaddress.version>
-        <byte-buddy.version>1.15.11</byte-buddy.version>
+        <byte-buddy.version>1.17.8</byte-buddy.version>
         <!-- plugins -->
-        <exec-maven-plugin.version>3.3.0</exec-maven-plugin.version>
-        <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
-        <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
-        <license-maven-plugin.version>2.4.0</license-maven-plugin.version>
+        <exec-maven-plugin.version>3.6.2</exec-maven-plugin.version>
+        <flatten-maven-plugin.version>1.7.3</flatten-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
+        <license-maven-plugin.version>2.7.0</license-maven-plugin.version>
         <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
-        <maven-enforcer-plugin.version>3.5.0</maven-enforcer-plugin.version>
-        <maven-gpg-plugin.version>3.2.4</maven-gpg-plugin.version>
-        <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
-        <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
+        <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
+        <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
+        <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
+        <maven-shade-plugin.version>3.6.1</maven-shade-plugin.version>
 
         <!-- Sonarcloud-->
         <sonar.organization>steadybit</sonar.organization>
