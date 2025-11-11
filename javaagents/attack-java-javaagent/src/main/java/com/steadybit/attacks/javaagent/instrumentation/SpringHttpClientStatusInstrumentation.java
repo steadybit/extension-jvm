@@ -15,6 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.lang.instrument.Instrumentation;
+import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -105,7 +106,9 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
             return false;
         }
 
-        if (!"*".equals(this.urlPath) && !"".equals(this.urlPath) && !this.urlPath.equalsIgnoreCase(path)) {
+        if (!"*".equals(this.urlPath)
+                && !"".equals(this.urlPath)
+                && !this.urlPath.toLowerCase(Locale.ROOT).startsWith(path.toLowerCase(Locale.ROOT))) {
             return false;
         }
 
