@@ -8,8 +8,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpMethod;
 
 import java.lang.instrument.Instrumentation;
+import java.net.URI;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +27,8 @@ class SpringHttpClientDelayInstrumentationTest {
     }
 
     Long attack(String httpMethod, String host, int port, String path) {
-        return (Long) new SpringHttpClientDelayInstrumentation(mock(Instrumentation.class), this.config).exec(2, httpMethod, host, port, path);
+        URI uri = URI.create("http://" + host + (port != -1 ? ":" + port : "") + path);
+        return (Long) new SpringHttpClientDelayInstrumentation(mock(Instrumentation.class), this.config).exec(2, httpMethod, uri);
     }
 
     @Test
@@ -51,7 +54,7 @@ class SpringHttpClientDelayInstrumentationTest {
 
     @Test
     void should_support_host_matching_requiring_port() {
-        this.config.put("hostAddress", "eXample.com");
+        this.config.put("hostAddress", "eXample.com:80");
         assertThat(this.attack("post", "example.com", 443, "/")).isNull();
         assertThat(this.attack("post", "example.com", -1, "/")).isEqualTo(500);
 
@@ -71,13 +74,21 @@ class SpringHttpClientDelayInstrumentationTest {
     void should_support_path_matching() {
         this.config.put("urlPath", "/api");
         assertThat(this.attack("post", "example.com", 443, "/aPi")).isEqualTo(500);
+        assertThat(this.attack("post", "example.com", -1, "/")).isNull();
+        assertThat(this.attack("post", "example.com", -1, "/api/attacks")).isNull();
+    }
+
+    @Test
+    void should_support_non_pattern_path() {
+        this.config.put("urlPath", "/");
+        assertThat(this.attack("post", "example.com", 443, "/aPi")).isNull();
         assertThat(this.attack("post", "example.com", -1, "/")).isEqualTo(500);
         assertThat(this.attack("post", "example.com", -1, "/api/attacks")).isNull();
     }
 
     @Test
     void should_support_asterisk_path() {
-        this.config.put("urlPath", "*");
+        this.config.put("urlPath", "/**");
         assertThat(this.attack("post", "example.com", 443, "/aPi")).isEqualTo(500);
         assertThat(this.attack("post", "example.com", -1, "/")).isEqualTo(500);
         assertThat(this.attack("post", "example.com", -1, "/api/attacks")).isEqualTo(500);

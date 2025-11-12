@@ -32,7 +32,7 @@ public abstract class AbstractJavaMethodInstrumentation extends ClassTransformat
     private final AtomicBoolean typeMatched = new AtomicBoolean(false);
     private final AtomicBoolean methodMatched = new AtomicBoolean(false);
 
-    public AbstractJavaMethodInstrumentation(Instrumentation instrumentation, JSONObject config) {
+    protected AbstractJavaMethodInstrumentation(Instrumentation instrumentation, JSONObject config) {
         super(instrumentation);
         this.initializeMatchers(config);
     }

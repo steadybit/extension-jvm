@@ -92,10 +92,10 @@ func httpClientStatusDescribe() action_kit_api.ActionDescription {
 			},
 			{
 				Name:         "urlPath",
-				Label:        "URL Path",
-				Description:  extutil.Ptr("\"Which URL path should be attacked? Use '*' or empty for any. All paths starting with the given value will be matched.\""),
+				Label:        "Path Pattern",
+				Description:  extutil.Ptr("Which URL path should be attacked? Supports Spring Ant-style path patterns (e.g. /api/**)."),
 				Type:         action_kit_api.ActionParameterTypeString,
-				DefaultValue: extutil.Ptr(""),
+				DefaultValue: extutil.Ptr("/**"),
 				Required:     extutil.Ptr(false),
 				Advanced:     extutil.Ptr(true),
 			},

@@ -20,7 +20,7 @@ public class WebClientHttpStatusAdvice {
     static Integer enter(@Registration int registration, @Advice.Argument(0) HttpMethod httpMethod, @Advice.Argument(1) URI uri) {
         return (Integer) InstrumentationPluginDispatcher
                 .find(registration)
-                .exec(1, httpMethod.toString(), uri.getHost(), uri.getPort(), uri.getPath());
+                .exec(1, httpMethod != null ? httpMethod.toString() : null, uri);
     }
 
     @Advice.OnMethodExit
