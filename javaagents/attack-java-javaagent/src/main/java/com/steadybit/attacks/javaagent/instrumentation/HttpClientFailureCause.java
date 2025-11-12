@@ -8,7 +8,6 @@ package com.steadybit.attacks.javaagent.instrumentation;
  * Modelled after https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream
  */
 public class HttpClientFailureCause {
-
     public static final String ERROR = "ERROR";
     public static final String TIMEOUT = "TIMEOUT";
     public static final String HTTP_500 = "HTTP_500";

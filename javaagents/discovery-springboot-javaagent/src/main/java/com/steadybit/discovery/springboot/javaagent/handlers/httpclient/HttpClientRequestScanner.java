@@ -132,7 +132,11 @@ public class HttpClientRequestScanner extends ClassTransformationPlugin {
 
     private void scanAddress(URI uri, int timeout) {
         if (uri != null && uri.getHost() != null) {
-            String host = uri.getPort() == -1 ? uri.getHost() : uri.getHost() + ":" + uri.getPort();
+            int port = uri.getPort();
+            if (port == -1) {
+                port = uri.getScheme().equalsIgnoreCase("https") ? 443 : 80;
+            }
+            String host = uri.getHost() + ":" + port;
             this.requests.put(host, new HttpRequest(host, uri.getScheme(), this.isCircuitBreakerActive(), timeout));
         }
     }

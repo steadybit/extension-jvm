@@ -79,7 +79,7 @@ class HttpClientRequestScannerITest {
 
         //then
         assertThat(this.scanner.getRequests()).hasSize(3).anySatisfy(d -> {
-            assertThat(d.getAddress()).isEqualTo("localhost");
+            assertThat(d.getAddress()).isEqualTo("localhost:80");
             assertThat(d.getScheme()).isEqualTo("http");
             assertThat(d.getTimeout()).isEqualTo(250);
             assertThat(d.hasCircuitBreaker()).isFalse();
@@ -118,7 +118,7 @@ class HttpClientRequestScannerITest {
 
         //then
         assertThat(this.scanner.getRequests()).anySatisfy(d -> {
-            assertThat(d.getAddress()).isEqualTo("localhost");
+            assertThat(d.getAddress()).isEqualTo("localhost:80");
             assertThat(d.getScheme()).isEqualTo("http");
             assertThat(d.getTimeout()).isZero();
             assertThat(d.hasCircuitBreaker()).isFalse();

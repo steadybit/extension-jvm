@@ -7,23 +7,19 @@ package com.steadybit.attacks.javaagent.advice;
 import com.steadybit.javaagent.instrumentation.InstrumentationPluginDispatcher;
 import com.steadybit.javaagent.instrumentation.Registration;
 import com.steadybit.shaded.net.bytebuddy.asm.Advice;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
-import java.net.URI;
 
 public class RestTemplateHttpStatusAdvice {
     @Advice.OnMethodEnter(skipOn = Integer.class)
     static Integer enter(@Registration int registration,
                          @Advice.This ClientHttpRequest request) {
-        URI uri = request.getURI();
-        HttpMethod method = request.getMethod();
         return (Integer) InstrumentationPluginDispatcher
                 .find(registration)
-                .exec(1, method != null ? method.toString() : null, uri.getHost(), uri.getPort(), uri.getPath());
+                .exec(1, request.getMethod() != null ? request.getMethod().toString() : null, request.getURI());
     }
 
     @Advice.OnMethodExit

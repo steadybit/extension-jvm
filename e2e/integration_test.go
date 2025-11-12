@@ -261,7 +261,7 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			delay:         200,
 			jitter:        false,
 			expectedDelay: true,
-			hostAddress:   "shop.demo-develop.steadybit.com",
+			hostAddress:   "shop.demo-develop.steadybit.com:443",
 		},
 		{
 			name:          "should not delay http client traffic on host",
@@ -353,7 +353,7 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			failureTypes:       []string{"HTTP_502"},
 			expectedLogStatus:  502,
 			expectedHttpStatus: 500,
-			hostAddress:        "www.github.com",
+			hostAddress:        "www.github.com:443",
 		},
 		{
 			name:               "should not throw http client exceptions on host",

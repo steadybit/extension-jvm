@@ -15,8 +15,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.lang.instrument.Instrumentation;
-import java.util.Locale;
+import java.net.URI;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.hasSuperType;
@@ -29,34 +31,26 @@ import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesNo
 public class SpringHttpClientStatusInstrumentation extends ClassTransformationPlugin {
     private static final int[] HTTP_4XX_CODES = {400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 421, 422, 423, 424, 425, 426, 428, 429, 431, 451};
     private static final int[] HTTP_5XX_CODES = {500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511};
+    private static final JSONArray EMPTY_ARRAY = new JSONArray();
 
     private final int errorRate;
-    private final String[] httpMethods;
-    private final String hostAddress;
-    private final String urlPath;
-    private final String[] failureCauses;
+    private final JSONObject config;
+    private final List<String> failureCauses;
     private final ElementMatcher<MethodDescription> executeMethod = named("execute").and(takesNoArguments()).and(not(isAbstract()));
     private final ElementMatcher<MethodDescription> connectMethod = named("connect").and(takesArguments(3)).and(not(isAbstract()));
+    private final List<String> httpMethods;
+    private final String hostAdress;
+    private final String urlPath;
+
 
     public SpringHttpClientStatusInstrumentation(Instrumentation instrumentation, JSONObject config) {
         super(instrumentation);
         this.errorRate = config.optInt("erroneousCallRate", 100);
-        this.hostAddress = config.optString("hostAddress", "*");
-        this.urlPath = config.optString("urlPath", "*");
-        this.httpMethods = this.getAllStringValues(config.optJSONArray("httpMethods"));
-        this.failureCauses = this.getAllStringValues(config.optJSONArray("failureCauses"));
-    }
-
-    private String[] getAllStringValues(JSONArray array) {
-        if (array == null || array.isEmpty()) {
-            return new String[]{};
-        }
-
-        String[] values = new String[array.length()];
-        for (int i = 0; i < array.length(); i++) {
-            values[i] = array.getString(i);
-        }
-        return values;
+        this.config = config;
+        this.failureCauses = config.optJSONArray("failureCauses", EMPTY_ARRAY).toList().stream().map(Object::toString).collect(Collectors.toList());
+        this.httpMethods = config.optJSONArray("httpMethods", EMPTY_ARRAY).toList().stream().map(Object::toString).collect(Collectors.toList());
+        this.hostAdress = config.optString("hostAddress", "*");
+        this.urlPath = config.optString("urlPath", "/**");
     }
 
     @Override
@@ -69,8 +63,7 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
                         .include(RestTemplateHttpStatusAdvice.class.getClassLoader()) //
                         .advice(this.executeMethod, RestTemplateHttpStatusAdvice.class.getName()))
                 .type(hasSuperType(named("org.springframework.http.client.reactive.ClientHttpConnector")).and(declaresMethod(this.connectMethod)))
-                .transform(new ClassInjectionTransformer(this.getClass().getClassLoader(),
-                        "com.steadybit.attacks.javaagent.advice.InjectedReactiveClientHttpResponse"))
+                .transform(new ClassInjectionTransformer(this.getClass().getClassLoader(), "com.steadybit.attacks.javaagent.advice.InjectedReactiveClientHttpResponse"))
                 .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping() //
                         .bind(Registration.class, this.getRegistration())) //
                         .include(WebClientHttpStatusAdvice.class.getClassLoader()) //
@@ -78,15 +71,15 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
     }
 
     @Override
-    public Object exec(int code, Object arg1, Object arg2, Object arg3, Object arg4) {
+    public Object exec(int code, Object arg1, Object arg2) {
         if (code == 1) {
-            return this.determineFailureScenario((String) arg1, (String) arg2, (int) arg3, (String) arg4);
+            return this.determineFailureScenario((String) arg1, (URI) arg2);
         }
         return null;
     }
 
-    private Integer determineFailureScenario(String httpMethod, String host, int port, String path) {
-        if (!this.shouldAttack(httpMethod, host, port, path)) {
+    private Integer determineFailureScenario(String method, URI uri) {
+        if (!new HttpMatcher(this.httpMethods, this.hostAdress, this.urlPath).test(method, uri)) {
             return null;
         }
 
@@ -97,41 +90,13 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
         return this.determineFailureStatusCode();
     }
 
-    private boolean shouldAttack(String httpMethod, String host, int port, String path) {
-        if (port != -1) {
-            host = host + ":" + port;
-        }
-
-        if (!"*".equals(this.hostAddress) && !this.hostAddress.equalsIgnoreCase(host)) {
-            return false;
-        }
-
-        if (!"*".equals(this.urlPath)
-                && !"".equals(this.urlPath)
-                && !this.urlPath.toLowerCase(Locale.ROOT).startsWith(path.toLowerCase(Locale.ROOT))) {
-            return false;
-        }
-
-        if (this.httpMethods.length == 0) {
-            return true;
-        }
-
-        for (String method : this.httpMethods) {
-            if (method.equalsIgnoreCase(httpMethod)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private Integer determineFailureStatusCode() {
-        if (this.failureCauses.length == 0) {
+        if (this.failureCauses.isEmpty()) {
             return 500;
         }
 
         ThreadLocalRandom threadLocalRandom = ThreadLocalRandom.current();
-        String failureCause = this.failureCauses[threadLocalRandom.nextInt(this.failureCauses.length)];
+        String failureCause = this.failureCauses.get(threadLocalRandom.nextInt(this.failureCauses.size()));
 
         if (HttpClientFailureCause.ERROR.equals(failureCause)) {
             return -2;

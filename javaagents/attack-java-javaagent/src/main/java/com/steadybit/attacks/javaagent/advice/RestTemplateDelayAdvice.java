@@ -11,23 +11,19 @@ import okhttp3.OkHttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.protocol.HttpContext;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpRequest;
 
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
-import java.net.URI;
 
 public class RestTemplateDelayAdvice {
     @Advice.OnMethodExit
     static void exit(@Registration int registration, @Advice.This ClientHttpRequest request) throws SocketTimeoutException {
-        URI uri = request.getURI();
-        HttpMethod method = request.getMethod();
-
         Long millis = (Long) InstrumentationPluginDispatcher
                 .find(registration)
-                .exec(2, method != null ? method.toString() : null, uri.getHost(), uri.getPort(), uri.getPath());
+                .exec(2, request.getMethod() != null ? request.getMethod().toString() : null, request.getURI());
+
         if (millis == null) {
             return;
         }

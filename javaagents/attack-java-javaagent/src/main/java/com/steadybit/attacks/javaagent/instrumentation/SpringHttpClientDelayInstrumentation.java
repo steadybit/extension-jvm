@@ -15,8 +15,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.lang.instrument.Instrumentation;
-import java.util.Locale;
+import java.net.URI;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.hasSuperType;
@@ -27,21 +29,22 @@ import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesAr
 import static com.steadybit.shaded.net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 public class SpringHttpClientDelayInstrumentation extends ClassTransformationPlugin {
+    private static final JSONArray EMPTY_ARRAY = new JSONArray();
     private final long delay;
     private final boolean delayJitter;
-    private final String[] httpMethods;
-    private final String hostAddress;
-    private final String urlPath;
     private final ElementMatcher<MethodDescription> executeMethod = named("execute").and(takesNoArguments()).and(not(isAbstract()));
     private final ElementMatcher<MethodDescription> connectMethod = named("connect").and(takesArguments(3)).and(not(isAbstract()));
+    private final List<String> httpMethods;
+    private final String hostAdress;
+    private final String urlPath;
 
     public SpringHttpClientDelayInstrumentation(Instrumentation instrumentation, JSONObject config) {
         super(instrumentation);
         this.delay = config.optLong("delay", 500L);
         this.delayJitter = config.optBoolean("delayJitter", false);
-        this.hostAddress = config.optString("hostAddress", "*");
-        this.urlPath = config.optString("urlPath", "*");
-        this.httpMethods = this.getAllStringValues(config.optJSONArray("httpMethods"));
+        this.httpMethods = config.optJSONArray("httpMethods", EMPTY_ARRAY).toList().stream().map(Object::toString).collect(Collectors.toList());
+        this.hostAdress = config.optString("hostAddress", "*");
+        this.urlPath = config.optString("urlPath", "/**");
     }
 
     @Override
@@ -59,65 +62,25 @@ public class SpringHttpClientDelayInstrumentation extends ClassTransformationPlu
                         .advice(this.connectMethod, WebClientDelayAdvice.class.getName()));
     }
 
-    private String[] getAllStringValues(JSONArray array) {
-        if (array == null || array.isEmpty()) {
-            return new String[]{};
-        }
-
-        String[] values = new String[array.length()];
-        for (int i = 0; i < array.length(); i++) {
-            values[i] = array.getString(i);
-        }
-        return values;
-    }
-
     @Override
-    public Object exec(int code, Object arg1, Object arg2, Object arg3, Object arg4) {
+    public Object exec(int code, Object arg1, Object arg2) {
         if (code == 2) {
-            return this.determineDelay((String) arg1, (String) arg2, (int) arg3, (String) arg4);
+            return this.determineDelay((String) arg1, (URI) arg2);
         }
         return null;
     }
 
-    private Long determineDelay(String arg1, String arg2, int arg3, String arg4) {
-        if (!this.shouldAttack(arg1, arg2, arg3, arg4)) {
+    private Long determineDelay(String method, URI uri) {
+        HttpMatcher m = new HttpMatcher(this.httpMethods, this.hostAdress, this.urlPath);
+        if (!m.test(method, uri)) {
             return null;
         }
 
         if (this.delayJitter) {
             double jitterValue = 1.3d - ThreadLocalRandom.current().nextDouble(0.6d);
-            return Math.round(jitterValue * delay);
+            return Math.round(jitterValue * this.delay);
         } else {
             return this.delay;
         }
     }
-
-    private boolean shouldAttack(String httpMethod, String host, int port, String path) {
-        if (port != -1) {
-            host = host + ":" + port;
-        }
-
-        if (!"*".equals(this.hostAddress) && !this.hostAddress.equalsIgnoreCase(host)) {
-            return false;
-        }
-
-        if (!"*".equals(this.urlPath)
-                && !"".equals(this.urlPath)
-                && !this.urlPath.toLowerCase(Locale.ROOT).startsWith(path.toLowerCase(Locale.ROOT))) {
-            return false;
-        }
-
-        if (this.httpMethods.length == 0) {
-            return true;
-        }
-
-        for (String method : this.httpMethods) {
-            if (method.equalsIgnoreCase(httpMethod)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
 }

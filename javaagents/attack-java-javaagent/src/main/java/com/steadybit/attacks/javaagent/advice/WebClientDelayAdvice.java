@@ -16,12 +16,14 @@ import java.time.Duration;
 
 public class WebClientDelayAdvice {
     @Advice.OnMethodExit
-    static void exit(@Registration int registration, @Advice.Argument(0) HttpMethod httpMethod, @Advice.Argument(1) URI uri,
+    static void exit(@Registration int registration,
+                     @Advice.Argument(0) HttpMethod httpMethod,
+                     @Advice.Argument(1) URI uri,
                      @Advice.Return(readOnly = false) Mono<ClientHttpResponse> response) {
 
         Long millis = (Long) InstrumentationPluginDispatcher
                 .find(registration)
-                .exec(2, httpMethod != null ? httpMethod.toString() : null, uri.getHost(), uri.getPort(), uri.getPath());
+                .exec(2, httpMethod != null ? httpMethod.toString() : null, uri);
         if (millis == null) {
             return;
         }
