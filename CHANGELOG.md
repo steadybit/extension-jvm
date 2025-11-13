@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.5
+
+- Support Spring Path Patterns for HTTP Client attacks
+- Update dependencies
+
 ## v1.2.4
 
 - Update dependencies
