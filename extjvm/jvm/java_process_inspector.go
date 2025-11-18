@@ -4,22 +4,23 @@
 package jvm
 
 import (
-	"codnect.io/chrono"
 	"context"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/v4/process"
-	"github.com/steadybit/extension-jvm/chrono_utils"
-	"github.com/steadybit/extension-jvm/extjvm/container"
-	"github.com/steadybit/extension-jvm/extjvm/jvm/hsperf"
-	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"math"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"codnect.io/chrono"
+	"github.com/rs/zerolog/log"
+	"github.com/shirou/gopsutil/v4/process"
+	"github.com/steadybit/extension-jvm/chrono_utils"
+	"github.com/steadybit/extension-jvm/extjvm/container"
+	"github.com/steadybit/extension-jvm/extjvm/jvm/hsperf"
+	"github.com/steadybit/extension-jvm/extjvm/utils"
 )
 
 type JavaProcessInspector struct {
@@ -144,12 +145,11 @@ func (i *JavaProcessInspector) createJvmUsingHsperfdata(ctx context.Context, p *
 	if err := utils.RootCommandContext(ctx, "cp", path, tempFile).Run(); err != nil {
 		return nil, fmt.Errorf("error while copying hsperfdata: %w", err)
 	}
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			log.Warn().Msgf("Error while removing temp file %s: %s", name, err)
+	defer func() {
+		if err := utils.RootCommandContext(ctx, "rm", tempFile).Run(); err != nil {
+			log.Warn().Msgf("Error while removing temp file %s: %s", tempFile, err)
 		}
-	}(tempFile)
+	}()
 
 	data, err := hsperf.ReadData(tempFile)
 	if err != nil {
