@@ -30,7 +30,7 @@ func Exec(ctx context.Context, containerId string, name string, args ...string) 
 	if cfg.Debug {
 		runtimeArgs = append([]string{"--debug"}, runtimeArgs...)
 	}
-	nsenterArgs := []string{"-t", "1", "-m", "-n", "-i", "-p", "-r", "-u", "-C", "--", runtime}
+	nsenterArgs := []string{"-t", "1", "-n", "-i", "-p", "-r", "-u", "-C", "--", runtime}
 	return utils.RootCommandContext(ctx, "nsenter", slices.Concat(nsenterArgs, runtimeArgs, args)...)
 }
 
