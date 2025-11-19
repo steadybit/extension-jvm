@@ -17,13 +17,22 @@ func (a hostJvmAttachment) attach(agentHTTPPort int, heartbeatFile string) bool 
 		return false
 	}
 
-	resolvedMainJar, _ := a.resolveFile(mainJarName)
-	resolvedInitJar, _ := a.resolveFile(initJarName)
-	resolvedHeartBeatFile, _ := a.resolveFile(heartbeatFile)
+	resolvedMainJar, err := a.resolveFile(mainJarName)
+	if err != nil {
+		log.Error().Err(err).Str("file", mainJarName).Msgf("failed to resolve path in container")
+	}
+	resolvedInitJar, err := a.resolveFile(initJarName)
+	if err != nil {
+		log.Error().Err(err).Str("file", initJarName).Msgf("failed to resolve path in container")
+	}
+	resolvedHeartbeatFile, err := a.resolveFile(heartbeatFile)
+	if err != nil {
+		log.Error().Err(err).Str("file", heartbeatFile).Msgf("failed to resolve path in container")
+	}
 	return externalAttach(a.jvm,
 		resolvedMainJar,
 		resolvedInitJar,
-		resolvedHeartBeatFile,
+		resolvedHeartbeatFile,
 		agentHTTPPort,
 		a.GetHostAddress(),
 		a.jvm.Pid(),
