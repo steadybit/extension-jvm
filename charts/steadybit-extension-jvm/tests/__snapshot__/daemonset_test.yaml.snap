@@ -100,6 +100,8 @@ manifest should match snapshot using containerd and resources:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -111,6 +113,17 @@ manifest should match snapshot using containerd and resources:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             seccompProfile:
@@ -119,6 +132,8 @@ manifest should match snapshot using containerd and resources:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory
@@ -239,6 +254,8 @@ manifest should match snapshot using crio using podAnnotations and Labels:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -250,6 +267,17 @@ manifest should match snapshot using crio using podAnnotations and Labels:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             seccompProfile:
@@ -258,6 +286,8 @@ manifest should match snapshot using crio using podAnnotations and Labels:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory
@@ -376,6 +406,8 @@ manifest should match snapshot using docker:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -387,6 +419,17 @@ manifest should match snapshot using docker:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             seccompProfile:
@@ -395,6 +438,8 @@ manifest should match snapshot using docker:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory
@@ -517,6 +562,8 @@ manifest should match snapshot with TLS:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -531,6 +578,17 @@ manifest should match snapshot with TLS:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             seccompProfile:
@@ -539,6 +597,8 @@ manifest should match snapshot with TLS:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory
@@ -662,6 +722,8 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -673,6 +735,17 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             seccompProfile:
@@ -681,6 +754,8 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory
@@ -799,6 +874,8 @@ manifest should match snapshot with different containerPorts:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -810,6 +887,17 @@ manifest should match snapshot with different containerPorts:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             seccompProfile:
@@ -818,6 +906,8 @@ manifest should match snapshot with different containerPorts:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory
@@ -943,6 +1033,8 @@ manifest should match snapshot with extra env vars:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -954,6 +1046,17 @@ manifest should match snapshot with extra env vars:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             seccompProfile:
@@ -962,6 +1065,8 @@ manifest should match snapshot with extra env vars:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory
@@ -1082,6 +1187,8 @@ manifest should match snapshot with extra labels:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -1093,6 +1200,17 @@ manifest should match snapshot with extra labels:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             seccompProfile:
@@ -1101,6 +1219,8 @@ manifest should match snapshot with extra labels:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory
@@ -1225,6 +1345,8 @@ manifest should match snapshot with mutual TLS:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -1242,6 +1364,17 @@ manifest should match snapshot with mutual TLS:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             seccompProfile:
@@ -1250,6 +1383,8 @@ manifest should match snapshot with mutual TLS:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory
@@ -1382,6 +1517,8 @@ manifest should match snapshot with mutual TLS using containerPaths:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -1393,6 +1530,17 @@ manifest should match snapshot with mutual TLS using containerPaths:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             seccompProfile:
@@ -1401,6 +1549,8 @@ manifest should match snapshot with mutual TLS using containerPaths:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory
@@ -1519,6 +1669,8 @@ manifest should match snapshot with podSecurityContext:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -1530,6 +1682,17 @@ manifest should match snapshot with podSecurityContext:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             runAsUser: 2222
@@ -1539,6 +1702,8 @@ manifest should match snapshot with podSecurityContext:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory
@@ -1657,6 +1822,8 @@ manifest should match snapshot with priority class:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -1668,6 +1835,17 @@ manifest should match snapshot with priority class:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           priorityClassName: my-priority-class
           securityContext:
             runAsNonRoot: true
@@ -1677,6 +1855,8 @@ manifest should match snapshot with priority class:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory
@@ -1795,6 +1975,8 @@ manifest should match snapshot with update strategy:
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
                 - mountPath: /tmp
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
@@ -1806,6 +1988,17 @@ manifest should match snapshot with update strategy:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             seccompProfile:
@@ -1814,6 +2007,8 @@ manifest should match snapshot with update strategy:
           volumes:
             - emptyDir: {}
               name: tmp-dir
+            - emptyDir: {}
+              name: javaagent-libs
             - hostPath:
                 path: /sys/fs/cgroup
                 type: Directory

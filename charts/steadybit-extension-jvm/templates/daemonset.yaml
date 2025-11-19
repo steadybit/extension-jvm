@@ -51,8 +51,18 @@ spec:
       hostNetwork: true
       hostPID: true
       dnsPolicy: ClusterFirstWithHostNet
+      initContainers:
+        - name: init-javaagent-libs
+          image: {{ .Values.image.name }}:{{ default .Chart.AppVersion .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-c", "cp -R /javaagent/* /javaagent-rw/"]
+          volumeMounts:
+            - name: javaagent-libs
+              mountPath: /javaagent-rw
+
       containers:
-        - image: {{ .Values.image.name }}:{{ default .Chart.AppVersion .Values.image.tag }}
+        - name: extension
+          image: {{ .Values.image.name }}:{{ default .Chart.AppVersion .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             requests:
@@ -61,7 +71,6 @@ spec:
             limits:
               memory: {{ .Values.resources.limits.memory }}
               cpu: {{ .Values.resources.limits.cpu }}
-          name: extension
           ports:
             - name: http
               containerPort: {{ .Values.containerPorts.http }}
@@ -97,6 +106,8 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
+            - name: javaagent-libs
+              mountPath: /javaagent
             - name: tmp-dir
               mountPath: /tmp
             - name: cgroup-root
@@ -130,6 +141,8 @@ spec:
           {{- end }}
       volumes:
         - name: tmp-dir
+          emptyDir: {}
+        - name: javaagent-libs
           emptyDir: {}
         - name: cgroup-root
           hostPath:
