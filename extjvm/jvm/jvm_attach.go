@@ -62,7 +62,7 @@ func externalAttach(jvm JavaVm, agentJar, initJar string, heartbeatFile string, 
 	}
 
 	if heartbeatFile != "" {
-		attachCommand = append(attachCommand, fmt.Sprintf("heartbeatFile=%s", heartbeatFile))
+		attachCommand = append(attachCommand, fmt.Sprintf("heartbeat=%s", heartbeatFile))
 	}
 
 	if needsUserSwitch(jvm) {
