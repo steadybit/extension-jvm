@@ -1,0 +1,32 @@
+vulnerabilities:
+  - id: CVE-2024-47072
+    paths:
+      - opt/apache-jmeter-5.6.3/lib/xstream-1.4.20.jar
+    statement: Wait for a new JMeter-Release
+    expired_at: 2025-12-31
+  - id: CVE-2024-25638
+    paths:
+      - opt/apache-jmeter-5.6.3/lib/dnsjava-2.1.9.jar
+    statement: Wait for a new JMeter-Release
+    expired_at: 2025-12-31
+  - id: CVE-2025-24970
+    paths:
+      - opt/apache-jmeter-5.6.3/lib/neo4j-java-driver-4.4.13.jar
+    statement: Wait for a new JMeter-Release
+    expired_at: 2025-12-31
+  - id: CVE-2024-57699
+    paths:
+      - opt/apache-jmeter-5.6.3/lib/json-smart-2.5.0.jar
+    statement: Wait for a new JMeter-Release
+    expired_at: 2025-12-31
+  - id: CVE-2025-54988
+    paths:
+      - opt/apache-jmeter-5.6.3/lib/tika-parsers-1.28.5.jar
+    statement: Wait for a new JMeter-Release
+    expired_at: 2025-12-31
+  - id: CVE-2022-44729
+    paths:
+      - opt/apache-jmeter-5.6.3/lib/batik-bridge-1.16.jar
+      - opt/apache-jmeter-5.6.3/lib/batik-transcoder-1.16.jar
+    statement: Wait for a new JMeter-Release
+    expired_at: 2025-12-31
