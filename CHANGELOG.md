@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.9
+
+- fix: prevent pickiung up JAVA_TOOL_OPTIONS when using crun
+
 ## v1.2.8
 
 - Update dependencies
