@@ -5,6 +5,7 @@ package e2e
 
 import (
 	"errors"
+
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
 	"github.com/steadybit/extension-kit/extutil"
@@ -51,6 +52,9 @@ func (n *FashionBestseller) Deploy(podName string, opts ...func(c *acorev1.PodAp
 						{
 							Name:  extutil.Ptr("STEADYBIT_LOG_LEVEL"),
 							Value: extutil.Ptr("DEBUG"),
+						}, {
+							Name:  extutil.Ptr("JAVA_TOOL_OPTIONS"),
+							Value: extutil.Ptr("-XX:+UseParallelGC"),
 						},
 					},
 				},

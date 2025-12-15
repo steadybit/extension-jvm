@@ -1,6 +1,8 @@
 package jvm
 
 import (
+	"context"
+	"os/exec"
 	"path"
 
 	"github.com/rs/zerolog/log"
@@ -13,7 +15,7 @@ type hostJvmAttachment struct {
 
 func (a hostJvmAttachment) attach(agentHTTPPort int, heartbeatFile string) bool {
 	if !a.jvm.IsRunning() {
-		log.Debug().Msgf("Process not running. Skipping a to JVM %s", a.jvm.ToDebugString())
+		log.Debug().Msgf("Process not running. Skipping JVM %s", a.jvm.ToDebugString())
 		return false
 	}
 
@@ -37,8 +39,12 @@ func (a hostJvmAttachment) attach(agentHTTPPort int, heartbeatFile string) bool 
 		a.GetHostAddress(),
 		a.jvm.Pid(),
 		a.jvm.Pid(),
-		utils.RootCommandContext,
+		a.run,
 	)
+}
+
+func (a hostJvmAttachment) run(ctx context.Context, name string, args ...string) *exec.Cmd {
+	return utils.RootCommandContext(ctx, name, args...)
 }
 
 func (a hostJvmAttachment) resolveFile(f string) (string, error) {

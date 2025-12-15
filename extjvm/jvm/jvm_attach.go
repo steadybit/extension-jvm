@@ -46,12 +46,6 @@ type cmdSupplier func(ctx context.Context, name string, args ...string) *exec.Cm
 
 func externalAttach(jvm JavaVm, agentJar, initJar string, heartbeatFile string, agentHTTPPort int, host string, pid, hostpid int32, cmdFn cmdSupplier) bool {
 	attachCommand := []string{
-		"-Xms16m",
-		"-Xmx16m",
-		"-XX:+UseSerialGC",
-		"-XX:+PerfDisableSharedMem",
-		"-Dsun.tools.attach.attachTimeout=30000",
-		"-Dsteadybit.agent.disable-jvm-attachment",
 		"-jar",
 		initJar,
 		fmt.Sprintf("pid=%d", pid),
@@ -73,6 +67,7 @@ func externalAttach(jvm JavaVm, agentJar, initJar string, heartbeatFile string, 
 	defer cancel()
 
 	cmd := cmdFn(ctx, getExecutable(jvm), attachCommand...)
+	cmd.Env = []string{"JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:+PerfDisableSharedMem -Xms16m -Xmx16m -Dsun.tools.attach.attachTimeout=30000 -Dsteadybit.agent.disable-jvm-attachment"}
 	log.Debug().Strs("args", cmd.Args).Msg("executing attach command")
 	outb, err := cmd.CombinedOutput()
 
