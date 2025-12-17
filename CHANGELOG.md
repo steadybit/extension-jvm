@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.10
+
+- fix: regression on EKS not finding runc
+
 ## v1.2.9
 
 - fix: prevent pickiung up JAVA_TOOL_OPTIONS when using crun
