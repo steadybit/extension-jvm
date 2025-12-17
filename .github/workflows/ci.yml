@@ -60,7 +60,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download JARs
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: java-agents
           path: javaagents/download/target/javaagent
@@ -149,7 +149,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
 
       - name: Download JARs
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: java-agents
           path: javaagents/download/target/javaagent
@@ -204,7 +204,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download JARs
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: java-agents
           path: javaagents/download/target/javaagent
