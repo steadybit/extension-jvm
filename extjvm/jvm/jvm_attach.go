@@ -67,7 +67,7 @@ func externalAttach(jvm JavaVm, agentJar, initJar string, heartbeatFile string, 
 	defer cancel()
 
 	cmd := cmdFn(ctx, getExecutable(jvm), attachCommand...)
-	cmd.Env = []string{"JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:+PerfDisableSharedMem -Xms16m -Xmx16m -Dsun.tools.attach.attachTimeout=30000 -Dsteadybit.agent.disable-jvm-attachment"}
+	cmd.Env = append(os.Environ(), "JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:+PerfDisableSharedMem -Xms16m -Xmx16m -Dsun.tools.attach.attachTimeout=30000 -Dsteadybit.agent.disable-jvm-attachment")
 	log.Debug().Strs("args", cmd.Args).Msg("executing attach command")
 	outb, err := cmd.CombinedOutput()
 
