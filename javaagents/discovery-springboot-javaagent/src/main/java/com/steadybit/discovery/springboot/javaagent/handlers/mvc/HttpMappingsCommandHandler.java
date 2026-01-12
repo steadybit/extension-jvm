@@ -2,7 +2,7 @@
  * Copyright 2021 steadybit GmbH. All rights reserved.
  */
 
-package com.steadybit.discovery.springboot.javaagent.handlers;
+package com.steadybit.discovery.springboot.javaagent.handlers.mvc;
 
 import com.steadybit.discovery.springboot.javaagent.handlers.mvc.JmxMappingDescriptionProvider;
 import com.steadybit.javaagent.CommandHandler;

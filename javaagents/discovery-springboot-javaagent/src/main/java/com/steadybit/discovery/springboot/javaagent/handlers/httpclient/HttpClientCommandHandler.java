@@ -2,9 +2,8 @@
  * Copyright 2021 steadybit GmbH. All rights reserved.
  */
 
-package com.steadybit.discovery.springboot.javaagent.handlers;
+package com.steadybit.discovery.springboot.javaagent.handlers.httpclient;
 
-import com.steadybit.discovery.springboot.javaagent.handlers.httpclient.HttpRequest;
 import com.steadybit.javaagent.CommandHandler;
 import org.json.JSONArray;
 import org.json.JSONObject;
