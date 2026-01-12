@@ -2,20 +2,16 @@
  * Copyright 2021 steadybit GmbH. All rights reserved.
  */
 
-package com.steadybit.discovery.springboot.javaagent.handlers;
+package com.steadybit.discovery.springboot.javaagent.handlers.beans;
 
-import com.steadybit.discovery.springboot.javaagent.handlers.beans.JmxBeanReader;
 import com.steadybit.javaagent.CommandHandler;
 import com.steadybit.javaagent.log.Logger;
 import com.steadybit.javaagent.log.RemoteAgentLogger;
-import org.springframework.context.ApplicationContext;
 
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.function.Supplier;
 
 public class BeanCommandHandler implements CommandHandler {
     private static final Logger log = RemoteAgentLogger.getLogger(BeanCommandHandler.class);
@@ -34,9 +30,9 @@ public class BeanCommandHandler implements CommandHandler {
     public void handle(String command, String argument, OutputStream os) {
         Object result;
         if (command.equals("spring-bean")) {
-            result = hasBeanOfType(argument);
+            result = this.hasBeanOfType(argument);
         } else if (command.equals("spring-main-context")) {
-            result = getMainContextName();
+            result = this.getMainContextName();
         } else {
             throw new IllegalArgumentException("Unknown command: " + command);
         }
