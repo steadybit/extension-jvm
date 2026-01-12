@@ -150,8 +150,9 @@ func (d *SpringDiscovery) readHttpClientRequest(javaVm jvm.JavaVm) []HttpRequest
 	requests, err := d.facade.SendCommandToAgentWithHandler(javaVm, "spring-httpclient-requests", "", func(response io.Reader) (any, error) {
 		var requests []HttpRequest
 		if err := json.NewDecoder(response).Decode(&requests); err != nil {
-			return nil, fmt.Errorf("failed to decode response: %w", err)
+			return nil, fmt.Errorf("failed to decode spring-httpclient-requests response: %w", err)
 		}
+		log.Debug().Msgf("Result from command spring-httpclient-requests agent on PID %d: %v", javaVm.Pid(), requests)
 		return requests, nil
 	})
 	if err != nil {
@@ -165,9 +166,10 @@ func (d *SpringDiscovery) readRequestMappings(javaVm jvm.JavaVm) []SpringMvcMapp
 	mappings, err := d.facade.SendCommandToAgentWithHandler(javaVm, "spring-mvc-mappings", "", func(response io.Reader) (any, error) {
 		var mappings []SpringMvcMapping
 		if err := json.NewDecoder(response).Decode(&mappings); err != nil {
-			return nil, fmt.Errorf("failed to decode response: %w", err)
+			return nil, fmt.Errorf("failed to decode spring-mvc-mappings response: %w", err)
 
 		}
+		log.Debug().Msgf("Result from command spring-mvc-mappings agent on PID %d: %v", javaVm.Pid(), mappings)
 		return mappings, nil
 	})
 	if err != nil {
