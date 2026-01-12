@@ -4,7 +4,6 @@
 
 package com.steadybit.discovery.springboot.javaagent.handlers.beans;
 
-import com.steadybit.discovery.springboot.javaagent.handlers.BeanCommandHandler;
 import com.steadybit.discovery.springboot.javaagent.handlers.TestBootApplication;
 import com.steadybit.javaagent.CommandHandler;
 import org.junit.jupiter.api.AfterEach;
@@ -14,7 +13,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.web.context.ConfigurableWebServerApplicationContext;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
