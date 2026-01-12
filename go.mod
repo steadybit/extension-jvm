@@ -12,7 +12,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/shirou/gopsutil/v4 v4.25.12
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.10.4
-	github.com/steadybit/action-kit/go/action_kit_commons v1.5.11
+	github.com/steadybit/action-kit/go/action_kit_commons v1.5.13
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.3.1
 	github.com/steadybit/action-kit/go/action_kit_test v1.4.4
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.1
