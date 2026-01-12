@@ -34,7 +34,10 @@ public class JmxMappingDescriptionProvider {
     @SuppressWarnings("unchecked")
     public void describeMappings(JSONArray result) {
         try {
-            Map<?, ?> applicationMappings = (Map<?, ?>) this.mBeanServer.invoke(objectName, "mappings", new Object[0], new String[0]);
+            Map<?, ?> applicationMappings = (Map<?, ?>) this.mBeanServer.invoke(this.objectName, "mappings", new Object[0], new String[0]);
+            if (log.isTraceEnabled()) {
+                log.trace("{}#mappings() result: {}", this.objectName, applicationMappings);
+            }
             if (applicationMappings == null) {
                 return;
             }
@@ -97,7 +100,7 @@ public class JmxMappingDescriptionProvider {
                 putNotEmpty(json, "produces", this.mediaTypeAsStringList((Collection<Map<?, ?>>) requestMappingConditions.get("produces")));
             }
 
-            if (json.length() > 0) {
+            if (!json.isEmpty()) {
                 mappings.put(json);
             }
         }

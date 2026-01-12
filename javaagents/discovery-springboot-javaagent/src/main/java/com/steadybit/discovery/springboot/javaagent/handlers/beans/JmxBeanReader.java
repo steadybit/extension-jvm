@@ -29,7 +29,11 @@ public class JmxBeanReader {
 
     public String getMainContextName() {
         try {
-            Map<?, ?> result = (Map<?, ?>) this.mBeanServer.invoke(objectName, "beans", new Object[0], new String[0]);
+            Map<?, ?> result = (Map<?, ?>) this.mBeanServer.invoke(this.objectName, "beans", new Object[0], new String[0]);
+            if (log.isTraceEnabled()) {
+                log.trace("{}#beans() result: {}", this.objectName, result);
+            }
+
             if (result == null || result.isEmpty()) {
                 return null;
             }
@@ -47,12 +51,12 @@ public class JmxBeanReader {
                 if (parentId == null && !"bootstrap".equals(name)) {
                     return name;
                 } else if ("bootstrap".equals(parentId)) {
-                    return stripSuffix(name);
+                    return this.stripSuffix(name);
                 }
             }
             return null;
         } catch (InstanceNotFoundException ex) {
-            log.trace("Could not find main context: MBean org.springframework.boot:type=Endpoint,name=Beans not found");
+            log.trace("Could not find main context: MBean {} not found", this.objectName);
             return null;
         } catch (Exception e) {
             log.debug("Could not find main context: " + e.getMessage());
@@ -66,7 +70,7 @@ public class JmxBeanReader {
 
     public Boolean hasBeanOfType(Class<?> clazz) {
         try {
-            Map<?, ?> result = (Map<?, ?>) this.mBeanServer.invoke(objectName, "beans", new Object[0], new String[0]);
+            Map<?, ?> result = (Map<?, ?>) this.mBeanServer.invoke(this.objectName, "beans", new Object[0], new String[0]);
             if (result == null || result.isEmpty()) {
                 return null;
             }
