@@ -25,7 +25,7 @@ require (
 	github.com/xin053/hsperfdata v0.2.3
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/net v0.48.0
-	golang.org/x/sys v0.39.0
+	golang.org/x/sys v0.40.0
 	k8s.io/api v0.35.0
 	k8s.io/apimachinery v0.35.0
 	k8s.io/client-go v0.35.0
