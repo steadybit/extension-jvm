@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.11
+
+- Update dependencies
+
 ## v1.2.10
 
 - fix: regression on EKS not finding runc
