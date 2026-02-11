@@ -261,14 +261,14 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			delay:         200,
 			jitter:        false,
 			expectedDelay: true,
-			hostAddress:   "www.github.com:443",
+			hostAddress:   "github.com:443",
 		},
 		{
 			name:          "should not delay http client traffic on host",
 			delay:         200,
 			jitter:        false,
 			expectedDelay: false,
-			hostAddress:   "www.github.com",
+			hostAddress:   "github.com",
 		},
 		{
 			name:          "should delay http client traffic with jitter",
@@ -300,16 +300,16 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			springBootSample.AssertIsReachable(t, true)
 
 			//measure customer endpoint
-			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/remote/blocking?url=https://www.github.com/steadybit")
+			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/remote/blocking?url=https://github.com/steadybit")
 			require.NoError(t, err, "failed to measure customers endpoint")
 
 			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-httpclient-delay-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.expectedDelay {
-				springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://www.github.com/steadybit", unaffectedLatency)
+				springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://github.com/steadybit", unaffectedLatency)
 			} else {
-				springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, "/remote/blocking?url=https://www.github.com/steadybit", 0)
+				springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, "/remote/blocking?url=https://github.com/steadybit", 0)
 			}
 			require.NoError(t, action.Cancel())
 		})
