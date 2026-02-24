@@ -777,6 +777,159 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
         rollingUpdate:
           maxUnavailable: 1
         type: RollingUpdate
+manifest should match snapshot with custom image registry:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels:
+        steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/extension: unconfined
+            oneagent.dynatrace.com/injection: "false"
+            steadybit.com/extension-auto-discovery: |
+              {"extensions":[{"port":8087,"protocol":"http","types":["ACTION","DISCOVERY","ADVICE"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8087,"protocol":"http"}]}
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/discovery-disabled: "true"
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8087"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+              image: my-registry.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                failureThreshold: 5
+                httpGet:
+                  path: /health/liveness
+                  port: 8083
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 5
+              name: extension
+              ports:
+                - containerPort: 8087
+                  name: http
+                - containerPort: 8083
+                  name: health
+              readinessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /health/readiness
+                  port: 8083
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 1
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 96Mi
+                requests:
+                  cpu: 100m
+                  memory: 48Mi
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_CHROOT
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
+                - mountPath: /run/containerd/runc/k8s.io
+                  name: ociruntime-root
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: my-registry.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
+          serviceAccountName: steadybit-extension-jvm
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - emptyDir:
+                medium: Memory
+              name: javaagent-libs
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /run/containerd/runc/k8s.io
+                type: Directory
+              name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
+      updateStrategy:
+        rollingUpdate:
+          maxUnavailable: 1
+        type: RollingUpdate
 manifest should match snapshot with different containerPorts:
   1: |
     apiVersion: apps/v1
@@ -1245,6 +1398,314 @@ manifest should match snapshot with extra labels:
         rollingUpdate:
           maxUnavailable: 1
         type: RollingUpdate
+manifest should match snapshot with global image pull secrets:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels:
+        steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/extension: unconfined
+            oneagent.dynatrace.com/injection: "false"
+            steadybit.com/extension-auto-discovery: |
+              {"extensions":[{"port":8087,"protocol":"http","types":["ACTION","DISCOVERY","ADVICE"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8087,"protocol":"http"}]}
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/discovery-disabled: "true"
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8087"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                failureThreshold: 5
+                httpGet:
+                  path: /health/liveness
+                  port: 8083
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 5
+              name: extension
+              ports:
+                - containerPort: 8087
+                  name: http
+                - containerPort: 8083
+                  name: health
+              readinessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /health/readiness
+                  port: 8083
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 1
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 96Mi
+                requests:
+                  cpu: 100m
+                  memory: 48Mi
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_CHROOT
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
+                - mountPath: /run/containerd/runc/k8s.io
+                  name: ociruntime-root
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          imagePullSecrets:
+            - name: global-pull-secret
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
+          serviceAccountName: steadybit-extension-jvm
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - emptyDir:
+                medium: Memory
+              name: javaagent-libs
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /run/containerd/runc/k8s.io
+                type: Directory
+              name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
+      updateStrategy:
+        rollingUpdate:
+          maxUnavailable: 1
+        type: RollingUpdate
+manifest should match snapshot with global image registry:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels:
+        steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/extension: unconfined
+            oneagent.dynatrace.com/injection: "false"
+            steadybit.com/extension-auto-discovery: |
+              {"extensions":[{"port":8087,"protocol":"http","types":["ACTION","DISCOVERY","ADVICE"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8087,"protocol":"http"}]}
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/discovery-disabled: "true"
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8087"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+              image: corp-registry.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                failureThreshold: 5
+                httpGet:
+                  path: /health/liveness
+                  port: 8083
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 5
+              name: extension
+              ports:
+                - containerPort: 8087
+                  name: http
+                - containerPort: 8083
+                  name: health
+              readinessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /health/readiness
+                  port: 8083
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 1
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 96Mi
+                requests:
+                  cpu: 100m
+                  memory: 48Mi
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_CHROOT
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
+                - mountPath: /run/containerd/runc/k8s.io
+                  name: ociruntime-root
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: corp-registry.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
+          serviceAccountName: steadybit-extension-jvm
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - emptyDir:
+                medium: Memory
+              name: javaagent-libs
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /run/containerd/runc/k8s.io
+                type: Directory
+              name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
+      updateStrategy:
+        rollingUpdate:
+          maxUnavailable: 1
+        type: RollingUpdate
 manifest should match snapshot with global priority class:
   1: |
     apiVersion: apps/v1
@@ -1372,6 +1833,314 @@ manifest should match snapshot with global priority class:
                 - mountPath: /javaagent-rw
                   name: javaagent-libs
           priorityClassName: my-global-priority-class
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
+          serviceAccountName: steadybit-extension-jvm
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - emptyDir:
+                medium: Memory
+              name: javaagent-libs
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /run/containerd/runc/k8s.io
+                type: Directory
+              name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
+      updateStrategy:
+        rollingUpdate:
+          maxUnavailable: 1
+        type: RollingUpdate
+manifest should match snapshot with image pull secrets:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels:
+        steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/extension: unconfined
+            oneagent.dynatrace.com/injection: "false"
+            steadybit.com/extension-auto-discovery: |
+              {"extensions":[{"port":8087,"protocol":"http","types":["ACTION","DISCOVERY","ADVICE"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8087,"protocol":"http"}]}
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/discovery-disabled: "true"
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8087"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                failureThreshold: 5
+                httpGet:
+                  path: /health/liveness
+                  port: 8083
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 5
+              name: extension
+              ports:
+                - containerPort: 8087
+                  name: http
+                - containerPort: 8083
+                  name: health
+              readinessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /health/readiness
+                  port: 8083
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 1
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 96Mi
+                requests:
+                  cpu: 100m
+                  memory: 48Mi
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_CHROOT
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
+                - mountPath: /run/containerd/runc/k8s.io
+                  name: ociruntime-root
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          imagePullSecrets:
+            - name: my-pull-secret
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
+          serviceAccountName: steadybit-extension-jvm
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - emptyDir:
+                medium: Memory
+              name: javaagent-libs
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - hostPath:
+                path: /run/containerd/runc/k8s.io
+                type: Directory
+              name: ociruntime-root
+            - hostPath:
+                path: /run/containerd/containerd.sock
+                type: Socket
+              name: containerengine-socket
+      updateStrategy:
+        rollingUpdate:
+          maxUnavailable: 1
+        type: RollingUpdate
+manifest should match snapshot with legacy image name containing registry:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels:
+        steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
+      name: RELEASE-NAME-steadybit-extension-jvm
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-jvm
+          app.kubernetes.io/name: steadybit-extension-jvm
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/extension: unconfined
+            oneagent.dynatrace.com/injection: "false"
+            steadybit.com/extension-auto-discovery: |
+              {"extensions":[{"port":8087,"protocol":"http","types":["ACTION","DISCOVERY","ADVICE"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8087,"protocol":"http"}]}
+          labels:
+            app: steadybit-extension-jvm
+            app.kubernetes.io/name: steadybit-extension-jvm
+            steadybit.com/discovery-disabled: "true"
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8087"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8083"
+                - name: STEADYBIT_EXTENSION_JAVA_AGENT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_ENABLED
+                  value: "true"
+                - name: STEADYBIT_EXTENSION_JVM_ATTACHMENT_PORT
+                  value: "0"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/containerd/runc/k8s.io
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                failureThreshold: 5
+                httpGet:
+                  path: /health/liveness
+                  port: 8083
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 5
+              name: extension
+              ports:
+                - containerPort: 8087
+                  name: http
+                - containerPort: 8083
+                  name: health
+              readinessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /health/readiness
+                  port: 8083
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 1
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 96Mi
+                requests:
+                  cpu: 100m
+                  memory: 48Mi
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_CHROOT
+                    - SYS_RESOURCE
+                    - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /javaagent
+                  name: javaagent-libs
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/containerd/containerd.sock
+                  name: containerengine-socket
+                - mountPath: /run/containerd/runc/k8s.io
+                  name: ociruntime-root
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - cp -R /javaagent/* /javaagent-rw/
+              image: ghcr.io/steadybit/extension-jvm:v0.0.0
+              imagePullPolicy: IfNotPresent
+              name: init-javaagent-libs
+              volumeMounts:
+                - mountPath: /javaagent-rw
+                  name: javaagent-libs
           securityContext:
             runAsNonRoot: true
             seccompProfile:

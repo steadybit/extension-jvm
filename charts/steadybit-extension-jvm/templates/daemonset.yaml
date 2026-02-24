@@ -53,17 +53,18 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       initContainers:
         - name: init-javaagent-libs
-          image: {{ .Values.image.name }}:{{ default .Chart.AppVersion .Values.image.tag }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: {{ include "extensionlib.image" . }}
+          imagePullPolicy: {{ include "extensionlib.imagePullPolicy" . }}
           command: ["sh", "-c", "cp -R /javaagent/* /javaagent-rw/"]
           volumeMounts:
             - name: javaagent-libs
               mountPath: /javaagent-rw
 
+      {{- include "extensionlib.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: extension
-          image: {{ .Values.image.name }}:{{ default .Chart.AppVersion .Values.image.tag }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: {{ include "extensionlib.image" . }}
+          imagePullPolicy: {{ include "extensionlib.imagePullPolicy" . }}
           resources:
             requests:
               memory: {{ .Values.resources.requests.memory }}
