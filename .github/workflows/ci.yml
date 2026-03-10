@@ -76,7 +76,7 @@ jobs:
           java-version: 21
           cache: maven
 
-      - uses: docker/setup-qemu-action@v3 # NOSONAR githubactions:S7637 - verified action creator
+      - uses: docker/setup-qemu-action@v4 # NOSONAR githubactions:S7637 - verified action creator
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4 # NOSONAR githubactions:S7637 - verified action creator
 
@@ -131,7 +131,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: docker/setup-qemu-action@v3 # NOSONAR githubactions:S7637 - verified action creator
+      - uses: docker/setup-qemu-action@v4 # NOSONAR githubactions:S7637 - verified action creator
       - uses: docker/setup-buildx-action@v4 # NOSONAR githubactions:S7637 - verified action creator
 
       - name: Log in to the container registry
