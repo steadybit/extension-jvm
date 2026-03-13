@@ -5,6 +5,9 @@
 package main
 
 import (
+	"os"
+	"time"
+
 	_ "github.com/KimMachineGun/automemlimit" // By default, it sets `GOMEMLIMIT` to 90% of cgroup's memory limit.
 	"github.com/rs/zerolog"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
@@ -19,8 +22,9 @@ import (
 	"github.com/steadybit/extension-kit/extlogging"
 	"github.com/steadybit/extension-kit/extruntime"
 	"github.com/steadybit/extension-kit/extsignals"
-	"os"
 )
+
+var startedAt = time.Now().Format(time.RFC3339)
 
 func main() {
 	//  - to activate JSON logging, set the environment variable STEADYBIT_LOG_FORMAT="json"
@@ -46,8 +50,6 @@ func main() {
 
 	// This call registers a handler for the extension's root path. This is the path initially accessed
 	// by the Steadybit agent to obtain the extension's capabilities.
-	exthttp.RegisterHttpHandler("/", exthttp.GetterAsHandler(getExtensionList))
-
 	// The registration of HTTP handlers for the extension.
 	stop, facade, datasource, spring := extjvm.StartJvmInfrastructure()
 
@@ -70,6 +72,8 @@ func main() {
 	action_kit_sdk.RegisterAction(extjvm.NewHttpClientDelay(facade))
 	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodDelay(facade))
 	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodException(facade))
+
+	exthttp.RegisterHttpHandler("/", exthttp.IfNoneMatchHandler(func() string { return startedAt }, exthttp.GetterAsHandler(getExtensionList)))
 
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)
