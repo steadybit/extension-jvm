@@ -1,5 +1,9 @@
 # Changelog
 
+## (next)
+
+- Support if-none-match for the extension list endpoint
+
 ## v1.2.11
 
 - Update dependencies
