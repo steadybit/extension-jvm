@@ -26,7 +26,7 @@ func NewControllerDelay(facade jvm.JavaFacade, spring *SpringDiscovery) action_k
 func controllerDelayDescribe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          ActionIDPrefix + ".spring-mvc-delay-attack",
-		Label:       "Controller Delay",
+		Label:       "Spring Controller Delay",
 		Description: "Delay a Spring MVC controller http response by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(controllerDelayIcon),

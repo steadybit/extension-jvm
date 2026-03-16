@@ -26,7 +26,7 @@ func NewHttpClientStatus(facade jvm.JavaFacade) action_kit_sdk.Action[JavaagentA
 func httpClientStatusDescribe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          ActionIDPrefix + ".spring-httpclient-status-attack",
-		Label:       "Http Client Status",
+		Label:       "Spring Http Client Status",
 		Description: "Returns the given status code for a RestTemplate or WebClient call. The original call is not executed.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(springHttpStatusIcon),
