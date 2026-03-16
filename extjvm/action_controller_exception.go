@@ -31,10 +31,8 @@ func controllerExceptionDescribe() action_kit_api.ActionDescription {
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(controllerExceptionIcon),
 		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
-			// The target type this action is for
-			TargetType: targetType + "(instance.type=spring;spring-instance.mvc-mapping)",
-			// You can provide a list of target templates to help the user select targets.
-			// A template can be used to pre-fill a selection
+			TargetType:         targetType,
+			TargetQuery:        extutil.Ptr(`instance.type="spring" AND spring-instance.mvc-mapping IS PRESENT`),
 			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
 		}),
 		Technology: extutil.Ptr("JVM"),

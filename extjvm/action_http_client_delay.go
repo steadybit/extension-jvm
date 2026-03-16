@@ -31,10 +31,8 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(springHttpDelayIcon),
 		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
-			// The target type this action is for
-			TargetType: targetType + "(instance.type=spring)",
-			// You can provide a list of target templates to help the user select targets.
-			// A template can be used to pre-fill a selection
+			TargetType:         targetType,
+			TargetQuery:        extutil.Ptr(`instance.type="spring"`),
 			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
 		}),
 		Technology: extutil.Ptr("JVM"),

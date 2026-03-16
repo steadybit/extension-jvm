@@ -11,7 +11,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.34.0
 	github.com/shirou/gopsutil/v4 v4.26.2
-	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.10.4
+	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.10.5-0.20260312092617-066581c6d7a0
 	github.com/steadybit/action-kit/go/action_kit_commons v1.5.15
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.3.1
 	github.com/steadybit/action-kit/go/action_kit_test v1.4.7
@@ -73,7 +73,7 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
-	github.com/oapi-codegen/runtime v1.1.2 // indirect
+	github.com/oapi-codegen/runtime v1.2.0 // indirect
 	github.com/oasdiff/yaml v0.0.0-20250309154309-f31be36b4037 // indirect
 	github.com/oasdiff/yaml3 v0.0.0-20250309153720-d2182401db90 // indirect
 	github.com/opencontainers/runtime-spec v1.3.0 // indirect
@@ -86,7 +86,6 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/tklauser/numcpus v0.11.0 // indirect
-	github.com/ugorji/go/codec v1.2.12 // indirect
 	github.com/woodsbury/decimal128 v1.4.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0 // indirect
