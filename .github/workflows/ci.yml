@@ -155,7 +155,7 @@ jobs:
           path: javaagents/download/target/javaagent
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6 # NOSONAR githubactions:S7637 - verified action creator
+        uses: docker/build-push-action@v7 # NOSONAR githubactions:S7637 - verified action creator
         with:
           context: ./
           push: ${{ github.event_name != 'pull_request' }}
