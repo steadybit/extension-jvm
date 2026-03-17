@@ -39,6 +39,22 @@ class JavaMethodDelayInstrumentationTest {
     }
 
     @Test
+    void should_delay_overloaded_method_calls() {
+        JSONObject config = new JSONObject().put("methods", new JSONArray(Collections.singletonList(TestClass.class.getName() + "#overloaded"))).put("delay", "100");
+        JavaMethodDelayInstrumentation attack = new JavaMethodDelayInstrumentation(INSTRUMENTATION, config);
+
+        long normalTime = this.measureTime(TEST_CLASS::overloaded);
+
+        Installable.AdviceApplied applied = attack.install();
+        assertThat(applied).isEqualTo(Installable.AdviceApplied.APPLIED);
+        assertThat(this.measureTime(TEST_CLASS::overloaded)).isCloseTo(normalTime + 100L, offset(10L));
+        assertThat(this.measureTime(() -> TEST_CLASS.overloaded("overloaded"))).isCloseTo(normalTime + 100L, offset(10L));
+        attack.reset();
+
+        assertThat(this.measureTime(TEST_CLASS::overloaded)).isCloseTo(normalTime, offset(10L));
+    }
+
+    @Test
     void should_do_nothing_if_method_not_matching() {
         JSONObject config = new JSONObject().put("methods", new JSONArray(Collections.singletonList(TestClass.class.getName() + "#anyOtherMethod"))).put("delay", "100");
         JavaMethodDelayInstrumentation attack = new JavaMethodDelayInstrumentation(INSTRUMENTATION, config);
@@ -96,6 +112,15 @@ class JavaMethodDelayInstrumentationTest {
     public static class TestClass {
         private void run() {
             log.info("run()");
+        }
+
+        private void overloaded() {
+            log.info("overloaded()");
+        }
+
+        @SuppressWarnings({"unused", "SameParameterValue"})
+        private void overloaded(Object o) {
+            log.info("overloaded(Object)");
         }
     }
 }

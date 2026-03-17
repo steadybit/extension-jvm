@@ -26,7 +26,7 @@ func NewHttpClientDelay(facade jvm.JavaFacade) action_kit_sdk.Action[JavaagentAc
 func httpClientDelayDescribe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          ActionIDPrefix + ".spring-httpclient-delay-attack",
-		Label:       "Http Client Delay",
+		Label:       "Spring Http Client Delay",
 		Description: "Delays a response from a RestTemplate or WebClient by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(springHttpDelayIcon),

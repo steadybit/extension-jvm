@@ -26,7 +26,7 @@ func NewJdbcTemplateException(facade jvm.JavaFacade) action_kit_sdk.Action[Javaa
 func jdbcTemplateExceptionDescribe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          ActionIDPrefix + ".spring-jdbctemplate-exception-attack",
-		Label:       "JDBC Template Exception",
+		Label:       "Spring JDBC Template Exception",
 		Description: "Throws an exception in a Spring JDBC Template.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(jdbcTemplateExceptionIcon),

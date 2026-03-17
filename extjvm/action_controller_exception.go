@@ -26,7 +26,7 @@ func NewControllerException(facade jvm.JavaFacade, spring *SpringDiscovery) acti
 func controllerExceptionDescribe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          ActionIDPrefix + ".spring-mvc-exception-attack",
-		Label:       "Controller Exception",
+		Label:       "Spring Controller Exception",
 		Description: "Throw an exception in an Spring MVC controller method",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(controllerExceptionIcon),

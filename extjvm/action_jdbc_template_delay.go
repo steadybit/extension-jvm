@@ -26,7 +26,7 @@ func NewJdbcTemplateDelay(facade jvm.JavaFacade) action_kit_sdk.Action[Javaagent
 func jdbcTemplateDelayDescribe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          ActionIDPrefix + ".spring-jdbctemplate-delay-attack",
-		Label:       "JDBC Template Delay",
+		Label:       "Spring JDBC Template Delay",
 		Description: "Delay a Spring JDBC Template response by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(jdbcTemplateDelayIcon),
