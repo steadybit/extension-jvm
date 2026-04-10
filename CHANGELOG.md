@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.13
+
+- Update dependencies
+
 ## v1.2.12
 
 - Use target query to narrow down attack targets
