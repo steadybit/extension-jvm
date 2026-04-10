@@ -7,6 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
 	"github.com/steadybit/extension-kit/extutil"
@@ -15,8 +18,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	acorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 	ametav1 "k8s.io/client-go/applyconfigurations/meta/v1"
-	"testing"
-	"time"
 )
 
 type SpringBootSample struct {
@@ -102,7 +103,31 @@ func (n *SpringBootSample) Deploy(podName string, opts ...func(c *acorev1.PodApp
 	n.cancelCtx = cancel
 	go n.Minikube.TailLogPrefixed(ctx, n.Pod, "🥾️")
 
+	if err = n.waitForReachable(3 * time.Minute); err != nil {
+		return fmt.Errorf("spring boot sample not reachable: %w", err)
+	}
+
 	return nil
+}
+
+func (n *SpringBootSample) waitForReachable(timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	var lastErr error
+	for {
+		select {
+		case <-ctx.Done():
+			statusInfo := n.podStatusInfo()
+			return fmt.Errorf("timed out waiting for application to become reachable (last error: %w)\n%s", lastErr, statusInfo)
+		case <-time.After(2 * time.Second):
+			if err := n.IsReachable(); err != nil {
+				lastErr = err
+				continue
+			}
+			return nil
+		}
+	}
 }
 
 func (n *SpringBootSample) Target() (*action_kit_api.Target, error) {
@@ -131,16 +156,34 @@ func (n *SpringBootSample) AssertIsReachable(t *testing.T, expected bool) {
 	require.NoError(t, err)
 	defer client.Close()
 
-	e2e.Retry(t, 20, 500*time.Millisecond, func(r *e2e.R) {
+	e2e.Retry(t, 30, 1*time.Second, func(r *e2e.R) {
 		_, err = client.R().Get("/customers")
 		if expected && err != nil {
 			r.Failed = true
-			_, _ = fmt.Fprintf(r.Log, "expected spring boot sample to be reachble, but was not: %s", err)
+			statusInfo := n.podStatusInfo()
+			_, _ = fmt.Fprintf(r.Log, "expected spring boot sample to be reachable, but was not: %s\n%s", err, statusInfo)
 		} else if !expected && err == nil {
 			r.Failed = true
-			_, _ = fmt.Fprintf(r.Log, "expected spring boot sample not to be reachble, but was")
+			_, _ = fmt.Fprintf(r.Log, "expected spring boot sample not to be reachable, but was")
 		}
 	})
+}
+
+func (n *SpringBootSample) podStatusInfo() string {
+	status, err := n.ContainerStatus()
+	if err != nil {
+		return fmt.Sprintf("pod status: unable to retrieve (%s)", err)
+	}
+	info := fmt.Sprintf("pod status: ready=%t, restartCount=%d, state=", status.Ready, status.RestartCount)
+	switch {
+	case status.State.Running != nil:
+		info += fmt.Sprintf("Running (since %s)", status.State.Running.StartedAt.Time)
+	case status.State.Waiting != nil:
+		info += fmt.Sprintf("Waiting (reason=%s, message=%s)", status.State.Waiting.Reason, status.State.Waiting.Message)
+	case status.State.Terminated != nil:
+		info += fmt.Sprintf("Terminated (reason=%s, exitCode=%d, message=%s)", status.State.Terminated.Reason, status.State.Terminated.ExitCode, status.State.Terminated.Message)
+	}
+	return info
 }
 
 func (n *SpringBootSample) GetHttpStatusOfCustomersEndpoint() (int, error) {
