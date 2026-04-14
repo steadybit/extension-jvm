@@ -13,7 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-jvm/chrono_utils"
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
-	"github.com/steadybit/extension-kit/extutil"
 )
 
 const (
@@ -77,7 +76,7 @@ func (d *SpringDiscovery) Detached(jvm jvm.JavaVm) {
 
 func (d *SpringDiscovery) getApplications() []SpringApplication {
 	var result []SpringApplication
-	d.applications.Range(func(key, value interface{}) bool {
+	d.applications.Range(func(key, value any) bool {
 		result = append(result, value.(SpringApplication))
 		return true
 	})
@@ -87,7 +86,7 @@ func (d *SpringDiscovery) getApplications() []SpringApplication {
 func (d *SpringDiscovery) findApplication(pid int32) *SpringApplication {
 	for _, application := range d.getApplications() {
 		if application.Pid == pid {
-			return extutil.Ptr(application)
+			return new(application)
 		}
 	}
 	return nil

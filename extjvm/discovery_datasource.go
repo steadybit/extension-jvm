@@ -50,7 +50,7 @@ func (d *DataSourceDiscovery) Detached(jvm jvm.JavaVm) {
 
 func (d *DataSourceDiscovery) getApplications() []dataSourceApplication {
 	var result []dataSourceApplication
-	d.applications.Range(func(key, value interface{}) bool {
+	d.applications.Range(func(key, value any) bool {
 		result = append(result, value.(dataSourceApplication))
 		return true
 	})

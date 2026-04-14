@@ -29,13 +29,13 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 		Label:       "Spring Http Client Delay",
 		Description: "Delays a response from a RestTemplate or WebClient by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
-		Icon:        extutil.Ptr(springHttpDelayIcon),
-		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
+		Icon:        new(springHttpDelayIcon),
+		TargetSelection: new(action_kit_api.TargetSelection{
 			TargetType:         targetType,
-			TargetQuery:        extutil.Ptr(`instance.type="spring"`),
-			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
+			TargetQuery:        new(`instance.type="spring"`),
+			SelectionTemplates: new(targetSelectionTemplates),
 		}),
-		Technology: extutil.Ptr("JVM"),
+		Technology: new("JVM"),
 
 		// To clarify the purpose of the action, you can set a kind.
 		//   Attack: Will cause harm to targets
@@ -55,47 +55,47 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 			{
 				Name:         "duration",
 				Label:        "Duration",
-				Description:  extutil.Ptr("How long should the delay be inflicted?"),
+				Description:  new("How long should the delay be inflicted?"),
 				Type:         action_kit_api.ActionParameterTypeDuration,
-				DefaultValue: extutil.Ptr("30s"),
-				Required:     extutil.Ptr(true),
+				DefaultValue: new("30s"),
+				Required:     new(true),
 			},
 			{
 				Name:         "delay",
 				Label:        "Delay",
-				Description:  extutil.Ptr("How long should the db access be delayed?"),
+				Description:  new("How long should the db access be delayed?"),
 				Type:         action_kit_api.ActionParameterTypeDuration,
-				DefaultValue: extutil.Ptr("500ms"),
-				Required:     extutil.Ptr(true),
+				DefaultValue: new("500ms"),
+				Required:     new(true),
 			},
 			{
 				Name:         "delayJitter",
 				Label:        "Jitter",
-				Description:  extutil.Ptr("Add random +/-30% jitter to response delay?"),
+				Description:  new("Add random +/-30% jitter to response delay?"),
 				Type:         action_kit_api.ActionParameterTypeBoolean,
-				DefaultValue: extutil.Ptr("false"),
-				Required:     extutil.Ptr(true),
-				Advanced:     extutil.Ptr(true),
+				DefaultValue: new("false"),
+				Required:     new(true),
+				Advanced:     new(true),
 			},
 			{
 				Name:        "httpMethods",
 				Label:       "Http Methods",
-				Description: extutil.Ptr("Which HTTP methods should be attacked?"),
+				Description: new("Which HTTP methods should be attacked?"),
 				Type:        action_kit_api.ActionParameterTypeStringArray,
-				Required:    extutil.Ptr(false),
-				Advanced:    extutil.Ptr(true),
+				Required:    new(false),
+				Advanced:    new(true),
 				Options:     methodsOptions,
 			},
 			{
 				Name:         "hostAddress",
 				Label:        "Host Address",
-				Description:  extutil.Ptr("Request to which host address should be attacked?"),
+				Description:  new("Request to which host address should be attacked?"),
 				Type:         action_kit_api.ActionParameterTypeString,
-				DefaultValue: extutil.Ptr("*"),
-				Required:     extutil.Ptr(false),
-				Advanced:     extutil.Ptr(true),
-				OptionsOnly:  extutil.Ptr(false),
-				Options: extutil.Ptr([]action_kit_api.ParameterOption{
+				DefaultValue: new("*"),
+				Required:     new(false),
+				Advanced:     new(true),
+				OptionsOnly:  new(false),
+				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Any",
 						Value: "*",
@@ -108,25 +108,25 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 			{
 				Name:         "urlPath",
 				Label:        "Path Pattern",
-				Description:  extutil.Ptr("Which URL path should be attacked? Supports Spring Ant-style path patterns (e.g. /api/**)."),
+				Description:  new("Which URL path should be attacked? Supports Spring Ant-style path patterns (e.g. /api/**)."),
 				Type:         action_kit_api.ActionParameterTypeString,
-				DefaultValue: extutil.Ptr("/**"),
-				Required:     extutil.Ptr(false),
-				Advanced:     extutil.Ptr(true),
+				DefaultValue: new("/**"),
+				Required:     new(false),
+				Advanced:     new(true),
 			},
 		},
-		Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
+		Stop: new(action_kit_api.MutatingEndpointReference{}),
 	}
 
 }
 
-func httpClientDelayConfigProvider(request action_kit_api.PrepareActionRequestBody) (map[string]interface{}, error) {
+func httpClientDelayConfigProvider(request action_kit_api.PrepareActionRequestBody) (map[string]any, error) {
 	duration, err := extractDuration(request)
 	if err != nil {
 		return nil, err
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"attack-class": "com.steadybit.attacks.javaagent.instrumentation.SpringHttpClientDelayInstrumentation",
 		"duration":     int(duration / time.Millisecond),
 		"delay":        extutil.ToUInt64(request.Config["delay"]),

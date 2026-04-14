@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -42,17 +41,17 @@ func Test_controllerDelay_Prepare(t *testing.T) {
 		{
 			name: "Should return config with deprecated method parameter",
 			requestBody: action_kit_api.PrepareActionRequestBody{
-				Config: map[string]interface{}{
+				Config: map[string]any{
 					"action":      "prepare",
 					"pattern":     "/customers",
 					"method":      "GET",
-					"methods":     []interface{}{"POST"},
+					"methods":     []any{"POST"},
 					"duration":    "10000",
 					"delay":       "500",
 					"delayJitter": "true",
 				},
 				ExecutionId: uuid.New(),
-				Target:      extutil.Ptr(fake.getTarget()),
+				Target:      new(fake.getTarget()),
 			},
 
 			wantedState: &JavaagentActionState{
@@ -62,16 +61,16 @@ func Test_controllerDelay_Prepare(t *testing.T) {
 		{
 			name: "Should return config",
 			requestBody: action_kit_api.PrepareActionRequestBody{
-				Config: map[string]interface{}{
+				Config: map[string]any{
 					"action":      "prepare",
 					"pattern":     "/customers",
-					"methods":     []interface{}{"GET"},
+					"methods":     []any{"GET"},
 					"duration":    "10000",
 					"delay":       "500",
 					"delayJitter": "true",
 				},
 				ExecutionId: uuid.New(),
-				Target:      extutil.Ptr(fake.getTarget()),
+				Target:      new(fake.getTarget()),
 			},
 
 			wantedState: &JavaagentActionState{

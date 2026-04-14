@@ -19,18 +19,18 @@ var (
 	erroneousCallRate = action_kit_api.ActionParameter{
 		Name:         "erroneousCallRate",
 		Label:        "Erroneous Call Rate",
-		Description:  extutil.Ptr("How many percent of requests should trigger an exception?"),
+		Description:  new("How many percent of requests should trigger an exception?"),
 		Type:         action_kit_api.ActionParameterTypePercentage,
-		MinValue:     extutil.Ptr(0),
-		MaxValue:     extutil.Ptr(100),
-		DefaultValue: extutil.Ptr("100"),
-		Required:     extutil.Ptr(true),
-		Advanced:     extutil.Ptr(true),
+		MinValue:     new(0),
+		MaxValue:     new(100),
+		DefaultValue: new("100"),
+		Required:     new(true),
+		Advanced:     new(true),
 	}
 	targetSelectionTemplates = []action_kit_api.TargetSelectionTemplate{
 		{
 			Label:       "instance name",
-			Description: extutil.Ptr("Find instance by name."),
+			Description: new("Find instance by name."),
 			Query:       "jvm-instance.name=\"\"",
 		},
 	}
@@ -48,7 +48,7 @@ type JavaagentActionState struct {
 type javaagentAction struct {
 	pluginJar      string
 	description    action_kit_api.ActionDescription
-	configProvider func(request action_kit_api.PrepareActionRequestBody) (map[string]interface{}, error)
+	configProvider func(request action_kit_api.PrepareActionRequestBody) (map[string]any, error)
 	facade         jvm.JavaFacade
 }
 
@@ -125,7 +125,7 @@ func (j *javaagentAction) Start(_ context.Context, state *JavaagentActionState) 
 		return nil, extension_kit.ToError("Failed to start action", err)
 	} else if state.ValidateAdviceApplied && status.AdviceApplied != "APPLIED" {
 		return &action_kit_api.StartResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
+			Error: new(action_kit_api.ActionKitError{
 				Title:  "The given class and method did not match anything in the target JVM.",
 				Status: extutil.Ptr(action_kit_api.Failed),
 			}),

@@ -13,10 +13,10 @@ var (
 	patternAttribute = action_kit_api.ActionParameter{
 		Name:        "pattern",
 		Label:       "Request Mapping",
-		Description: extutil.Ptr("Which request mapping pattern should be used to match the requests?"),
+		Description: new("Which request mapping pattern should be used to match the requests?"),
 		Type:        action_kit_api.ActionParameterTypeString,
-		Required:    extutil.Ptr(true),
-		Options: extutil.Ptr([]action_kit_api.ParameterOption{
+		Required:    new(true),
+		Options: new([]action_kit_api.ParameterOption{
 			action_kit_api.ParameterOptionsFromTargetAttribute{
 				Attribute: "spring-instance.mvc-mapping",
 			},
@@ -25,22 +25,22 @@ var (
 	methodAttribute = action_kit_api.ActionParameter{
 		Name:               "method",
 		Label:              "Http Method",
-		Description:        extutil.Ptr("Which HTTP method should be attacked?"),
+		Description:        new("Which HTTP method should be attacked?"),
 		Type:               action_kit_api.ActionParameterTypeString,
 		Options:            methodsOptions,
-		Deprecated:         extutil.Ptr(true),
-		DeprecationMessage: extutil.Ptr("Use the 'Http Methods' parameter instead."),
+		Deprecated:         new(true),
+		DeprecationMessage: new("Use the 'Http Methods' parameter instead."),
 	}
 	methodsAttribute = action_kit_api.ActionParameter{
 		Name:         "methods",
 		Label:        "Http Methods",
-		Description:  extutil.Ptr("Which HTTP methods should be attacked?"),
+		Description:  new("Which HTTP methods should be attacked?"),
 		Type:         action_kit_api.ActionParameterTypeStringArray,
-		Required:     extutil.Ptr(true),
-		DefaultValue: extutil.Ptr("*"),
+		Required:     new(true),
+		DefaultValue: new("*"),
 		Options:      methodsOptions,
 	}
-	methodsOptions = extutil.Ptr([]action_kit_api.ParameterOption{
+	methodsOptions = new([]action_kit_api.ParameterOption{
 		action_kit_api.ExplicitParameterOption{
 			Label: "Any",
 			Value: "*",

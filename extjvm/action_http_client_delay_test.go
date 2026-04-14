@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,9 +29,9 @@ func Test_http_Client_Delay_Prepare(t *testing.T) {
 		{
 			name: "Should return config",
 			requestBody: action_kit_api.PrepareActionRequestBody{
-				Config: map[string]interface{}{
+				Config: map[string]any{
 					"action":      "prepare",
-					"httpMethods": []interface{}{"GET"},
+					"httpMethods": []any{"GET"},
 					"hostAddress": "*",
 					"urlPath":     "/test",
 					"duration":    "10000",
@@ -40,7 +39,7 @@ func Test_http_Client_Delay_Prepare(t *testing.T) {
 					"delayJitter": "true",
 				},
 				ExecutionId: uuid.New(),
-				Target:      extutil.Ptr(fake.getTarget()),
+				Target:      new(fake.getTarget()),
 			},
 
 			wantedState: &JavaagentActionState{

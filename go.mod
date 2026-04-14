@@ -1,6 +1,6 @@
 module github.com/steadybit/extension-jvm
 
-go 1.25.7
+go 1.26.2
 
 require (
 	codnect.io/chrono v1.1.3
