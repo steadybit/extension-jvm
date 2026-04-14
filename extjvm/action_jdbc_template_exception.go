@@ -29,13 +29,13 @@ func jdbcTemplateExceptionDescribe() action_kit_api.ActionDescription {
 		Label:       "Spring JDBC Template Exception",
 		Description: "Throws an exception in a Spring JDBC Template.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
-		Icon:        extutil.Ptr(jdbcTemplateExceptionIcon),
-		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
+		Icon:        new(jdbcTemplateExceptionIcon),
+		TargetSelection: new(action_kit_api.TargetSelection{
 			TargetType:         targetType,
-			TargetQuery:        extutil.Ptr(`instance.type="spring" AND spring-instance.jdbc-template IS PRESENT`),
-			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
+			TargetQuery:        new(`instance.type="spring" AND spring-instance.jdbc-template IS PRESENT`),
+			SelectionTemplates: new(targetSelectionTemplates),
 		}),
-		Technology: extutil.Ptr("JVM"),
+		Technology: new("JVM"),
 
 		// To clarify the purpose of the action, you can set a kind.
 		//   Attack: Will cause harm to targets
@@ -55,11 +55,11 @@ func jdbcTemplateExceptionDescribe() action_kit_api.ActionDescription {
 			{
 				Name:         "operations",
 				Label:        "Operation",
-				Description:  extutil.Ptr("Which operation should be attacked?"),
+				Description:  new("Which operation should be attacked?"),
 				Type:         action_kit_api.ActionParameterTypeString,
-				DefaultValue: extutil.Ptr("*"),
-				Required:     extutil.Ptr(true),
-				Options: extutil.Ptr([]action_kit_api.ParameterOption{
+				DefaultValue: new("*"),
+				Required:     new(true),
+				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Any",
 						Value: "*",
@@ -77,20 +77,20 @@ func jdbcTemplateExceptionDescribe() action_kit_api.ActionDescription {
 			{
 				Name:         "duration",
 				Label:        "Duration",
-				Description:  extutil.Ptr("How long should the traffic be dropped?"),
+				Description:  new("How long should the traffic be dropped?"),
 				Type:         action_kit_api.ActionParameterTypeDuration,
-				DefaultValue: extutil.Ptr("30s"),
-				Required:     extutil.Ptr(true),
+				DefaultValue: new("30s"),
+				Required:     new(true),
 			},
 			{
 				Name:         "jdbcUrl",
 				Label:        "JDBC connection url",
-				Description:  extutil.Ptr("Which JDBC connection should be attacked?"),
+				Description:  new("Which JDBC connection should be attacked?"),
 				Type:         action_kit_api.ActionParameterTypeString,
-				DefaultValue: extutil.Ptr("*"),
-				Required:     extutil.Ptr(true),
-				Advanced:     extutil.Ptr(true),
-				Options: extutil.Ptr([]action_kit_api.ParameterOption{
+				DefaultValue: new("*"),
+				Required:     new(true),
+				Advanced:     new(true),
+				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Any",
 						Value: "*",
@@ -102,17 +102,17 @@ func jdbcTemplateExceptionDescribe() action_kit_api.ActionDescription {
 			},
 			erroneousCallRate,
 		},
-		Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
+		Stop: new(action_kit_api.MutatingEndpointReference{}),
 	}
 }
 
-func jdbcTemplateExceptionConfigProvider(request action_kit_api.PrepareActionRequestBody) (map[string]interface{}, error) {
+func jdbcTemplateExceptionConfigProvider(request action_kit_api.PrepareActionRequestBody) (map[string]any, error) {
 	duration, err := extractDuration(request)
 	if err != nil {
 		return nil, err
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"attack-class":      "com.steadybit.attacks.javaagent.instrumentation.SpringJdbcTemplateExceptionInstrumentation",
 		"duration":          int(duration / time.Millisecond),
 		"operations":        extutil.ToString(request.Config["operations"]),

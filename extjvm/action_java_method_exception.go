@@ -30,12 +30,12 @@ func methodExceptionDescribe() action_kit_api.ActionDescription {
 		Label:       "Java Method Exception",
 		Description: "Throw an exception in an public Java method.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
-		Icon:        extutil.Ptr(javaMethodExceptionIcon),
-		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
+		Icon:        new(javaMethodExceptionIcon),
+		TargetSelection: new(action_kit_api.TargetSelection{
 			TargetType:         targetType,
-			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
+			SelectionTemplates: new(targetSelectionTemplates),
 		}),
-		Technology: extutil.Ptr("JVM"),
+		Technology: new("JVM"),
 
 		// To clarify the purpose of the action, you can set a kind.
 		//   Attack: Will cause harm to targets
@@ -55,41 +55,41 @@ func methodExceptionDescribe() action_kit_api.ActionDescription {
 			{
 				Name:        "className",
 				Label:       "Class Name",
-				Description: extutil.Ptr("Which Java class should be attacked?"),
+				Description: new("Which Java class should be attacked?"),
 				Type:        action_kit_api.ActionParameterTypeString,
-				Required:    extutil.Ptr(true),
+				Required:    new(true),
 			},
 			{
 				Name:        "methodName",
 				Label:       "Method Name",
-				Description: extutil.Ptr("Which public method should be attacked?"),
+				Description: new("Which public method should be attacked?"),
 				Type:        action_kit_api.ActionParameterTypeString,
-				Required:    extutil.Ptr(true),
+				Required:    new(true),
 			},
 			erroneousCallRate,
 			{
 				Name:         "duration",
 				Label:        "Duration",
-				Description:  extutil.Ptr("How long should the delay be inflicted?"),
+				Description:  new("How long should the delay be inflicted?"),
 				Type:         action_kit_api.ActionParameterTypeDuration,
-				DefaultValue: extutil.Ptr("30s"),
-				Required:     extutil.Ptr(true),
+				DefaultValue: new("30s"),
+				Required:     new(true),
 			},
 			{
 				Name:         "validate",
 				Label:        "Validate class and method name",
-				Description:  extutil.Ptr("Should the action fail if the specified class and method could not be found?"),
+				Description:  new("Should the action fail if the specified class and method could not be found?"),
 				Type:         action_kit_api.ActionParameterTypeBoolean,
-				DefaultValue: extutil.Ptr("true"),
-				Required:     extutil.Ptr(true),
-				Advanced:     extutil.Ptr(true),
+				DefaultValue: new("true"),
+				Required:     new(true),
+				Advanced:     new(true),
 			},
 		},
-		Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
+		Stop: new(action_kit_api.MutatingEndpointReference{}),
 	}
 }
 
-func methodExceptionConfigProvider(request action_kit_api.PrepareActionRequestBody) (map[string]interface{}, error) {
+func methodExceptionConfigProvider(request action_kit_api.PrepareActionRequestBody) (map[string]any, error) {
 	duration, err := extractDuration(request)
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func methodExceptionConfigProvider(request action_kit_api.PrepareActionRequestBo
 	className := extutil.ToString(request.Config["className"])
 	methodName := extutil.ToString(request.Config["methodName"])
 
-	return map[string]interface{}{
+	return map[string]any{
 		"attack-class":      "com.steadybit.attacks.javaagent.instrumentation.JavaMethodExceptionInstrumentation",
 		"duration":          int(duration / time.Millisecond),
 		"erroneousCallRate": extutil.ToInt(request.Config["erroneousCallRate"]),

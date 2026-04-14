@@ -30,12 +30,12 @@ func methodDelayDescribe() action_kit_api.ActionDescription {
 		Label:       "Java Method Delay",
 		Description: "Delay a public method call by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
-		Icon:        extutil.Ptr(javaMethodDelayIcon),
-		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
+		Icon:        new(javaMethodDelayIcon),
+		TargetSelection: new(action_kit_api.TargetSelection{
 			TargetType:         targetType,
-			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
+			SelectionTemplates: new(targetSelectionTemplates),
 		}),
-		Technology: extutil.Ptr("JVM"),
+		Technology: new("JVM"),
 
 		// To clarify the purpose of the action, you can set a kind.
 		//   Attack: Will cause harm to targets
@@ -55,57 +55,57 @@ func methodDelayDescribe() action_kit_api.ActionDescription {
 			{
 				Name:        "className",
 				Label:       "Class Name",
-				Description: extutil.Ptr("Which Java class should be attacked?"),
+				Description: new("Which Java class should be attacked?"),
 				Type:        action_kit_api.ActionParameterTypeString,
-				Required:    extutil.Ptr(true),
+				Required:    new(true),
 			},
 			{
 				Name:        "methodName",
 				Label:       "Method Name",
-				Description: extutil.Ptr("Which public method should be attacked?"),
+				Description: new("Which public method should be attacked?"),
 				Type:        action_kit_api.ActionParameterTypeString,
-				Required:    extutil.Ptr(true),
+				Required:    new(true),
 			},
 			{
 				Name:         "delay",
 				Label:        "Delay",
-				Description:  extutil.Ptr("How long should the db access be delayed?"),
+				Description:  new("How long should the db access be delayed?"),
 				Type:         action_kit_api.ActionParameterTypeDuration,
-				DefaultValue: extutil.Ptr("500ms"),
-				Required:     extutil.Ptr(true),
+				DefaultValue: new("500ms"),
+				Required:     new(true),
 			},
 			{
 				Name:         "duration",
 				Label:        "Duration",
-				Description:  extutil.Ptr("How long should the delay be inflicted?"),
+				Description:  new("How long should the delay be inflicted?"),
 				Type:         action_kit_api.ActionParameterTypeDuration,
-				DefaultValue: extutil.Ptr("30s"),
-				Required:     extutil.Ptr(true),
+				DefaultValue: new("30s"),
+				Required:     new(true),
 			},
 			{
 				Name:         "delayJitter",
 				Label:        "Jitter",
-				Description:  extutil.Ptr("Add random +/-30% jitter to response delay?"),
+				Description:  new("Add random +/-30% jitter to response delay?"),
 				Type:         action_kit_api.ActionParameterTypeBoolean,
-				DefaultValue: extutil.Ptr("false"),
-				Required:     extutil.Ptr(true),
-				Advanced:     extutil.Ptr(true),
+				DefaultValue: new("false"),
+				Required:     new(true),
+				Advanced:     new(true),
 			},
 			{
 				Name:         "validate",
 				Label:        "Validate class and method name",
-				Description:  extutil.Ptr("Should the action fail if the specified class and method could not be found?"),
+				Description:  new("Should the action fail if the specified class and method could not be found?"),
 				Type:         action_kit_api.ActionParameterTypeBoolean,
-				DefaultValue: extutil.Ptr("true"),
-				Required:     extutil.Ptr(true),
-				Advanced:     extutil.Ptr(true),
+				DefaultValue: new("true"),
+				Required:     new(true),
+				Advanced:     new(true),
 			},
 		},
-		Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
+		Stop: new(action_kit_api.MutatingEndpointReference{}),
 	}
 }
 
-func methodDelayConfigProvider(request action_kit_api.PrepareActionRequestBody) (map[string]interface{}, error) {
+func methodDelayConfigProvider(request action_kit_api.PrepareActionRequestBody) (map[string]any, error) {
 	duration, err := extractDuration(request)
 	if err != nil {
 		return nil, err
@@ -114,7 +114,7 @@ func methodDelayConfigProvider(request action_kit_api.PrepareActionRequestBody) 
 	className := extutil.ToString(request.Config["className"])
 	methodName := extutil.ToString(request.Config["methodName"])
 
-	return map[string]interface{}{
+	return map[string]any{
 		"attack-class": "com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation",
 		"duration":     int(duration / time.Millisecond),
 		"delay":        extutil.ToUInt64(request.Config["delay"]),

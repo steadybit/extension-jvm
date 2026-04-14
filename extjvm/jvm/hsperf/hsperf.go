@@ -71,7 +71,7 @@ func findHsPerfDataFile(ctx context.Context, searchDir string, pid int32) (strin
 	}
 
 	match := ""
-	for _, p := range strings.Split(string(output), "\n") {
+	for p := range strings.SplitSeq(string(output), "\n") {
 		if p == "" {
 			continue
 		}
@@ -87,7 +87,7 @@ func findHsPerfDataFile(ctx context.Context, searchDir string, pid int32) (strin
 }
 
 type Data struct {
-	entries map[string]interface{}
+	entries map[string]any
 }
 
 func ReadData(file string) (Data, error) {
@@ -95,7 +95,7 @@ func ReadData(file string) (Data, error) {
 	if err == nil {
 		return Data{entries: entries}, nil
 	} else {
-		return Data{entries: make(map[string]interface{})}, err
+		return Data{entries: make(map[string]any)}, err
 	}
 }
 

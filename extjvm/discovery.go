@@ -16,7 +16,6 @@ import (
 	"github.com/steadybit/extension-jvm/extjvm/jvm"
 	"github.com/steadybit/extension-jvm/extjvm/utils"
 	"github.com/steadybit/extension-kit/extbuild"
-	"github.com/steadybit/extension-kit/extutil"
 	"slices"
 	"strconv"
 	"strings"
@@ -118,7 +117,7 @@ func (j *jvmDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
 	return discovery_kit_api.DiscoveryDescription{
 		Id: targetType,
 		Discover: discovery_kit_api.DescribingEndpointReferenceWithCallInterval{
-			CallInterval: extutil.Ptr(config.Config.DiscoveryCallInterval),
+			CallInterval: new(config.Config.DiscoveryCallInterval),
 		},
 	}
 }
@@ -127,13 +126,13 @@ func (j *jvmDiscovery) DescribeTarget() discovery_kit_api.TargetDescription {
 	return discovery_kit_api.TargetDescription{
 		Id:      targetType,
 		Version: extbuild.GetSemverVersionStringOrUnknown(),
-		Icon:    extutil.Ptr(targetIcon),
+		Icon:    new(targetIcon),
 
 		// Labels used in the UI
 		Label: discovery_kit_api.PluralLabel{One: "JVM instance", Other: "JVM instances"},
 
 		// Category for the targets to appear in
-		Category: extutil.Ptr(category),
+		Category: new(category),
 
 		// Specify attributes shown in table columns and to be used for sorting
 		Table: discovery_kit_api.Table{

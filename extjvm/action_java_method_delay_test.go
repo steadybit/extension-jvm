@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -26,7 +25,7 @@ func Test_Java_Method_Delay_Prepare(t *testing.T) {
 		{
 			name: "Should return config",
 			requestBody: action_kit_api.PrepareActionRequestBody{
-				Config: map[string]interface{}{
+				Config: map[string]any{
 					"action":      "prepare",
 					"className":   "com.steadybit.demo.CustomerController",
 					"methodName":  "GetCustomers",
@@ -36,7 +35,7 @@ func Test_Java_Method_Delay_Prepare(t *testing.T) {
 					"validate":    "true",
 				},
 				ExecutionId: uuid.New(),
-				Target:      extutil.Ptr(fake.getTarget()),
+				Target:      new(fake.getTarget()),
 			},
 
 			wantedState: &JavaagentActionState{

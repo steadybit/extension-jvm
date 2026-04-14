@@ -94,8 +94,8 @@ func readNsPids(hostPid int32) []int32 {
 	if err != nil {
 		return nil
 	}
-	nsPids := strings.Split(string(file), "\n")
-	for _, nsPid := range nsPids {
+	nsPids := strings.SplitSeq(string(file), "\n")
+	for nsPid := range nsPids {
 		if strings.HasPrefix(nsPid, "NSpid:\t") {
 			tokens := strings.Split(nsPid[len("NSpid:\t"):], "\t")
 			pids := make([]int32, len(tokens))

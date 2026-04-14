@@ -7,7 +7,6 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -29,17 +28,17 @@ func Test_http_Client_Status_Prepare(t *testing.T) {
 		{
 			name: "Should return config",
 			requestBody: action_kit_api.PrepareActionRequestBody{
-				Config: map[string]interface{}{
+				Config: map[string]any{
 					"action":            "prepare",
 					"erroneousCallRate": 75,
 					"duration":          "10000",
-					"httpMethods":       []interface{}{"GET"},
+					"httpMethods":       []any{"GET"},
 					"hostAddress":       "*",
 					"urlPath":           "/test",
-					"failureCauses":     []interface{}{"HTTP_502"},
+					"failureCauses":     []any{"HTTP_502"},
 				},
 				ExecutionId: uuid.New(),
-				Target:      extutil.Ptr(fake.getTarget()),
+				Target:      new(fake.getTarget()),
 			},
 
 			wantedState: &JavaagentActionState{

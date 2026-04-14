@@ -31,10 +31,8 @@ func RootCommandContext(ctx context.Context, name string, arg ...string) *exec.C
 }
 
 func AppendIfMissing(slice []string, val string) []string {
-	for _, ele := range slice {
-		if ele == val {
-			return slice
-		}
+	if slices.Contains(slice, val) {
+		return slice
 	}
 	return append(slice, val)
 }

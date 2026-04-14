@@ -146,7 +146,7 @@ func saveAttackStatus(port int, status Status) {
 
 func GetAttackStatus(pid int32) Status {
 	var status Status
-	attackStatus.Range(func(key, value interface{}) bool {
+	attackStatus.Range(func(key, value any) bool {
 		if value.(Status).Pid == pid {
 			status = value.(Status)
 			return false

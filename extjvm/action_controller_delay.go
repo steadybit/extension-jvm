@@ -29,13 +29,13 @@ func controllerDelayDescribe() action_kit_api.ActionDescription {
 		Label:       "Spring Controller Delay",
 		Description: "Delay a Spring MVC controller http response by the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
-		Icon:        extutil.Ptr(controllerDelayIcon),
-		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
+		Icon:        new(controllerDelayIcon),
+		TargetSelection: new(action_kit_api.TargetSelection{
 			TargetType:         targetType,
-			TargetQuery:        extutil.Ptr(`instance.type="spring" AND spring-instance.mvc-mapping IS PRESENT`),
-			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
+			TargetQuery:        new(`instance.type="spring" AND spring-instance.mvc-mapping IS PRESENT`),
+			SelectionTemplates: new(targetSelectionTemplates),
 		}),
-		Technology: extutil.Ptr("JVM"),
+		Technology: new("JVM"),
 
 		// To clarify the purpose of the action, you can set a kind.
 		//   Attack: Will cause harm to targets
@@ -58,34 +58,34 @@ func controllerDelayDescribe() action_kit_api.ActionDescription {
 			{
 				Name:         "delay",
 				Label:        "Delay",
-				Description:  extutil.Ptr("How much should the response be delayed?"),
+				Description:  new("How much should the response be delayed?"),
 				Type:         action_kit_api.ActionParameterTypeDuration,
-				DefaultValue: extutil.Ptr("500ms"),
-				Required:     extutil.Ptr(true),
+				DefaultValue: new("500ms"),
+				Required:     new(true),
 			},
 			{
 				Name:         "duration",
 				Label:        "Duration",
-				Description:  extutil.Ptr("How long should the traffic be dropped?"),
+				Description:  new("How long should the traffic be dropped?"),
 				Type:         action_kit_api.ActionParameterTypeDuration,
-				DefaultValue: extutil.Ptr("30s"),
-				Required:     extutil.Ptr(true),
+				DefaultValue: new("30s"),
+				Required:     new(true),
 			}, {
 				Name:         "delayJitter",
 				Label:        "Jitter",
-				Description:  extutil.Ptr("Add random +/-30% jitter to response delay?"),
+				Description:  new("Add random +/-30% jitter to response delay?"),
 				Type:         action_kit_api.ActionParameterTypeBoolean,
-				DefaultValue: extutil.Ptr("false"),
-				Required:     extutil.Ptr(true),
-				Advanced:     extutil.Ptr(true),
+				DefaultValue: new("false"),
+				Required:     new(true),
+				Advanced:     new(true),
 			},
 		},
-		Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
+		Stop: new(action_kit_api.MutatingEndpointReference{}),
 	}
 }
 
-func controllerDelayConfigProvider(s *SpringDiscovery) func(request action_kit_api.PrepareActionRequestBody) (map[string]interface{}, error) {
-	return func(request action_kit_api.PrepareActionRequestBody) (map[string]interface{}, error) {
+func controllerDelayConfigProvider(s *SpringDiscovery) func(request action_kit_api.PrepareActionRequestBody) (map[string]any, error) {
+	return func(request action_kit_api.PrepareActionRequestBody) (map[string]any, error) {
 		duration, err := extractDuration(request)
 		if err != nil {
 			return nil, err
@@ -96,7 +96,7 @@ func controllerDelayConfigProvider(s *SpringDiscovery) func(request action_kit_a
 			return nil, err
 		}
 
-		return map[string]interface{}{
+		return map[string]any{
 			"attack-class": "com.steadybit.attacks.javaagent.instrumentation.JavaMethodDelayInstrumentation",
 			"duration":     int(duration / time.Millisecond),
 			"delay":        extutil.ToUInt64(request.Config["delay"]),

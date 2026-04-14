@@ -29,13 +29,13 @@ func httpClientStatusDescribe() action_kit_api.ActionDescription {
 		Label:       "Spring Http Client Status",
 		Description: "Returns the given status code for a RestTemplate or WebClient call. The original call is not executed.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
-		Icon:        extutil.Ptr(springHttpStatusIcon),
-		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
+		Icon:        new(springHttpStatusIcon),
+		TargetSelection: new(action_kit_api.TargetSelection{
 			TargetType:         targetType,
-			TargetQuery:        extutil.Ptr(`instance.type="spring"`),
-			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
+			TargetQuery:        new(`instance.type="spring"`),
+			SelectionTemplates: new(targetSelectionTemplates),
 		}),
-		Technology: extutil.Ptr("JVM"),
+		Technology: new("JVM"),
 
 		// To clarify the purpose of the action, you can set a kind.
 		//   Attack: Will cause harm to targets
@@ -55,30 +55,30 @@ func httpClientStatusDescribe() action_kit_api.ActionDescription {
 			{
 				Name:         "duration",
 				Label:        "Duration",
-				Description:  extutil.Ptr("How long should the calls be attacked?"),
+				Description:  new("How long should the calls be attacked?"),
 				Type:         action_kit_api.ActionParameterTypeDuration,
-				DefaultValue: extutil.Ptr("30s"),
-				Required:     extutil.Ptr(true),
+				DefaultValue: new("30s"),
+				Required:     new(true),
 			},
 			{
 				Name:        "httpMethods",
 				Label:       "Http Methods",
-				Description: extutil.Ptr("Which HTTP methods should be attacked?"),
+				Description: new("Which HTTP methods should be attacked?"),
 				Type:        action_kit_api.ActionParameterTypeStringArray,
-				Required:    extutil.Ptr(false),
-				Advanced:    extutil.Ptr(true),
+				Required:    new(false),
+				Advanced:    new(true),
 				Options:     methodsOptions,
 			},
 			{
 				Name:         "hostAddress",
 				Label:        "Host Address",
-				Description:  extutil.Ptr("Request to which host address should be attacked?"),
+				Description:  new("Request to which host address should be attacked?"),
 				Type:         action_kit_api.ActionParameterTypeString,
-				DefaultValue: extutil.Ptr("*"),
-				Required:     extutil.Ptr(false),
-				Advanced:     extutil.Ptr(true),
-				OptionsOnly:  extutil.Ptr(false),
-				Options: extutil.Ptr([]action_kit_api.ParameterOption{
+				DefaultValue: new("*"),
+				Required:     new(false),
+				Advanced:     new(true),
+				OptionsOnly:  new(false),
+				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Any",
 						Value: "*",
@@ -91,20 +91,20 @@ func httpClientStatusDescribe() action_kit_api.ActionDescription {
 			{
 				Name:         "urlPath",
 				Label:        "Path Pattern",
-				Description:  extutil.Ptr("Which URL path should be attacked? Supports Spring Ant-style path patterns (e.g. /api/**)."),
+				Description:  new("Which URL path should be attacked? Supports Spring Ant-style path patterns (e.g. /api/**)."),
 				Type:         action_kit_api.ActionParameterTypeString,
-				DefaultValue: extutil.Ptr("/**"),
-				Required:     extutil.Ptr(false),
-				Advanced:     extutil.Ptr(true),
+				DefaultValue: new("/**"),
+				Required:     new(false),
+				Advanced:     new(true),
 			},
 			{
 				Name:        "failureCauses",
 				Label:       "Failure Types",
-				Description: extutil.Ptr("What HTTP client behavior should be simulated? If multiple are selected, one will be chosen randomly for every request."),
+				Description: new("What HTTP client behavior should be simulated? If multiple are selected, one will be chosen randomly for every request."),
 				Type:        action_kit_api.ActionParameterTypeStringArray,
-				Required:    extutil.Ptr(false),
-				Advanced:    extutil.Ptr(true),
-				Options: extutil.Ptr([]action_kit_api.ParameterOption{
+				Required:    new(false),
+				Advanced:    new(true),
+				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Protocol & Network Errors",
 						Value: "ERROR",
@@ -157,17 +157,17 @@ func httpClientStatusDescribe() action_kit_api.ActionDescription {
 			},
 			erroneousCallRate,
 		},
-		Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
+		Stop: new(action_kit_api.MutatingEndpointReference{}),
 	}
 }
 
-func httpClientStatusConfigProvider(request action_kit_api.PrepareActionRequestBody) (map[string]interface{}, error) {
+func httpClientStatusConfigProvider(request action_kit_api.PrepareActionRequestBody) (map[string]any, error) {
 	duration, err := extractDuration(request)
 	if err != nil {
 		return nil, err
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"attack-class":      "com.steadybit.attacks.javaagent.instrumentation.SpringHttpClientStatusInstrumentation",
 		"duration":          int(duration / time.Millisecond),
 		"erroneousCallRate": extutil.ToInt(request.Config["erroneousCallRate"]),
