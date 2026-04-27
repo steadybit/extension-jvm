@@ -25,9 +25,9 @@ require (
 	github.com/xin053/hsperfdata v0.2.3
 	golang.org/x/net v0.53.0
 	golang.org/x/sys v0.43.0
-	k8s.io/api v0.35.4
+	k8s.io/api v0.36.0
 	k8s.io/apimachinery v0.36.0
-	k8s.io/client-go v0.35.4
+	k8s.io/client-go v0.36.0
 	k8s.io/utils v0.0.0-20260319190234-28399d86e0b5
 )
 
