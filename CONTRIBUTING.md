@@ -1,5 +1,17 @@
 # Contributing
 
+## Prerequisites
+
+To build and run this extension locally, you need:
+
+- [Go](https://go.dev/dl/) 1.26 or later
+- [Java](https://adoptium.net/) 21 or later (required by the bundled Java agents)
+- [Apache Maven](https://maven.apache.org/) (used to build the Java agents in `javaagents/`)
+- [GNU Make](https://www.gnu.org/software/make/)
+- [GoReleaser](https://goreleaser.com/) (used by `make build`)
+- [Docker](https://www.docker.com/) (required for `make container` and container-based tests)
+- [Helm](https://helm.sh/docs/intro/install/) and [helm-unittest](https://github.com/helm-unittest/helm-unittest) (for chart development; `make charttesting` and `make chartlint`)
+
 ## Getting Started
 
 1. Clone the repository
@@ -9,14 +21,17 @@
 
 ## Tasks
 
-The `Makefile` in the project root contains commands to easily run common admin tasks:
+The `Makefile` in the project root contains commands to easily run common admin tasks. Run `make help` to list all available targets.
 
-| Command        | Meaning                                                                                               |
-|----------------|-------------------------------------------------------------------------------------------------------|
-| `$ make tidy`  | Format all code using `go fmt` and tidy the `go.mod` file.                                            |
-| `$ make audit` | Run `go vet`, `staticheck`, execute all tests and verify required modules.                            |
-| `$ make build` | Build a binary for the extension. Creates a file called `extension` in the repository root directory. |
-| `$ make run`   | Build and then run the created binary.                                                                |
+| Command            | Meaning                                                                                                                                            |
+|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| `$ make tidy`      | Format all code using `go fmt` and tidy the `go.mod` file.                                                                                         |
+| `$ make audit`     | Run `go vet`, `staticcheck`, execute all tests and verify required modules.                                                                        |
+| `$ make build`     | Build a binary for the extension. Creates a file called `extension` in the repository root directory.                                              |
+| `$ make run`       | Build and then run the created binary.                                                                                                             |
+| `$ make java`      | Build the Java agents (`mvn clean package -DskipTests -f ./javaagents/pom.xml`).                                                                   |
+| `$ make javatest`  | Run the Java agent test suite (`mvn clean verify -f ./javaagents/pom.xml`).                                                                        |
+| `$ make container` | Build the container image (`extension-jvm:latest`) using Docker buildx. Builds the Java agents (`mvn clean package` of `javaagents/pom.xml`) first.|
 
 ## Releasing the Code/Docker Image
 
