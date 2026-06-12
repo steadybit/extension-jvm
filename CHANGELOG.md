@@ -7,8 +7,6 @@
 - chore(deps): bump golang.org/x/net from 0.54.0 to 0.55.0
 - chore(deps): bump golang.org/x/sys from 0.44.0 to 0.45.0
 - chore(deps): bump golang.org/x/sys from 0.45.0 to 0.46.0
-- chore: add CVE-2026-48959 and CVE-2026-45447 to trivyignore
-- chore: add ignore to .trivyignore.yml
 - chore: bump runc/crun and update trivyignore
 - chore: update to go 1.26.4
 - feat: add weekly auto patch-release workflow
