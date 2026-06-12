@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.2.17
+
+- chore(deps): bump github.com/shirou/gopsutil/v4 from 4.26.4 to 4.26.5
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_commons
+- chore(deps): bump golang.org/x/net from 0.54.0 to 0.55.0
+- chore(deps): bump golang.org/x/sys from 0.44.0 to 0.45.0
+- chore(deps): bump golang.org/x/sys from 0.45.0 to 0.46.0
+- chore: add CVE-2026-48959 and CVE-2026-45447 to trivyignore
+- chore: add ignore to .trivyignore.yml
+- chore: bump runc/crun and update trivyignore
+- chore: update to go 1.26.4
+- feat: add weekly auto patch-release workflow
+
 ## v1.2.16
 
 - Support discovery group attribute via `STEADYBIT_EXTENSION_DISCOVERY_GROUP` env var (or `discovery.group` Helm value) — when set, the extension adds `steadybit.group=<value>` to every discovered target
