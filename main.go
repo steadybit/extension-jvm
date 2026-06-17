@@ -35,6 +35,7 @@ func main() {
 	// The information is mostly handy for debugging purposes.
 	extbuild.PrintBuildInformation()
 	extruntime.LogRuntimeInformation(zerolog.InfoLevel)
+	extruntime.AdjustOOMScoreAdj()
 
 	// Most extensions require some form of configuration. These calls exist to parse and validate the
 	// configuration obtained from environment variables.

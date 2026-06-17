@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- feat: lower `oom_score_adj` on startup via extension-kit's `extruntime.AdjustOOMScoreAdj()` to avoid being killed by the node OOM killer. The extension sets it directly using the `cap_sys_resource` file capability (default `-998`, configurable via `STEADYBIT_EXTENSION_OOM_SCORE_ADJ`).
+
 ## v1.2.17
 
 - chore(deps): bump github.com/shirou/gopsutil/v4 from 4.26.4 to 4.26.5
