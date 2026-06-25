@@ -456,10 +456,10 @@ func addHttpClientRequests(target *discovery_kit_api.Target, requests []HttpRequ
 	for _, request := range requests {
 		target.Attributes["spring-instance.http-outgoing-calls"] = append(target.Attributes["spring-instance.http-outgoing-calls"], request.Address)
 		if !request.CircuitBreaker {
-			target.Attributes["spring-instance.http-outgoing-calls.missing-circuit-breaker"] = append(target.Attributes["spring-instance.http-outgoing-calls"], request.Address)
+			target.Attributes["spring-instance.http-outgoing-calls.missing-circuit-breaker"] = append(target.Attributes["spring-instance.http-outgoing-calls.missing-circuit-breaker"], request.Address)
 		}
 		if request.Timeout == 0 {
-			target.Attributes["spring-instance.http-outgoing-calls.missing-timeout"] = append(target.Attributes["spring-instance.http-outgoing-calls"], request.Address)
+			target.Attributes["spring-instance.http-outgoing-calls.missing-timeout"] = append(target.Attributes["spring-instance.http-outgoing-calls.missing-timeout"], request.Address)
 		}
 	}
 }
