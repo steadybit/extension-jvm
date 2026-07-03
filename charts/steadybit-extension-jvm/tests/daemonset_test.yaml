@@ -124,6 +124,24 @@ tests:
     asserts:
       - matchSnapshot: {}
 
+  - it: manifest should match snapshot on openshift with default seLinuxOptions
+    capabilities:
+      apiVersions:
+        - security.openshift.io/v1/SecurityContextConstraints
+    asserts:
+      - matchSnapshot: {}
+
+  - it: manifest should match snapshot on openshift with custom seLinuxOptions
+    capabilities:
+      apiVersions:
+        - security.openshift.io/v1/SecurityContextConstraints
+    set:
+      podSecurityContext:
+        seLinuxOptions:
+          level: "s0:c123,c456"
+    asserts:
+      - matchSnapshot: {}
+
   - it: manifest should match snapshot with priority class
     set:
       priorityClassName: my-priority-class

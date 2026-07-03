@@ -44,7 +44,14 @@ spec:
       {{- with (.Values.priorityClassName | default (dig "priorityClassName" nil (.Values.global | default dict))) }}
       priorityClassName: {{ . }}
       {{- end }}
-      {{- with .Values.podSecurityContext }}
+      {{- $podSecurityContext := deepCopy .Values.podSecurityContext }}
+      {{- if and (include "jvm.openshift" .) (not (hasKey $podSecurityContext "seLinuxOptions")) }}
+      {{- /* On OpenShift the javaagent jars are mounted into target containers. Run the pod
+             with an MCS-category-less SELinux level so that target JVMs (confined with their
+             own per-namespace categories) are allowed to read them. */}}
+      {{- $_ := set $podSecurityContext "seLinuxOptions" (dict "level" "s0") }}
+      {{- end }}
+      {{- with $podSecurityContext }}
       securityContext:
       {{- toYaml . | nindent 8 }}
       {{- end }}

@@ -127,6 +127,9 @@ affinity: {}
 priorityClassName: null
 
 # podSecurityContext -- SecurityContext to apply to the pod.
+#  On OpenShift, seLinuxOptions defaults to `level: s0` (no MCS categories) so that the javaagent
+#  jars mounted into target containers are readable by the confined target JVMs. Set your own
+#  seLinuxOptions here to override that default.
 podSecurityContext:
   seccompProfile:
     type: Unconfined
