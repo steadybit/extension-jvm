@@ -37,6 +37,15 @@ ociRuntime.get will select the attribute for the selected container engine
 {{- end -}}
 
 {{- /*
+jvm.openshift returns "true" when running on OpenShift (or when securityContextConstraint.create is forced)
+*/}}
+{{- define "jvm.openshift" -}}
+{{- if or .Values.securityContextConstraint.create (and (.Capabilities.APIVersions.Has "security.openshift.io/v1/SecurityContextConstraints") (eq .Values.securityContextConstraint.create nil)) -}}
+true
+{{- end -}}
+{{- end -}}
+
+{{- /*
 will omit attribute from the passed in object depending on the KubeVersion
 */}}
 {{- define "omitForKuberVersion" -}}

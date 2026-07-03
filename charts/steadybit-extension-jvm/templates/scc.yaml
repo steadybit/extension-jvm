@@ -1,4 +1,4 @@
-{{- if or .Values.securityContextConstraint.create (and (.Capabilities.APIVersions.Has "security.openshift.io/v1/SecurityContextConstraints") (eq .Values.securityContextConstraint.create nil)) -}}
+{{- if include "jvm.openshift" . -}}
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
@@ -16,5 +16,10 @@ runAsUser:
 seccompProfiles:
   - unconfined
 seLinuxContext:
+  # Pin the SELinux level to s0 (no MCS categories) so that the javaagent jars mounted into
+  # target containers are readable by the confined target JVMs. Mirrors
+  # podSecurityContext.seLinuxOptions when overridden.
   type: MustRunAs
+  seLinuxOptions:
+    {{- (.Values.podSecurityContext | default dict).seLinuxOptions | default (dict "level" "s0") | toYaml | nindent 4 }}
 {{- end -}}
