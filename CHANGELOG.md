@@ -3,6 +3,7 @@
 ## Unreleased
 
 - fix(chart): on OpenShift, run the extension pod with an MCS-category-less SELinux level (`s0`) so target JVMs can read the mounted javaagent jars. Without this, SELinux denies the agent jar read (each namespace gets distinct MCS categories) and attacks fail with "connection not found". The SCC pins the level via `seLinuxContext: MustRunAs`; override via `podSecurityContext.seLinuxOptions` (mirrored into the SCC).
+- fix: propagate the underlying error when stopping an action fails, instead of returning a bare "Failed to stop action"
 - feat: lower `oom_score_adj` on startup via extension-kit's `extruntime.AdjustOOMScoreAdj()` to avoid being killed by the node OOM killer. The extension sets it directly using the `cap_sys_resource` file capability (default `-998`, configurable via `STEADYBIT_EXTENSION_OOM_SCORE_ADJ`).
 
 ## v1.2.17
