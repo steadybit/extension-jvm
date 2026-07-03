@@ -143,7 +143,7 @@ func (j *javaagentAction) Stop(_ context.Context, state *JavaagentActionState) (
 	var msg action_kit_api.Message
 	if javaVm != nil {
 		if err := j.stopAttack(javaVm, j.pluginJar); err != nil {
-			return nil, extension_kit.ToError("Failed to stop action", nil)
+			return nil, extension_kit.ToError("Failed to stop action", err)
 		}
 		msg.Level = extutil.Ptr(action_kit_api.Info)
 		msg.Message = fmt.Sprintf("Action on PID %d stopped", state.Pid)
