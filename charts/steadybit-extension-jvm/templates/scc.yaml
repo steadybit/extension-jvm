@@ -16,7 +16,10 @@ runAsUser:
 seccompProfiles:
   - unconfined
 seLinuxContext:
-  # RunAsAny allows the pod to request an MCS-category-less SELinux level (s0), so that the
-  # javaagent jars mounted into target containers are readable by the confined target JVMs.
-  type: RunAsAny
+  # Pin the SELinux level to s0 (no MCS categories) so that the javaagent jars mounted into
+  # target containers are readable by the confined target JVMs. Mirrors
+  # podSecurityContext.seLinuxOptions when overridden.
+  type: MustRunAs
+  seLinuxOptions:
+    {{- .Values.podSecurityContext.seLinuxOptions | default (dict "level" "s0") | toYaml | nindent 4 }}
 {{- end -}}
