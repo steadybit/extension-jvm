@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: propagate the underlying error when stopping an action fails, instead of returning a bare "Failed to stop action"
 - feat: lower `oom_score_adj` on startup via extension-kit's `extruntime.AdjustOOMScoreAdj()` to avoid being killed by the node OOM killer. The extension sets it directly using the `cap_sys_resource` file capability (default `-998`, configurable via `STEADYBIT_EXTENSION_OOM_SCORE_ADJ`).
 
 ## v1.2.17
