@@ -21,5 +21,5 @@ seLinuxContext:
   # podSecurityContext.seLinuxOptions when overridden.
   type: MustRunAs
   seLinuxOptions:
-    {{- .Values.podSecurityContext.seLinuxOptions | default (dict "level" "s0") | toYaml | nindent 4 }}
+    {{- (.Values.podSecurityContext | default dict).seLinuxOptions | default (dict "level" "s0") | toYaml | nindent 4 }}
 {{- end -}}

@@ -131,6 +131,15 @@ tests:
     asserts:
       - matchSnapshot: {}
 
+  - it: manifest should match snapshot on openshift with null podSecurityContext
+    capabilities:
+      apiVersions:
+        - security.openshift.io/v1/SecurityContextConstraints
+    set:
+      podSecurityContext: null
+    asserts:
+      - matchSnapshot: {}
+
   - it: manifest should match snapshot on openshift with custom seLinuxOptions
     capabilities:
       apiVersions:
