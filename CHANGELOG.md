@@ -1,10 +1,27 @@
 # Changelog
 
-## Unreleased
+## v1.2.18
 
-- fix(chart): on OpenShift, run the extension pod with an MCS-category-less SELinux level (`s0`) so target JVMs can read the mounted javaagent jars. Without this, SELinux denies the agent jar read (each namespace gets distinct MCS categories) and attacks fail with "connection not found". The SCC pins the level via `seLinuxContext: MustRunAs`; override via `podSecurityContext.seLinuxOptions` (mirrored into the SCC).
-- fix: propagate the underlying error when stopping an action fails, instead of returning a bare "Failed to stop action"
+- chore(deps): bump actions/checkout from 6 to 7
+- chore(deps): bump github.com/shirou/gopsutil/v4 from 4.26.5 to 4.26.6
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_commons
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_sdk
+- chore(deps): bump github.com/steadybit/discovery-kit/go/discovery_kit_sdk
+- chore(deps): bump github.com/steadybit/extension-kit
+- chore(deps): bump golang.org/x/net from 0.55.0 to 0.56.0
+- chore(deps): bump k8s.io/api from 0.36.1 to 0.36.2
+- chore(deps): bump k8s.io/apimachinery from 0.36.1 to 0.36.2
+- chore(deps): bump k8s.io/client-go from 0.36.1 to 0.36.2
+- chore(deps): runc 1.4.3
+- chore: add Claude Code workflows (#406)
+- chore: silence SonarQube finding on secrets: inherit in Claude workflows
 - feat: lower `oom_score_adj` on startup via extension-kit's `extruntime.AdjustOOMScoreAdj()` to avoid being killed by the node OOM killer. The extension sets it directly using the `cap_sys_resource` file capability (default `-998`, configurable via `STEADYBIT_EXTENSION_OOM_SCORE_ADJ`).
+- feat: lower oom_score_adj on startup via extension-kit (#402)
+- fix(chart): make javaagent jars readable across SELinux MCS boundaries on OpenShift (#409)
+- fix(chart): on OpenShift, run the extension pod with an MCS-category-less SELinux level (`s0`) so target JVMs can read the mounted javaagent jars. Without this, SELinux denies the agent jar read (each namespace gets distinct MCS categories) and attacks fail with "connection not found". The SCC pins the level via `seLinuxContext: MustRunAs`; override via `podSecurityContext.seLinuxOptions` (mirrored into the SCC).
+- fix: missing-circuit-breaker and missing-timeout accumulated wrong entries (#405)
+- fix: propagate the underlying error when stopping an action fails, instead of returning a bare "Failed to stop action"
+- fix: propagate underlying error when stopping an action fails (#408)
 
 ## v1.2.17
 
