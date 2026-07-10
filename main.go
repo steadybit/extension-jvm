@@ -6,7 +6,6 @@ package main
 
 import (
 	"os"
-	"time"
 
 	_ "github.com/KimMachineGun/automemlimit" // By default, it sets `GOMEMLIMIT` to 90% of cgroup's memory limit.
 	"github.com/rs/zerolog"
@@ -23,8 +22,6 @@ import (
 	"github.com/steadybit/extension-kit/extruntime"
 	"github.com/steadybit/extension-kit/extsignals"
 )
-
-var startedAt = time.Now().Format(time.RFC3339)
 
 func main() {
 	//  - to activate JSON logging, set the environment variable STEADYBIT_LOG_FORMAT="json"
@@ -74,7 +71,7 @@ func main() {
 	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodDelay(facade))
 	action_kit_sdk.RegisterAction(extjvm.NewJavaMethodException(facade))
 
-	exthttp.RegisterHttpHandler("/", exthttp.IfNoneMatchHandler(func() string { return startedAt }, exthttp.GetterAsHandler(getExtensionList)))
+	exthttp.RegisterRevisionedHandler("/", getExtensionList)
 
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)
