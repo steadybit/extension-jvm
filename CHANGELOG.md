@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.2.19
+
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_commons
+- chore(deps): bump go to 1.26.5 (#415)
+- chore(deps): bump golang.org/x/net from 0.56.0 to 0.57.0
+- chore(deps): bump golang.org/x/sys from 0.46.0 to 0.47.0
+- refactor: register extension index via exthttp.RegisterRevisionedHandler (#416)
+
 ## v1.2.18
 
 - chore(deps): bump actions/checkout from 6 to 7
