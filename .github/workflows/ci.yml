@@ -158,6 +158,8 @@ jobs:
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v7 # NOSONAR githubactions:S7637 - verified action creator
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: "false"
         with:
           context: ./
           push: ${{ github.event_name != 'pull_request' }}
