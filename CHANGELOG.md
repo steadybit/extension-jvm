@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.20
+
+- chore: run audit job on free ubuntu-latest runner (#420)
+- ci: skip build on .trivyignore.yml-only changes [skip ci]
+
 ## v1.2.19
 
 - chore(deps): bump github.com/steadybit/action-kit/go/action_kit_commons
