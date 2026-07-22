@@ -1,7 +1,8 @@
 name: attack-support-matrix
 
 # On-demand only (BM-13107). This suite is image- and time-heavy and is never part
-# of push/PR builds — it must be triggered manually from the Actions tab.
+# of ordinary push/PR builds. Trigger it manually from the Actions tab, or run the
+# full grid against a PR by applying the "run-matrix" label.
 on:
   workflow_dispatch:
     inputs:
@@ -17,10 +18,14 @@ on:
         options:
           - per-attack
           - per-cell
+  pull_request:
+    types: [labeled]
 
 jobs:
   matrix:
     name: Attack support matrix
+    # workflow_dispatch always runs; on a PR only when the "run-matrix" label is applied.
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'run-matrix'
     runs-on: ubuntu-latest
     timeout-minutes: 240
     steps:
