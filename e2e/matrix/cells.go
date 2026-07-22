@@ -7,6 +7,8 @@ package matrix
 
 import "fmt"
 
+const temurin = "eclipse-temurin:" // base image prefix for sample runtimes/builders
+
 // Cell is one point in the support matrix: a sample built for a specific
 // (Spring Boot, Java) combination. The build args mirror what the two sample
 // Dockerfiles under testdata/samples expect.
@@ -43,7 +45,7 @@ func Cells() []Cell {
 	for _, j := range []string{"8", "11", "17", "21", "25"} {
 		cells = append(cells, Cell{
 			SampleType: "plain", Java: j, Compiler: "8",
-			Builder: "eclipse-temurin:17-jdk", Runtime: "eclipse-temurin:" + j + "-jre",
+			Builder: temurin + "17-jdk", Runtime: temurin + j + "-jre",
 		})
 	}
 
@@ -51,7 +53,7 @@ func Cells() []Cell {
 	for _, j := range []string{"8", "11", "17"} {
 		cells = append(cells, Cell{
 			SampleType: "spring", Boot: "2.7.18", Java: j, Compiler: "8", RestClient: false,
-			Builder: "maven:3.9.11-eclipse-temurin-8", Runtime: "eclipse-temurin:" + j + "-jre",
+			Builder: "maven:3.9.11-eclipse-temurin-8", Runtime: temurin + j + "-jre",
 		})
 	}
 
@@ -59,7 +61,7 @@ func Cells() []Cell {
 	for _, j := range []string{"17", "21", "25"} {
 		cells = append(cells, Cell{
 			SampleType: "spring", Boot: "3.5.16", Java: j, Compiler: "17", RestClient: true,
-			Builder: "maven:3.9.11-eclipse-temurin-17", Runtime: "eclipse-temurin:" + j + "-jre",
+			Builder: "maven:3.9.11-eclipse-temurin-17", Runtime: temurin + j + "-jre",
 		})
 	}
 
@@ -67,7 +69,7 @@ func Cells() []Cell {
 	for _, j := range []string{"17", "21", "25"} {
 		cells = append(cells, Cell{
 			SampleType: "spring", Boot: "4.1.0", Java: j, Compiler: "17", RestClient: true,
-			Builder: "maven:3.9.11-eclipse-temurin-21", Runtime: "eclipse-temurin:" + j + "-jre",
+			Builder: "maven:3.9.11-eclipse-temurin-21", Runtime: temurin + j + "-jre",
 		})
 	}
 

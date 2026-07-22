@@ -30,6 +30,7 @@ const (
 	discoveredPath = "/" + actionPrefix + "jvm-instance/discovery/discovered-targets"
 	agentPort      = "8080/tcp"
 	extPort        = "8087/tcp"
+	buildArg       = "--build-arg"
 )
 
 func extImage() string {
@@ -73,9 +74,9 @@ func (h *Harness) buildSampleImage() error {
 	if h.cell.SampleType == "plain" {
 		dir = filepath.Join(h.samplesFS, "plainjava")
 		args = append(args,
-			"--build-arg", "BUILDER_IMAGE="+h.cell.Builder,
-			"--build-arg", "RUNTIME_IMAGE="+h.cell.Runtime,
-			"--build-arg", "COMPILER_RELEASE="+h.cell.Compiler)
+			buildArg, "BUILDER_IMAGE="+h.cell.Builder,
+			buildArg, "RUNTIME_IMAGE="+h.cell.Runtime,
+			buildArg, "COMPILER_RELEASE="+h.cell.Compiler)
 	} else {
 		dir = filepath.Join(h.samplesFS, "springboot")
 		profiles := ""
@@ -83,11 +84,11 @@ func (h *Harness) buildSampleImage() error {
 			profiles = "-Pwith-restclient"
 		}
 		args = append(args,
-			"--build-arg", "BUILDER_IMAGE="+h.cell.Builder,
-			"--build-arg", "RUNTIME_IMAGE="+h.cell.Runtime,
-			"--build-arg", "BOOT_VERSION="+h.cell.Boot,
-			"--build-arg", "COMPILER_RELEASE="+h.cell.Compiler,
-			"--build-arg", "MVN_PROFILES="+profiles)
+			buildArg, "BUILDER_IMAGE="+h.cell.Builder,
+			buildArg, "RUNTIME_IMAGE="+h.cell.Runtime,
+			buildArg, "BOOT_VERSION="+h.cell.Boot,
+			buildArg, "COMPILER_RELEASE="+h.cell.Compiler,
+			buildArg, "MVN_PROFILES="+profiles)
 	}
 	args = append(args, ".")
 	cmd := exec.CommandContext(h.ctx, "docker", args...)

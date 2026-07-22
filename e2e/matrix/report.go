@@ -42,10 +42,22 @@ func WriteJSON(path string, results []CellResult) error {
 	return os.WriteFile(path, b, 0o644)
 }
 
+var symbols = map[string]string{"pass": "✅", "fail": "❌", "error": "⚠️"}
+
+// matrixCell is the symbol for one (attack, cell): its result, ⚠️ if the cell failed
+// to set up, or blank when the attack is not applicable to that cell.
+func matrixCell(perCol map[string]string, atk string, cellErrored bool) string {
+	if r, ok := perCol[atk]; ok {
+		return symbols[r]
+	}
+	if cellErrored {
+		return symbols["error"]
+	}
+	return ""
+}
+
 // WriteMarkdown renders the attack × (Boot, Java) support matrix.
 func WriteMarkdown(path string, results []CellResult) error {
-	symbols := map[string]string{"pass": "✅", "fail": "❌", "error": "⚠️"}
-
 	// One column per result (Cells() yields unique names); perCol[i] holds that
 	// cell's attack→result lookup, aligned by index with results.
 	attackSet := map[string]bool{}
@@ -76,14 +88,7 @@ func WriteMarkdown(path string, results []CellResult) error {
 	for _, atk := range attacks {
 		b.WriteString("| " + atk + " |")
 		for i, c := range results {
-			cell := ""
-			if r, ok := perCol[i][atk]; ok {
-				cell = symbols[r]
-			} else if c.Error != "" {
-				// Cell failed to set up: mark ⚠️ rather than blank (which reads as n/a).
-				cell = symbols["error"]
-			}
-			b.WriteString(" " + cell + " |")
+			b.WriteString(" " + matrixCell(perCol[i], atk, c.Error != "") + " |")
 		}
 		b.WriteString("\n")
 	}
