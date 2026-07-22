@@ -318,7 +318,11 @@ func (h *Harness) RunAttack(spec AttackSpec) AttackResult {
 	res.During = obs(dCode, dT)
 
 	var stop actionResponse
-	_ = h.extPostJSON(path+"/stop", map[string]any{"executionId": exec, "state": state}, &stop)
+	if err := h.extPostJSON(path+"/stop", map[string]any{"executionId": exec, "state": state}, &stop); err != nil {
+		res.Detail = "stop: " + err.Error()
+	} else if stop.Error != nil {
+		res.Detail = "stop: " + stringifyErr(stop.Error)
+	}
 	time.Sleep(3 * time.Second)
 	aCode, aT := h.probe(spec.Endpoint)
 	res.After = obs(aCode, aT)

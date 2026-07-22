@@ -42,9 +42,12 @@ func (s AttackSpec) effectObserved(code int, latencySecs float64) bool {
 }
 
 // recovered reports whether a probe shows the endpoint back to normal after stop.
+// The status must be 200 in both modes: probe returns the sentinel (-1, -1) on a
+// failed request, so checking latency alone would score a crashed/unreachable sample
+// as "recovered".
 func (s AttackSpec) recovered(code int, latencySecs float64) bool {
 	if s.Mode == modeDelay {
-		return latencySecs < recoveredSecs
+		return code == 200 && latencySecs < recoveredSecs
 	}
 	return code == 200
 }
