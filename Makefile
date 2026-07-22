@@ -87,6 +87,11 @@ container:
 	mvn clean package -DskipTests -f ./javaagents/pom.xml
 	docker buildx build --build-arg BUILD_WITH_COVERAGE="true" --build-arg SKIP_LICENSES_REPORT="true" -t extension-jvm:latest --output=type=docker .
 
+## matrix: run the attack support matrix suite (BM-13107) and regenerate e2e/matrix/RESULTS.md
+.PHONY: matrix
+matrix: container
+	go test -tags matrix -timeout 3h -run TestSupportMatrix -v ./e2e/matrix/...
+
 ## java: build the java packages
 .PHONY: java
 java:
