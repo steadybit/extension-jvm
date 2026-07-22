@@ -31,6 +31,17 @@
             <artifactId>javaagent-main</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- The Spring-6 implementation (advice + injected responses, distinctly named). Not compiled against
+             (the instrumentation references it by name); runtime scope so the shade plugin bundles its classes
+             into the agent jar alongside the Spring-5 ones, and optional so it is not propagated to consumers.
+             Being a reactor dependency also guarantees attack-javaagent-spring6 builds first. -->
+        <dependency>
+            <groupId>com.steadybit</groupId>
+            <artifactId>attack-javaagent-spring6</artifactId>
+            <version>${revision}</version>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-jdbc</artifactId>
