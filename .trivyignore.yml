@@ -5,71 +5,7 @@ vulnerabilities:
   - id: CVE-2026-48962
     statement: Waiting for debian upstream fix
     expired_at: 2026-09-01
-  - id: CVE-2026-32280
-    statement: Wait for runc release with fix
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-32283
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-32281
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-33811
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
   - id: CVE-2026-33814
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-39820
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-39836
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-42499
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-39825
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-42499
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-39823
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-39825
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-39826
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-42499
     statement: waiting for runc release
     expired_at: 2026-09-01
     paths:
@@ -86,28 +22,6 @@ vulnerabilities:
   - id: CVE-2026-9538
     statement: Waiting for debian upstream fix
     expired_at: 2026-09-01
-  - id: CVE-2026-42504
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-48959
-    statement: Waiting for debian upstream fix
-    expired_at: 2026-09-01
-  - id: CVE-2026-45447
-    statement: Waiting for debian upstream fix
-    expired_at: 2026-09-01
-  - id: CVE-2026-11822
-    statement: Waiting for debian upstream fix
-    expired_at: 2026-09-01
-  - id: CVE-2026-11824
-    statement: Waiting for debian upstream fix
-    expired_at: 2026-09-01
-  - id: CVE-2026-25680
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
   - id: CVE-2026-25681
     statement: waiting for runc release
     expired_at: 2026-09-01
@@ -123,35 +37,13 @@ vulnerabilities:
     expired_at: 2026-09-01
     paths:
       - usr/sbin/runc
-  - id: CVE-2026-42502
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
-  - id: CVE-2026-42506
-    statement: waiting for runc release
-    expired_at: 2026-09-01
-    paths:
-      - usr/sbin/runc
   - id: CVE-2026-54369
-    statement: Waiting for debian upstream fix
-    expired_at: 2026-09-01
-  - id: CVE-2026-54371
     statement: Waiting for debian upstream fix
     expired_at: 2026-09-01
   - id: CVE-2026-41992
     statement: Waiting for debian upstream fix
     expired_at: 2026-09-01
   - id: CVE-2026-53615
-    statement: Waiting for debian upstream fix
-    expired_at: 2026-09-01
-  - id: CVE-2026-56131
-    statement: Waiting for debian upstream fix
-    expired_at: 2026-09-01
-  - id: CVE-2026-56407
-    statement: Waiting for debian upstream fix
-    expired_at: 2026-09-01
-  - id: CVE-2026-56408
     statement: Waiting for debian upstream fix
     expired_at: 2026-09-01
   - id: CVE-2026-39822
