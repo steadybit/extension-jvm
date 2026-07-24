@@ -251,7 +251,7 @@ func (h *Harness) enriched(t *target) bool {
 }
 
 type target struct {
-	ID         string              `json:"target"`
+	ID         string              `json:"id"`
 	Attributes map[string][]string `json:"attributes"`
 }
 
@@ -283,7 +283,8 @@ func (h *Harness) RunAttack(spec AttackSpec) AttackResult {
 		res.Result, res.Detail = "error", "sample target not found"
 		return res
 	}
-	res.Baseline = obs(h.probe(spec.Endpoint))
+	baseCode, baseT := h.probe(spec.Endpoint)
+	res.Baseline = obs(baseCode, baseT)
 
 	exec := uuid.New().String()
 	path := "/" + actionPrefix + spec.ActionID
@@ -314,7 +315,7 @@ func (h *Harness) RunAttack(spec AttackSpec) AttackResult {
 	if state == nil {
 		state = prep.State
 	}
-	dCode, dT := h.pollDuring(spec)
+	dCode, dT := h.pollDuring(spec, baseT)
 	res.During = obs(dCode, dT)
 
 	var stop actionResponse
@@ -323,11 +324,10 @@ func (h *Harness) RunAttack(spec AttackSpec) AttackResult {
 	} else if stop.Error != nil {
 		res.Detail = "stop: " + stringifyErr(stop.Error)
 	}
-	time.Sleep(3 * time.Second)
-	aCode, aT := h.probe(spec.Endpoint)
+	aCode, aT := h.pollRecovered(spec)
 	res.After = obs(aCode, aT)
 
-	if spec.effectObserved(dCode, dT) && spec.recovered(aCode, aT) {
+	if spec.effectObserved(dCode, dT, baseT) && spec.recovered(aCode, aT) {
 		res.Result = "pass"
 	} else {
 		res.Result = "fail"
@@ -365,19 +365,38 @@ func (h *Harness) Teardown() {
 	if h.net != nil {
 		_ = h.net.Remove(h.ctx)
 	}
+	// Remove the per-cell sample image so a full grid doesn't accumulate ~14 images on disk.
+	if h.sampleTag != "" {
+		_ = exec.CommandContext(h.ctx, "docker", "image", "rm", "-f", h.sampleTag).Run()
+	}
 }
 
 // ---- helpers ----
 
 // pollDuring repeatedly probes the endpoint while an attack is active, returning as
 // soon as the expected effect appears (ByteBuddy instrumentation activates
-// asynchronously after /start, so a single fixed-delay probe is racy). It returns the
-// last observation if the effect never appears within the window.
-func (h *Harness) pollDuring(spec AttackSpec) (int, float64) {
-	deadline := time.Now().Add(10 * time.Second)
+// asynchronously after /start, so a single fixed-delay probe is racy). The window is
+// generous because retransformation on heavier cells (Boot 4.1 / Java 25) can be slow.
+// It returns the last observation if the effect never appears within the window.
+func (h *Harness) pollDuring(spec AttackSpec, baselineSecs float64) (int, float64) {
+	deadline := time.Now().Add(20 * time.Second)
 	for {
 		code, t := h.probe(spec.Endpoint)
-		if spec.effectObserved(code, t) || !time.Now().Before(deadline) {
+		if spec.effectObserved(code, t, baselineSecs) || !time.Now().Before(deadline) {
+			return code, t
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
+
+// pollRecovered polls the endpoint after /stop until the effect clears (de-instrumentation
+// is asynchronous too, so a single post-stop probe is racy). Returns the last observation
+// if it does not recover within the window.
+func (h *Harness) pollRecovered(spec AttackSpec) (int, float64) {
+	deadline := time.Now().Add(15 * time.Second)
+	for {
+		code, t := h.probe(spec.Endpoint)
+		if spec.recovered(code, t) || !time.Now().Before(deadline) {
 			return code, t
 		}
 		time.Sleep(1 * time.Second)

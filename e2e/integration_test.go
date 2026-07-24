@@ -121,12 +121,15 @@ func getSpringBootSampleTarget(t *testing.T, ctx context.Context, e *e2e.Extensi
 	target, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_jvm.jvm-instance", func(target discovery_kit_api.Target) bool {
 		//The application context is instrumented whenever an event is thrown. We make sure that events happen by calling a http endpoint in the application
 		springBootSample.AssertIsReachable(t, true)
+		// Call the JDBC-backed endpoint so the agent captures the datasource: getConnection
+		// is instrumented on first use after attach, and /mvc never touches the database.
+		_, _ = springBootSample.MeasureLatencyOnPath(200, "/jdbc")
 
 		fmt.Printf("targetApplication: %+v\n", target.Attributes)
 		return e2e.HasAttribute(target, "jvm-instance.name", "app") &&
 			e2e.HasAttribute(target, "instance.type", "spring-boot") &&
 			e2e.HasAttribute(target, "datasource.jdbc-url", "jdbc:h2:mem:testdb") &&
-			e2e.HasAttribute(target, "spring-instance.name", "spring-boot-sample") &&
+			e2e.HasAttribute(target, "spring-instance.name", "jvm-matrix-sample") &&
 			e2e.HasAttribute(target, "spring-instance.jdbc-template", "true")
 	})
 	require.NoError(t, err)
@@ -170,7 +173,7 @@ func testMvcDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			Duration: 10000,
 			Delay:    tt.delay,
 			Jitter:   tt.jitter,
-			Pattern:  "/customers",
+			Pattern:  "/mvc",
 			Method:   "GET",
 		}
 
@@ -187,7 +190,7 @@ func testMvcDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			if tt.expectedDelay {
 				springBootSample.AssertLatency(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), unaffectedLatency)
 			} else {
-				springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, unaffectedLatency)
+				springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2, unaffectedLatency)
 			}
 			require.NoError(t, action.Cancel())
 		})
@@ -218,7 +221,7 @@ func testMvcException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 		}{
 			Duration:          10000,
 			ErroneousCallRate: tt.erroneousCallRate,
-			Pattern:           "/customers",
+			Pattern:           "/mvc",
 			Method:            "GET",
 		}
 
@@ -300,16 +303,16 @@ func testHttpClientDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			springBootSample.AssertIsReachable(t, true)
 
 			//measure customer endpoint
-			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/remote/blocking?url=https://github.com/steadybit")
+			unaffectedLatency, err := springBootSample.MeasureUnaffectedLatencyOnPath(200, "/http/resttemplate?url=https://github.com/steadybit")
 			require.NoError(t, err, "failed to measure customers endpoint")
 
 			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-httpclient-delay-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.expectedDelay {
-				springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/remote/blocking?url=https://github.com/steadybit", unaffectedLatency)
+				springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/http/resttemplate?url=https://github.com/steadybit", unaffectedLatency)
 			} else {
-				springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, "/remote/blocking?url=https://github.com/steadybit", 0)
+				springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2, "/http/resttemplate?url=https://github.com/steadybit", 0)
 			}
 			require.NoError(t, action.Cancel())
 		})
@@ -324,51 +327,48 @@ func getMaxLatency(unaffectedLatency time.Duration, delay uint64) time.Duration 
 	return unaffectedLatency + time.Duration(delay)*time.Millisecond*350/100
 }
 
-func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+func testHttpClientStatus(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 
+	// expectedStatus is the status the WebClient endpoint surfaces: the injected code
+	// when the attack fires (host matches, within the erroneous rate), otherwise 200.
 	tests := []struct {
-		name               string
-		erroneousCallRate  int
-		hostAddress        string
-		expectedLogStatus  int
-		expectedHttpStatus int
-		failureTypes       []string
+		name              string
+		erroneousCallRate int
+		hostAddress       string
+		expectedStatus    int
+		failureTypes      []string
 	}{
 		{
-			name:               "should not throw http client exceptions",
-			erroneousCallRate:  0,
-			expectedHttpStatus: 200,
-			failureTypes:       []string{},
+			name:              "should not throw http client exceptions",
+			erroneousCallRate: 0,
+			expectedStatus:    200,
+			failureTypes:      []string{},
 		},
 		{
-			name:               "should throw http client exceptions",
-			erroneousCallRate:  100,
-			failureTypes:       []string{},
-			expectedLogStatus:  500,
-			expectedHttpStatus: 500,
+			name:              "should throw http client exceptions",
+			erroneousCallRate: 100,
+			failureTypes:      []string{},
+			expectedStatus:    500,
 		},
 		{
-			name:               "should throw http client exceptions on host and set http status",
-			erroneousCallRate:  100,
-			failureTypes:       []string{"HTTP_502"},
-			expectedLogStatus:  502,
-			expectedHttpStatus: 500,
-			hostAddress:        "www.github.com:443",
+			name:              "should throw http client exceptions on host and set http status",
+			erroneousCallRate: 100,
+			failureTypes:      []string{"HTTP_502"},
+			expectedStatus:    502,
+			hostAddress:       "www.github.com:443",
 		},
 		{
-			name:               "should not throw http client exceptions on host",
-			erroneousCallRate:  100,
-			failureTypes:       []string{},
-			expectedLogStatus:  200,
-			expectedHttpStatus: 200,
-			hostAddress:        "steadybit.github.com",
+			name:              "should not throw http client exceptions on host",
+			erroneousCallRate: 100,
+			failureTypes:      []string{},
+			expectedStatus:    200,
+			hostAddress:       "steadybit.github.com",
 		},
 		{
-			name:               "should throw http client exceptions sometimes",
-			erroneousCallRate:  50,
-			failureTypes:       []string{},
-			expectedLogStatus:  500,
-			expectedHttpStatus: 500,
+			name:              "should throw http client exceptions sometimes",
+			erroneousCallRate: 50,
+			failureTypes:      []string{},
+			expectedStatus:    500,
 		},
 	}
 
@@ -396,17 +396,13 @@ func testHttpClientStatus(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		t.Run(tt.name, func(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 
+			// Use the WebClient endpoint: the status attack does not take effect for the
+			// blocking clients (RestTemplate/RestClient) on Spring Framework 6+, which the
+			// in-repo sample uses (Spring Boot 3.5). See the extension support matrix.
 			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-httpclient-status-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
-			if tt.erroneousCallRate > 0 {
-				springBootSample.AssertStatusOnPath(t, tt.expectedHttpStatus, "/remote/blocking?url=https://www.github.com")
-				if tt.expectedLogStatus != 200 {
-					e2e.AssertLogContains(t, m, springBootSample.Pod, fmt.Sprintf("%d Injected by steadybit", tt.expectedLogStatus))
-				}
-			} else {
-				springBootSample.AssertStatusOnPath(t, tt.expectedHttpStatus, "/remote/blocking?url=https://www.github.com")
-			}
+			springBootSample.AssertStatusOnPath(t, tt.expectedStatus, "/http/webclient?url=https://www.github.com")
 			require.NoError(t, action.Cancel())
 		})
 	}
@@ -450,8 +446,8 @@ func testJavaMethodDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			Duration:   10000,
 			Delay:      tt.delay,
 			Jitter:     tt.jitter,
-			ClassName:  "com.steadybit.samples.data.CustomerController",
-			MethodName: "getAllCustomers",
+			ClassName:  "com.steadybit.matrix.ComputeService",
+			MethodName: "compute",
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -467,7 +463,7 @@ func testJavaMethodDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			if tt.expectedDelay {
 				springBootSample.AssertLatency(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), unaffectedLatency)
 			} else {
-				springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, unaffectedLatency)
+				springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2, unaffectedLatency)
 			}
 			require.NoError(t, action.Cancel())
 		})
@@ -499,8 +495,8 @@ func testJavaMethodException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 		}{
 			Duration:          10000,
 			ErroneousCallRate: tt.erroneousCallRate,
-			ClassName:         "com.steadybit.samples.data.CustomerController",
-			MethodName:        "getAllCustomers",
+			ClassName:         "com.steadybit.matrix.ComputeService",
+			MethodName:        "compute",
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -602,17 +598,17 @@ func testJDBCTemplateDelay(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 		t.Run(tt.name, func(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 
-			//measure customer endpoint
-			unaffectedLatency, err := springBootSample.MeasureLatency(200)
-			require.NoError(t, err, "failed to measure customers endpoint")
+			// measure the JDBC-backed endpoint (the delay affects JdbcTemplate operations)
+			unaffectedLatency, err := springBootSample.MeasureLatencyOnPath(200, "/jdbc")
+			require.NoError(t, err, "failed to measure jdbc endpoint")
 
 			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-jdbctemplate-delay-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.expectedDelay {
-				springBootSample.AssertLatency(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), unaffectedLatency)
+				springBootSample.AssertLatencyOnPath(t, getMinLatency(unaffectedLatency, config.Delay), getMaxLatency(unaffectedLatency, config.Delay), "/jdbc", unaffectedLatency)
 			} else {
-				springBootSample.AssertLatency(t, 1*time.Millisecond, unaffectedLatency*2*time.Millisecond, unaffectedLatency)
+				springBootSample.AssertLatencyOnPath(t, 1*time.Millisecond, unaffectedLatency*2, "/jdbc", unaffectedLatency)
 			}
 			require.NoError(t, action.Cancel())
 		})
@@ -653,25 +649,25 @@ func testJDBCTemplateException(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) 
 		config := struct {
 			Duration          int    `json:"duration"`
 			ErroneousCallRate int    `json:"erroneousCallRate"`
-			ClassName         string `json:"className"`
-			MethodName        string `json:"methodName"`
+			JdbcUrl           string `json:"jdbcUrl"`
+			Operations        string `json:"operations"`
 		}{
 			Duration:          10000,
 			ErroneousCallRate: tt.erroneousCallRate,
-			ClassName:         "com.steadybit.samples.data.CustomerController",
-			MethodName:        "getAllCustomers",
+			JdbcUrl:           tt.jdbcUrl,
+			Operations:        tt.operations,
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
 			springBootSample.AssertIsReachable(t, true)
 
-			action, err := e.RunAction(extjvm.ActionIDPrefix+".java-method-exception-attack", getTarget(t, e), config, nil)
+			action, err := e.RunAction(extjvm.ActionIDPrefix+".spring-jdbctemplate-exception-attack", getTarget(t, e), config, nil)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 			if tt.erroneousCallRate > 0 {
-				springBootSample.AssertStatus(t, 500)
+				springBootSample.AssertStatusOnPath(t, 500, "/jdbc")
 			} else {
-				springBootSample.AssertStatus(t, 200)
+				springBootSample.AssertStatusOnPath(t, 200, "/jdbc")
 			}
 			require.NoError(t, action.Cancel())
 		})
