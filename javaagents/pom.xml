@@ -28,6 +28,7 @@
         <module>javaagent-main</module>
         <module>discovery-java-javaagent</module>
         <module>discovery-springboot-javaagent</module>
+        <module>attack-javaagent-spring6</module>
         <module>attack-java-javaagent</module>
         <module>download</module>
     </modules>
@@ -49,6 +50,10 @@
 
         <ipaddress.version>5.5.1</ipaddress.version>
         <byte-buddy.version>1.17.8</byte-buddy.version>
+        <!-- Spring 6 toolchain used only by attack-javaagent-spring6 to compile the injected
+             client-response variants against the Spring 6 API. -->
+        <spring.v6.version>6.2.7</spring.v6.version>
+        <reactor.version>3.7.5</reactor.version>
         <!-- plugins -->
         <exec-maven-plugin.version>3.6.2</exec-maven-plugin.version>
         <flatten-maven-plugin.version>1.7.3</flatten-maven-plugin.version>

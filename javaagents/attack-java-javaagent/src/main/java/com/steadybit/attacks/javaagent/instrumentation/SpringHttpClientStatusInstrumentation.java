@@ -4,12 +4,11 @@
 
 package com.steadybit.attacks.javaagent.instrumentation;
 
-import com.steadybit.attacks.javaagent.advice.RestTemplateHttpStatusAdvice;
-import com.steadybit.attacks.javaagent.advice.WebClientHttpStatusAdvice;
 import com.steadybit.javaagent.instrumentation.Registration;
 import com.steadybit.shaded.net.bytebuddy.agent.builder.AgentBuilder;
 import com.steadybit.shaded.net.bytebuddy.asm.Advice;
 import com.steadybit.shaded.net.bytebuddy.description.method.MethodDescription;
+import com.steadybit.shaded.net.bytebuddy.description.type.TypeDescription;
 import com.steadybit.shaded.net.bytebuddy.matcher.ElementMatcher;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,6 +31,10 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
     private static final int[] HTTP_4XX_CODES = {400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 421, 422, 423, 424, 425, 426, 428, 429, 431, 451};
     private static final int[] HTTP_5XX_CODES = {500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511};
     private static final JSONArray EMPTY_ARRAY = new JSONArray();
+    private static final String ADVICE_PKG = "com.steadybit.attacks.javaagent.advice.";
+    // Spring 6+ (incl. 7) is on the target when HttpStatusCode is present; it changed the client-response
+    // APIs, so those targets get the Spring-6-compiled advice + injected responses (the *Spring6 classes).
+    private static final String SPRING6_MARKER = "org.springframework.http.HttpStatusCode";
 
     private final int errorRate;
     private final JSONObject config;
@@ -55,19 +58,28 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
 
     @Override
     protected AgentBuilder doInstall(AgentBuilder agentBuilder) {
-        return agentBuilder //
-                .type(hasSuperType(named("org.springframework.http.client.ClientHttpRequest")).and(declaresMethod(this.executeMethod)))
-                .transform(new ClassInjectionTransformer(this.getClass().getClassLoader(), "com.steadybit.attacks.javaagent.advice.InjectedClientHttpResponse"))
-                .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping() //
-                        .bind(Registration.class, this.getRegistration())) //
-                        .include(RestTemplateHttpStatusAdvice.class.getClassLoader()) //
-                        .advice(this.executeMethod, RestTemplateHttpStatusAdvice.class.getName()))
-                .type(hasSuperType(named("org.springframework.http.client.reactive.ClientHttpConnector")).and(declaresMethod(this.connectMethod)))
-                .transform(new ClassInjectionTransformer(this.getClass().getClassLoader(), "com.steadybit.attacks.javaagent.advice.InjectedReactiveClientHttpResponse"))
-                .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping() //
-                        .bind(Registration.class, this.getRegistration())) //
-                        .include(WebClientHttpStatusAdvice.class.getClassLoader()) //
-                        .advice(this.connectMethod, WebClientHttpStatusAdvice.class.getName()));
+        ElementMatcher<TypeDescription> blockingClient = hasSuperType(named("org.springframework.http.client.ClientHttpRequest")).and(declaresMethod(this.executeMethod));
+        ElementMatcher<TypeDescription> reactiveClient = hasSuperType(named("org.springframework.http.client.reactive.ClientHttpConnector")).and(declaresMethod(this.connectMethod));
+        ElementMatcher<ClassLoader> spring6 = classLoader -> classLoader != null && ClassInjectionHelper.hasClass(classLoader, SPRING6_MARKER);
+
+        // Weave the advice and inject the response matching the target's Spring version: HttpStatusCode present
+        // -> the Spring-6 variants, otherwise the Spring-5 ones.
+        AgentBuilder builder = agentBuilder;
+        builder = this.weave(builder, blockingClient, spring6, "InjectedClientHttpResponseSpring6", this.executeMethod, "RestTemplateHttpStatusAdviceSpring6");
+        builder = this.weave(builder, blockingClient, not(spring6), "InjectedClientHttpResponse", this.executeMethod, "RestTemplateHttpStatusAdvice");
+        builder = this.weave(builder, reactiveClient, spring6, "InjectedReactiveClientHttpResponseSpring6", this.connectMethod, "WebClientHttpStatusAdviceSpring6");
+        builder = this.weave(builder, reactiveClient, not(spring6), "InjectedReactiveClientHttpResponse", this.connectMethod, "WebClientHttpStatusAdvice");
+        return builder;
+    }
+
+    // Parameters follow the body top-to-bottom: .type(type, classLoader), inject responseClass, .advice(method, adviceClass).
+    private AgentBuilder weave(AgentBuilder builder, ElementMatcher<? super TypeDescription> type, ElementMatcher<? super ClassLoader> classLoader,
+                               String responseClass, ElementMatcher<? super MethodDescription> method, String adviceClass) {
+        return builder.type(type, classLoader)
+                .transform(new NamedClassInjectionTransformer(this.getClass().getClassLoader(), ADVICE_PKG + responseClass))
+                .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping().bind(Registration.class, this.getRegistration()))
+                        .include(this.getClass().getClassLoader())
+                        .advice(method, ADVICE_PKG + adviceClass));
     }
 
     @Override

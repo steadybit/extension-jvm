@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.steadybit</groupId>
+        <artifactId>extension-jvm-parent</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>attack-javaagent-spring6</artifactId>
+
+    <!--
+      Compiles the Spring Framework 6 implementation of the HTTP-client status attack: the advice woven into
+      Spring 6+ targets and the injected client-http responses it constructs. Spring 6 changed the client
+      APIs (ClientHttpResponse#getStatusCode() returns HttpStatusCode; AbstractClientHttpResponse removed),
+      which Spring-5 (Java 8) compiled classes cannot satisfy. These classes carry Spring-6-specific names, so
+      the agent jar bundles them alongside the Spring-5 ones and the instrumentation weaves/injects the set
+      matching the target's Spring version. Compiled against Java 17 (required by Spring 6).
+    -->
+    <properties>
+        <!-- Spring 6 requires Java 17; this module overrides the parent's Java 8 target.
+             spring.v6.version / reactor.version are inherited from the parent pom. -->
+        <java.version>17</java.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>${spring.v6.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <version>${reactor.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Provides the agent instrumentation API (Registration / InstrumentationPluginDispatcher) and the
+             shaded ByteBuddy Advice annotations the advice compiles against; inlined at weave time. -->
+        <dependency>
+            <groupId>com.steadybit</groupId>
+            <artifactId>javaagent-main</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>
