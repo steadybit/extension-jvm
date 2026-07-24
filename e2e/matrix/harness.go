@@ -283,6 +283,10 @@ func (h *Harness) RunAttack(spec AttackSpec) AttackResult {
 		res.Result, res.Detail = "error", "sample target not found"
 		return res
 	}
+	// Warm the endpoint before measuring the baseline: a lazily-initialized client (e.g. WebClient's
+	// first call spins up Netty/DNS/connection pool ~1s) would otherwise make the baseline latency
+	// unrepresentatively high, and the baseline-relative delay scoring would then miss the injected delay.
+	h.probe(spec.Endpoint)
 	baseCode, baseT := h.probe(spec.Endpoint)
 	res.Baseline = obs(baseCode, baseT)
 
