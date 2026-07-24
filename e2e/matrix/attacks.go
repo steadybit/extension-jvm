@@ -34,9 +34,12 @@ type AttackSpec struct {
 }
 
 // effectObserved reports whether a probe (status, latency) shows the attack's effect.
-func (s AttackSpec) effectObserved(code int, latencySecs float64) bool {
+// For delay attacks the latency must rise above the baseline by the threshold, so a
+// merely slow endpoint (high baseline, or a transient spike near it) isn't mistaken for
+// an injected delay.
+func (s AttackSpec) effectObserved(code int, latencySecs, baselineSecs float64) bool {
 	if s.Mode == modeDelay {
-		return latencySecs >= delayThresholdSecs
+		return latencySecs-baselineSecs >= delayThresholdSecs
 	}
 	return code >= 500
 }
