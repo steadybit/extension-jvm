@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -27,7 +29,32 @@ type SpringBootSample struct {
 	cancelCtx context.CancelFunc
 }
 
+// sampleImage is the in-repo parameterized Spring Boot sample built with its
+// Dockerfile defaults (Spring Boot 3.5.16 / Java 21, RestClient enabled).
+const sampleImage = "jvm-matrix-sample:e2e"
+
+// buildAndLoadSampleImage builds the in-repo sample on the host (buildkit, so the
+// Dockerfile's cache mount works) and loads it into minikube, for both the docker
+// and containerd runtimes. Replaces the previously used external
+// docker.io/steadybit/spring-boot-sample image.
+func (n *SpringBootSample) buildAndLoadSampleImage() error {
+	build := exec.Command("docker", "build", "testdata/samples/springboot", "-t", sampleImage)
+	build.Stdout, build.Stderr = os.Stdout, os.Stderr
+	// The Dockerfile uses `RUN --mount=type=cache`, which requires BuildKit.
+	build.Env = append(os.Environ(), "DOCKER_BUILDKIT=1")
+	if err := build.Run(); err != nil {
+		return fmt.Errorf("failed to build sample image: %w", err)
+	}
+	if err := n.Minikube.LoadImage(sampleImage); err != nil {
+		return fmt.Errorf("failed to load sample image into minikube: %w", err)
+	}
+	return nil
+}
+
 func (n *SpringBootSample) Deploy(podName string, opts ...func(c *acorev1.PodApplyConfiguration)) error {
+	if err := n.buildAndLoadSampleImage(); err != nil {
+		return err
+	}
 	cfg := &acorev1.PodApplyConfiguration{
 		TypeMetaApplyConfiguration: ametav1.TypeMetaApplyConfiguration{
 			Kind:       extutil.Ptr("Pod"),
@@ -41,11 +68,12 @@ func (n *SpringBootSample) Deploy(podName string, opts ...func(c *acorev1.PodApp
 			RestartPolicy: extutil.Ptr(corev1.RestartPolicyNever),
 			Containers: []acorev1.ContainerApplyConfiguration{
 				{
-					Name:  extutil.Ptr("spring-boot-sample"),
-					Image: extutil.Ptr("docker.io/steadybit/spring-boot-sample:1.0.26"),
+					Name:            extutil.Ptr("spring-boot-sample"),
+					Image:           extutil.Ptr(sampleImage),
+					ImagePullPolicy: extutil.Ptr(corev1.PullNever),
 					Ports: []acorev1.ContainerPortApplyConfiguration{
 						{
-							ContainerPort: extutil.Ptr(int32(80)),
+							ContainerPort: extutil.Ptr(int32(8080)),
 						},
 					},
 					Env: []acorev1.EnvVarApplyConfiguration{
@@ -141,7 +169,7 @@ func (n *SpringBootSample) IsReachable() error {
 	}
 	defer client.Close()
 
-	_, err = client.R().Get("/customers")
+	_, err = client.R().Get("/mvc")
 	if err != nil {
 		return err
 	}
@@ -157,7 +185,7 @@ func (n *SpringBootSample) AssertIsReachable(t *testing.T, expected bool) {
 	defer client.Close()
 
 	e2e.Retry(t, 30, 1*time.Second, func(r *e2e.R) {
-		_, err = client.R().Get("/customers")
+		_, err = client.R().Get("/mvc")
 		if expected && err != nil {
 			r.Failed = true
 			statusInfo := n.podStatusInfo()
@@ -193,7 +221,7 @@ func (n *SpringBootSample) GetHttpStatusOfCustomersEndpoint() (int, error) {
 	}
 	defer client.Close()
 
-	response, err := client.R().Get("/customers")
+	response, err := client.R().Get("/mvc")
 	if err != nil {
 		return 0, err
 	}
@@ -202,7 +230,7 @@ func (n *SpringBootSample) GetHttpStatusOfCustomersEndpoint() (int, error) {
 }
 
 func (n *SpringBootSample) MeasureLatency(expectedStatus int) (time.Duration, error) {
-	return n.MeasureLatencyOnPath(expectedStatus, "/customers")
+	return n.MeasureLatencyOnPath(expectedStatus, "/mvc")
 }
 func (n *SpringBootSample) MeasureLatencyOnPath(expectedStatus int, path string) (time.Duration, error) {
 	client, err := n.Minikube.NewRestClientForService(n.Service)
@@ -239,7 +267,7 @@ func (n *SpringBootSample) MeasureUnaffectedLatencyOnPath(expectedStatus int, pa
 }
 
 func (n *SpringBootSample) AssertLatency(t *testing.T, min time.Duration, max time.Duration, unaffectedLatency time.Duration) {
-	n.AssertLatencyOnPath(t, min, max, "/customers", unaffectedLatency)
+	n.AssertLatencyOnPath(t, min, max, "/mvc", unaffectedLatency)
 }
 func (n *SpringBootSample) AssertLatencyOnPath(t *testing.T, min time.Duration, max time.Duration, path string, unaffectedLatency time.Duration) {
 	t.Helper()
@@ -260,7 +288,7 @@ func (n *SpringBootSample) AssertLatencyOnPath(t *testing.T, min time.Duration, 
 }
 
 func (n *SpringBootSample) ExpectedStatus(expectedStatus int) (bool, int, error) {
-	return n.ExpectedStatusOnPath(expectedStatus, "/customers")
+	return n.ExpectedStatusOnPath(expectedStatus, "/mvc")
 }
 func (n *SpringBootSample) ExpectedStatusOnPath(expectedStatus int, path string) (bool, int, error) {
 	client, err := n.Minikube.NewRestClientForService(n.Service)
@@ -279,7 +307,7 @@ func (n *SpringBootSample) ExpectedStatusOnPath(expectedStatus int, path string)
 	return true, response.StatusCode(), nil
 }
 func (n *SpringBootSample) AssertStatus(t *testing.T, expectedHttpStatus int) {
-	n.AssertStatusOnPath(t, expectedHttpStatus, "/customers")
+	n.AssertStatusOnPath(t, expectedHttpStatus, "/mvc")
 }
 func (n *SpringBootSample) AssertStatusOnPath(t *testing.T, expectedHttpStatus int, path string) {
 	t.Helper()

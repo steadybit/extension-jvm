@@ -6,6 +6,7 @@ package com.steadybit.matrix;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
 
@@ -20,7 +21,8 @@ public class RestClientController {
     }
 
     @GetMapping("/http/restclient")
-    public String restClient() {
-        return "restclient:" + restClient.get().uri(downstreamUrl).retrieve().body(String.class);
+    public String restClient(@RequestParam(name = "url", required = false) String url) {
+        String target = (url == null || url.isEmpty()) ? downstreamUrl : url;
+        return "restclient:" + restClient.get().uri(target).retrieve().body(String.class);
     }
 }
