@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.3.0
+
+- Add on-demand JVM attack support matrix suite (BM-13107) (#424)
+- chore(deps): bump actions/setup-go from 6 to 7
+- chore(deps): bump actions/setup-go from 6 to 7 (#422)
+- chore(deps): bump actions/setup-python from 6 to 7
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_commons
+- chore(deps): bump k8s.io/client-go from 0.36.2 to 0.36.3
+- chore(deps): update dependencies
+- fix(agent): support HTTP-client status injection on Spring Framework 6+ (#426)
+- fix(matrix): warm the endpoint before the baseline probe (#427)
+- test(jvm): run the minikube e2e against the in-repo sample (#425)
+
 ## v1.2.20
 
 - chore: run audit job on free ubuntu-latest runner (#420)
