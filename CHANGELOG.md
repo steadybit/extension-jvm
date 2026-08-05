@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3.1
+
+- chore(deps): bump github.com/shirou/gopsutil/v4 from 4.26.6 to 4.26.7
+- feat: support filtering targets out of discovery
+
 ## v1.3.0
 
 - Add on-demand JVM attack support matrix suite (BM-13107) (#424)
