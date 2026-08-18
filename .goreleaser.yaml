@@ -61,8 +61,8 @@ nfpms:
     builds:
       - steadybit-extension-jvm
     dependencies:
-      - procps
       - runc
+      # capsh, used by the sysv init.d script
       - libcap2-bin
     bindir: /opt/steadybit/extension-jvm
     contents:
@@ -96,7 +96,6 @@ nfpms:
     overrides:
       rpm:
         dependencies:
-          - /usr/bin/ps
           - runc
           - /usr/sbin/capsh
 
