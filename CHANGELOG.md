@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.3.2
+
+- chore(deps): bump docker/setup-buildx-action from 3 to 4
+- chore(deps): bump github.com/moby/go-archive from 0.2.0 to 0.3.0
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_commons
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_test
+- chore(deps): bump github.com/stretchr/testify from 1.12.0 to 1.12.1
+- chore(deps): bump github.com/testcontainers/testcontainers-go
+- chore(deps): bump golang from 1.26-trixie to 1.27-trixie
+- chore(deps): bump k8s.io/client-go from 0.36.3 to 0.36.4
+- chore(deps): bump steadybit kits and drop Go patch pin (#439)
+- chore(deps): float Go on 1.26.x in the standalone setup-go step
+- chore(linuxpkg): drop the unused procps dependency (#441)
+- chore: bump runc to v1.5.1 and crun to 1.29.1 (#440)
+- ci: add --ignore-scripts to npm tool installs (Sonar) (#438)
+- ci: migrate to npm 12 (#434)
+- ci: pin npm to 12.0.2 to satisfy Sonar dependency pinning (#437)
+
 ## v1.3.1
 
 - chore(deps): bump github.com/shirou/gopsutil/v4 from 4.26.6 to 4.26.7
