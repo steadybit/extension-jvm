@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.3.3
+
+- chore(deps): bump actions/setup-java from 5 to 6
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_test
+- chore(deps): bump k8s.io/client-go from 0.36.4 to 0.37.0
+
 ## v1.3.2
 
 - chore(deps): bump docker/setup-buildx-action from 3 to 4
