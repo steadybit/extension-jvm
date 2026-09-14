@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.3.4
+
+- chore(deps): bump github.com/KimMachineGun/automemlimit from 0.7.5 to 1.0.0
+- chore(deps): bump github.com/moby/moby/api from 1.55.0 to 1.56.0
+- chore(deps): bump github.com/shirou/gopsutil/v4 from 4.26.7 to 4.26.8
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_commons
+- chore: remove fixed CVEs from ignore list
+
 ## v1.3.3
 
 - chore(deps): bump actions/setup-java from 5 to 6
