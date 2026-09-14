@@ -26,7 +26,7 @@ require (
 	github.com/tklauser/go-sysconf v0.4.0
 	github.com/xin053/hsperfdata v0.2.3
 	golang.org/x/net v0.58.0
-	golang.org/x/sys v0.47.0
+	golang.org/x/sys v0.48.0
 	k8s.io/api v0.37.0
 	k8s.io/apimachinery v0.37.0
 	k8s.io/client-go v0.37.0
