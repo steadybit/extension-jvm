@@ -97,5 +97,5 @@ nfpms:
       rpm:
         dependencies:
           - runc
-          - /usr/sbin/capsh
+          - libcap
 
