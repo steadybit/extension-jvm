@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.3.5
+
+- chore(deps): bump extensionlib to ^1.5.5
+- chore(deps): bump golang.org/x/net from 0.58.0 to 0.59.0
+- chore: remove fixed cves
+- feat: initialize OpenTelemetry tracing (#461)
+- fix(linuxpkg): require libcap by name, not by sbin path (#460)
+
 ## v1.3.4
 
 - chore(deps): bump github.com/KimMachineGun/automemlimit from 0.7.5 to 1.0.0
