@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3.6
+
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_test
+- chore(deps): bump k8s.io/client-go from 0.37.0 to 0.37.1
+
 ## v1.3.5
 
 - chore(deps): bump extensionlib to ^1.5.5
