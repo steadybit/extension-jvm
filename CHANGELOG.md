@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3.8
+
+- chore(deps): bump golang.org/x/net to v0.61.0
+- chore: add go stdlib CVEs to trivyignore for runc
+
 ## v1.3.7
 
 - chore(deps): bump github.com/moby/moby/api from 1.56.0 to 1.56.1
