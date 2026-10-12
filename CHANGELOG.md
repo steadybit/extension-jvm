@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3.7
+
+- chore(deps): bump github.com/moby/moby/api from 1.56.0 to 1.56.1
+- chore(deps): bump github.com/shirou/gopsutil/v4 from 4.26.8 to 4.26.9
+
 ## v1.3.6
 
 - chore(deps): bump github.com/steadybit/action-kit/go/action_kit_test
