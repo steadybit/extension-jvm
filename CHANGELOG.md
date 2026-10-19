@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3.9
+
+- chore(deps): bump helm/chart-testing-action from 2.8.0 to 2.9.0
+
 ## v1.3.8
 
 - chore(deps): bump golang.org/x/net to v0.61.0
