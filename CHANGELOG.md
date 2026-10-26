@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3.10
+
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_commons
+- chore(deps): update runc to v1.5.2
+
 ## v1.3.9
 
 - chore(deps): bump helm/chart-testing-action from 2.8.0 to 2.9.0
