@@ -64,8 +64,8 @@ github.com/fsnotify/fsnotify v1.10.1 h1:b0/UzAf9yR5rhf3RPm9gf3ehBPpf0oZKIjtpKrx5
 github.com/fsnotify/fsnotify v1.10.1/go.mod h1:TLheqan6HD6GBK6PrDWyDPBaEV8LspOxvPSjC+bVfgo=
 github.com/fxamacker/cbor/v2 v2.9.2 h1:X4Ksno9+x3cz0TZv69ec1hxP/+tymuR8PXQJyDwfh78=
 github.com/fxamacker/cbor/v2 v2.9.2/go.mod h1:vM4b+DJCtHn+zz7h3FFp/hDAI9WNWCsZj23V5ytsSxQ=
-github.com/getkin/kin-openapi v0.149.0 h1:ZbhmVJ4yq5RZDUsyP8lcBcGMsjsaTqXEFt6isdtMDfA=
-github.com/getkin/kin-openapi v0.149.0/go.mod h1:1+BHDzstro+P5CKtPy1X4PfofnFgmRe6uvMy9+r9fKY=
+github.com/getkin/kin-openapi v0.151.0 h1:p8NIstL53h620DnlO9R4pR4QRkEzJ3jbw9flb4kc1hg=
+github.com/getkin/kin-openapi v0.151.0/go.mod h1:1+BHDzstro+P5CKtPy1X4PfofnFgmRe6uvMy9+r9fKY=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
 github.com/go-logr/logr v1.4.4 h1:tG4xh9yMsRCAiodLVTxyrkzSZ9+o0L1Kg/+cPVcbP/8=
 github.com/go-logr/logr v1.4.4/go.mod h1:9T104GzyrTigFIr8wt5mBrctHMim0Nb2HLGrmQ40KvY=
@@ -231,8 +231,8 @@ github.com/steadybit/action-kit/go/action_kit_commons v1.14.1 h1:3r/iuIu05jAWYHE
 github.com/steadybit/action-kit/go/action_kit_commons v1.14.1/go.mod h1:QN4XrK/sTHgkvIozNsTiv/0KG9ZFkczLr9tbMbiXMjk=
 github.com/steadybit/action-kit/go/action_kit_sdk v1.4.1 h1:fKgOjkC64Au6RWX/ANWmq0Y1LjMElURde0RPc6lEDCo=
 github.com/steadybit/action-kit/go/action_kit_sdk v1.4.1/go.mod h1:1mLrjwlZkcz8xN3kIRa5zy4LavmZsdNBd6v+Ao5DNe8=
-github.com/steadybit/action-kit/go/action_kit_test v1.4.12 h1:hfIGawfiUnClZ51CMq8QXuuSSUk3EQhL6Ib/POVuUQo=
-github.com/steadybit/action-kit/go/action_kit_test v1.4.12/go.mod h1:cSn9jXiQ/NNQ0KIH+iyR8knn/z9AyG5owGrWJnZPVAA=
+github.com/steadybit/action-kit/go/action_kit_test v1.4.13 h1:1AP3Gufm41MTWLhXGiJQDnTx7hLSCy7pycdL/HChXEU=
+github.com/steadybit/action-kit/go/action_kit_test v1.4.13/go.mod h1:SfuFvChoFAF0gXcBO7kyVq5acAdpI4GQjHU4uXsw1ps=
 github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.2 h1:WVF31RBWgWCFPAPM1yMCMeY8DCQu48oxfzwtas6zsaI=
 github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.2/go.mod h1:/4woDchG257OkXbB23D4OEOh44+rJSkvuJK8kPeueT0=
 github.com/steadybit/discovery-kit/go/discovery_kit_commons v0.3.2 h1:uwUHBnKzxH+yX0ZuPN+IoGtWjEGYGqRMimWWQMnd1q0=
