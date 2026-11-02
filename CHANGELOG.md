@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.3.11
+
+- chore(deps): bump github.com/KimMachineGun/automemlimit
+- chore(deps): bump github.com/dimchansky/utfbom from 1.1.1 to 1.2.0
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_commons
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_test
+- chore(deps): bump github.com/steadybit/extension-kit
+
 ## v1.3.10
 
 - chore(deps): bump github.com/steadybit/action-kit/go/action_kit_commons
