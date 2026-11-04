@@ -103,7 +103,6 @@ func httpClientStatusDescribe() action_kit_api.ActionDescription {
 				Description: new("What HTTP client behavior should be simulated? If multiple are selected, one will be chosen randomly for every request."),
 				Type:        action_kit_api.ActionParameterTypeStringArray,
 				Required:    new(false),
-				Advanced:    new(true),
 				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Protocol & Network Errors",

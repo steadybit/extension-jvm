@@ -75,7 +75,6 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 				Type:         action_kit_api.ActionParameterTypeBoolean,
 				DefaultValue: new("false"),
 				Required:     new(true),
-				Advanced:     new(true),
 			},
 			{
 				Name:        "httpMethods",
