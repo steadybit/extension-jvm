@@ -30,6 +30,7 @@ var (
 		Options:            methodsOptions,
 		Deprecated:         new(true),
 		DeprecationMessage: new("Use the 'Http Methods' parameter instead."),
+		Group:              new(groupTrafficFilter),
 	}
 	methodsAttribute = action_kit_api.ActionParameter{
 		Name:         "methods",
@@ -39,6 +40,7 @@ var (
 		Required:     new(true),
 		DefaultValue: new("*"),
 		Options:      methodsOptions,
+		Group:        new(groupTrafficFilter),
 	}
 	methodsOptions = new([]action_kit_api.ParameterOption{
 		action_kit_api.ExplicitParameterOption{

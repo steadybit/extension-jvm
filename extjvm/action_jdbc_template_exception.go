@@ -51,7 +51,16 @@ func jdbcTemplateExceptionDescribe() action_kit_api.ActionDescription {
 		TimeControl: action_kit_api.TimeControlExternal,
 
 		// The parameters for the action
+		ParameterGroups: new([]action_kit_api.ParameterGroup{jdbcFilterGroup}),
 		Parameters: []action_kit_api.ActionParameter{
+			{
+				Name:         "duration",
+				Label:        "Duration",
+				Description:  new("How long should the traffic be dropped?"),
+				Type:         action_kit_api.ActionParameterTypeDuration,
+				DefaultValue: new("30s"),
+				Required:     new(true),
+			},
 			{
 				Name:         "operations",
 				Label:        "Operation",
@@ -59,6 +68,7 @@ func jdbcTemplateExceptionDescribe() action_kit_api.ActionDescription {
 				Type:         action_kit_api.ActionParameterTypeString,
 				DefaultValue: new("*"),
 				Required:     new(true),
+				Group:        new(groupTrafficFilter),
 				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Any",
@@ -75,14 +85,6 @@ func jdbcTemplateExceptionDescribe() action_kit_api.ActionDescription {
 				}),
 			},
 			{
-				Name:         "duration",
-				Label:        "Duration",
-				Description:  new("How long should the traffic be dropped?"),
-				Type:         action_kit_api.ActionParameterTypeDuration,
-				DefaultValue: new("30s"),
-				Required:     new(true),
-			},
-			{
 				Name:         "jdbcUrl",
 				Label:        "JDBC connection url",
 				Description:  new("Which JDBC connection should be attacked?"),
@@ -90,6 +92,7 @@ func jdbcTemplateExceptionDescribe() action_kit_api.ActionDescription {
 				DefaultValue: new("*"),
 				Required:     new(true),
 				Advanced:     new(true),
+				Group:        new(groupTrafficFilter),
 				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Any",

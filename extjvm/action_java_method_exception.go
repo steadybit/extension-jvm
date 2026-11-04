@@ -51,6 +51,7 @@ func methodExceptionDescribe() action_kit_api.ActionDescription {
 		TimeControl: action_kit_api.TimeControlExternal,
 
 		// The parameters for the action
+		ParameterGroups: new([]action_kit_api.ParameterGroup{methodCallsFilterGroup}),
 		Parameters: []action_kit_api.ActionParameter{
 			{
 				Name:        "className",
@@ -74,7 +75,6 @@ func methodExceptionDescribe() action_kit_api.ActionDescription {
 				DefaultValue: new("true"),
 				Required:     new(true),
 			},
-			erroneousCallRate,
 			{
 				Name:         "duration",
 				Label:        "Duration",
@@ -83,6 +83,7 @@ func methodExceptionDescribe() action_kit_api.ActionDescription {
 				DefaultValue: new("30s"),
 				Required:     new(true),
 			},
+			erroneousCallRate,
 		},
 		Stop: new(action_kit_api.MutatingEndpointReference{}),
 	}

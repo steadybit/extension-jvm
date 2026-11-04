@@ -51,10 +51,9 @@ func controllerDelayDescribe() action_kit_api.ActionDescription {
 		TimeControl: action_kit_api.TimeControlExternal,
 
 		// The parameters for the action
+		ParameterGroups: new([]action_kit_api.ParameterGroup{controllerFilterGroup}),
 		Parameters: []action_kit_api.ActionParameter{
 			patternAttribute,
-			methodAttribute,
-			methodsAttribute,
 			{
 				Name:         "delay",
 				Label:        "Delay",
@@ -78,6 +77,8 @@ func controllerDelayDescribe() action_kit_api.ActionDescription {
 				DefaultValue: new("false"),
 				Required:     new(true),
 			},
+			methodAttribute,
+			methodsAttribute,
 		},
 		Stop: new(action_kit_api.MutatingEndpointReference{}),
 	}

@@ -26,6 +26,7 @@ var (
 		DefaultValue: new("100"),
 		Required:     new(true),
 		Advanced:     new(true),
+		Group:        new(groupTrafficFilter),
 	}
 	targetSelectionTemplates = []action_kit_api.TargetSelectionTemplate{
 		{
