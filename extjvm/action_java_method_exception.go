@@ -51,6 +51,7 @@ func methodExceptionDescribe() action_kit_api.ActionDescription {
 		TimeControl: action_kit_api.TimeControlExternal,
 
 		// The parameters for the action
+		ParameterGroups: new([]action_kit_api.ParameterGroup{methodCallsFilterGroup}),
 		Parameters: []action_kit_api.ActionParameter{
 			{
 				Name:        "className",
@@ -66,7 +67,14 @@ func methodExceptionDescribe() action_kit_api.ActionDescription {
 				Type:        action_kit_api.ActionParameterTypeString,
 				Required:    new(true),
 			},
-			erroneousCallRate,
+			{
+				Name:         "validate",
+				Label:        "Fail if Class or Method Is Missing",
+				Description:  new("Should the action fail if the specified class and method could not be found?"),
+				Type:         action_kit_api.ActionParameterTypeBoolean,
+				DefaultValue: new("true"),
+				Required:     new(true),
+			},
 			{
 				Name:         "duration",
 				Label:        "Duration",
@@ -75,15 +83,7 @@ func methodExceptionDescribe() action_kit_api.ActionDescription {
 				DefaultValue: new("30s"),
 				Required:     new(true),
 			},
-			{
-				Name:         "validate",
-				Label:        "Validate class and method name",
-				Description:  new("Should the action fail if the specified class and method could not be found?"),
-				Type:         action_kit_api.ActionParameterTypeBoolean,
-				DefaultValue: new("true"),
-				Required:     new(true),
-				Advanced:     new(true),
-			},
+			erroneousCallRate,
 		},
 		Stop: new(action_kit_api.MutatingEndpointReference{}),
 	}

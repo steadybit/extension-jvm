@@ -51,6 +51,7 @@ func httpClientStatusDescribe() action_kit_api.ActionDescription {
 		TimeControl: action_kit_api.TimeControlExternal,
 
 		// The parameters for the action
+		ParameterGroups: new([]action_kit_api.ParameterGroup{outgoingRequestsFilterGroup}),
 		Parameters: []action_kit_api.ActionParameter{
 			{
 				Name:         "duration",
@@ -61,49 +62,11 @@ func httpClientStatusDescribe() action_kit_api.ActionDescription {
 				Required:     new(true),
 			},
 			{
-				Name:        "httpMethods",
-				Label:       "Http Methods",
-				Description: new("Which HTTP methods should be attacked?"),
-				Type:        action_kit_api.ActionParameterTypeStringArray,
-				Required:    new(false),
-				Advanced:    new(true),
-				Options:     methodsOptions,
-			},
-			{
-				Name:         "hostAddress",
-				Label:        "Host Address",
-				Description:  new("Request to which host address should be attacked?"),
-				Type:         action_kit_api.ActionParameterTypeString,
-				DefaultValue: new("*"),
-				Required:     new(false),
-				Advanced:     new(true),
-				OptionsOnly:  new(false),
-				Options: new([]action_kit_api.ParameterOption{
-					action_kit_api.ExplicitParameterOption{
-						Label: "Any",
-						Value: "*",
-					},
-					action_kit_api.ParameterOptionsFromTargetAttribute{
-						Attribute: "spring-instance.http-outgoing-calls",
-					},
-				}),
-			},
-			{
-				Name:         "urlPath",
-				Label:        "Path Pattern",
-				Description:  new("Which URL path should be attacked? Supports Spring Ant-style path patterns (e.g. /api/**)."),
-				Type:         action_kit_api.ActionParameterTypeString,
-				DefaultValue: new("/**"),
-				Required:     new(false),
-				Advanced:     new(true),
-			},
-			{
 				Name:        "failureCauses",
 				Label:       "Failure Types",
 				Description: new("What HTTP client behavior should be simulated? If multiple are selected, one will be chosen randomly for every request."),
 				Type:        action_kit_api.ActionParameterTypeStringArray,
 				Required:    new(false),
-				Advanced:    new(true),
 				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Protocol & Network Errors",
@@ -154,6 +117,46 @@ func httpClientStatusDescribe() action_kit_api.ActionDescription {
 						Value: "HTTP_4XX",
 					},
 				}),
+			},
+			{
+				Name:        "httpMethods",
+				Label:       "Http Methods",
+				Description: new("Which HTTP methods should be attacked?"),
+				Type:        action_kit_api.ActionParameterTypeStringArray,
+				Required:    new(false),
+				Advanced:    new(true),
+				Group:       new(groupTrafficFilter),
+				Options:     methodsOptions,
+			},
+			{
+				Name:         "hostAddress",
+				Label:        "Host Address",
+				Description:  new("Request to which host address should be attacked?"),
+				Type:         action_kit_api.ActionParameterTypeString,
+				DefaultValue: new("*"),
+				Required:     new(false),
+				Advanced:     new(true),
+				Group:        new(groupTrafficFilter),
+				OptionsOnly:  new(false),
+				Options: new([]action_kit_api.ParameterOption{
+					action_kit_api.ExplicitParameterOption{
+						Label: "Any",
+						Value: "*",
+					},
+					action_kit_api.ParameterOptionsFromTargetAttribute{
+						Attribute: "spring-instance.http-outgoing-calls",
+					},
+				}),
+			},
+			{
+				Name:         "urlPath",
+				Label:        "Path Pattern",
+				Description:  new("Which URL path should be attacked? Supports Spring Ant-style path patterns (e.g. /api/**)."),
+				Type:         action_kit_api.ActionParameterTypeString,
+				DefaultValue: new("/**"),
+				Required:     new(false),
+				Advanced:     new(true),
+				Group:        new(groupTrafficFilter),
 			},
 			erroneousCallRate,
 		},

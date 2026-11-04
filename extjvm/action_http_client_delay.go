@@ -51,6 +51,7 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 		TimeControl: action_kit_api.TimeControlExternal,
 
 		// The parameters for the action
+		ParameterGroups: new([]action_kit_api.ParameterGroup{outgoingRequestsFilterGroup}),
 		Parameters: []action_kit_api.ActionParameter{
 			{
 				Name:         "duration",
@@ -75,7 +76,6 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 				Type:         action_kit_api.ActionParameterTypeBoolean,
 				DefaultValue: new("false"),
 				Required:     new(true),
-				Advanced:     new(true),
 			},
 			{
 				Name:        "httpMethods",
@@ -84,6 +84,7 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 				Type:        action_kit_api.ActionParameterTypeStringArray,
 				Required:    new(false),
 				Advanced:    new(true),
+				Group:       new(groupTrafficFilter),
 				Options:     methodsOptions,
 			},
 			{
@@ -94,6 +95,7 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 				DefaultValue: new("*"),
 				Required:     new(false),
 				Advanced:     new(true),
+				Group:        new(groupTrafficFilter),
 				OptionsOnly:  new(false),
 				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
@@ -113,6 +115,7 @@ func httpClientDelayDescribe() action_kit_api.ActionDescription {
 				DefaultValue: new("/**"),
 				Required:     new(false),
 				Advanced:     new(true),
+				Group:        new(groupTrafficFilter),
 			},
 		},
 		Stop: new(action_kit_api.MutatingEndpointReference{}),

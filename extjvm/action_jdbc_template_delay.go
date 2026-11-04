@@ -51,29 +51,8 @@ func jdbcTemplateDelayDescribe() action_kit_api.ActionDescription {
 		TimeControl: action_kit_api.TimeControlExternal,
 
 		// The parameters for the action
+		ParameterGroups: new([]action_kit_api.ParameterGroup{jdbcFilterGroup}),
 		Parameters: []action_kit_api.ActionParameter{
-			{
-				Name:         "operations",
-				Label:        "Operation",
-				Description:  new("Which operation should be attacked?"),
-				Type:         action_kit_api.ActionParameterTypeString,
-				DefaultValue: new("*"),
-				Required:     new(true),
-				Options: new([]action_kit_api.ParameterOption{
-					action_kit_api.ExplicitParameterOption{
-						Label: "Any",
-						Value: "*",
-					},
-					action_kit_api.ExplicitParameterOption{
-						Label: "Reads",
-						Value: "r",
-					},
-					action_kit_api.ExplicitParameterOption{
-						Label: "Writes",
-						Value: "w",
-					},
-				}),
-			},
 			{
 				Name:         "duration",
 				Label:        "Duration",
@@ -97,7 +76,29 @@ func jdbcTemplateDelayDescribe() action_kit_api.ActionDescription {
 				Type:         action_kit_api.ActionParameterTypeBoolean,
 				DefaultValue: new("false"),
 				Required:     new(true),
-				Advanced:     new(true),
+			},
+			{
+				Name:         "operations",
+				Label:        "Operation",
+				Description:  new("Which operation should be attacked?"),
+				Type:         action_kit_api.ActionParameterTypeString,
+				DefaultValue: new("*"),
+				Required:     new(true),
+				Group:        new(groupTrafficFilter),
+				Options: new([]action_kit_api.ParameterOption{
+					action_kit_api.ExplicitParameterOption{
+						Label: "Any",
+						Value: "*",
+					},
+					action_kit_api.ExplicitParameterOption{
+						Label: "Reads",
+						Value: "r",
+					},
+					action_kit_api.ExplicitParameterOption{
+						Label: "Writes",
+						Value: "w",
+					},
+				}),
 			},
 			{
 				Name:         "jdbcUrl",
@@ -107,6 +108,7 @@ func jdbcTemplateDelayDescribe() action_kit_api.ActionDescription {
 				DefaultValue: new("*"),
 				Required:     new(true),
 				Advanced:     new(true),
+				Group:        new(groupTrafficFilter),
 				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Any",
