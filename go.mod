@@ -12,8 +12,8 @@ require (
 	github.com/moby/moby/api v1.56.1
 	github.com/rs/zerolog v1.35.1
 	github.com/shirou/gopsutil/v4 v4.26.10
-	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.11.1
-	github.com/steadybit/action-kit/go/action_kit_commons v1.14.2
+	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.11.2
+	github.com/steadybit/action-kit/go/action_kit_commons v1.15.0
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.4.1
 	github.com/steadybit/action-kit/go/action_kit_test v1.4.13
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.2
@@ -90,7 +90,7 @@ require (
 	github.com/moby/moby/client v0.5.0 // indirect
 	github.com/moby/patternmatcher v0.6.1 // indirect
 	github.com/moby/spdystream v0.5.1 // indirect
-	github.com/moby/sys/capability v0.4.0 // indirect
+	github.com/moby/sys/capability v0.5.0 // indirect
 	github.com/moby/sys/sequential v0.7.0 // indirect
 	github.com/moby/sys/user v0.4.1 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
