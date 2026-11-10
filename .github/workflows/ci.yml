@@ -66,6 +66,7 @@ jobs:
           name: java-agents
           path: javaagents/download/target/javaagent
 
+      # Keep in sync with go_version of the snyk-test and snyk-monitor jobs.
       - uses: actions/setup-go@v7
         with:
           go-version: '1.26'
@@ -90,14 +91,15 @@ jobs:
           minikube config set memory 8g
           make audit
 
+      - name: "[release] Set up Snyk CLI"
+        if: ${{ startsWith(github.ref, 'refs/tags/') && env.snyk_available == 'true' }}
+        uses: steadybit/extension-kit/.github/actions/setup-snyk@main # NOSONAR githubactions:S7637 - our own action
+
       - name: "[release] Snyk test"
         if: ${{ startsWith(github.ref, 'refs/tags/') && env.snyk_available == 'true' }}
-        uses: snyk/actions/golang@master # NOSONAR githubactions:S7637 - verified action creator
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high --project-name=${{ github.repository }} --target-reference=${{ github.ref_name }}
-          command: test
+        run: snyk test --severity-threshold=high --project-name="$GITHUB_REPOSITORY" --target-reference="$GITHUB_REF_NAME"
 
       - name: SonarCloud Scan
         if: ${{ env.sonar_available == 'true' }}
@@ -179,6 +181,8 @@ jobs:
     with:
       command: test
       container_image: ghcr.io/${{ github.repository }}:latest
+      # Keep in sync with setup-go in the audit job: Snyk takes the stdlib version of the Go scan from this toolchain.
+      go_version: '1.26'
     secrets:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
@@ -190,6 +194,8 @@ jobs:
     with:
       command: monitor
       container_image: ghcr.io/${{ github.repository }}:latest
+      # Keep in sync with setup-go in the audit job: Snyk takes the stdlib version of the Go scan from this toolchain.
+      go_version: '1.26'
       target_ref: latest
     secrets:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -318,8 +324,8 @@ jobs:
 
       # this commit will effectively cause another run of the workflow which then actually performs the helm chart release
       - run: |
-          npm install -g --ignore-scripts npm@12.0.2
-          npm install --ignore-scripts -g semver@7.7.4
+          npm install -g --ignore-scripts npm@12.2.2
+          npm install --ignore-scripts -g semver@7.8.6
           make chart-bump-version APP_VERSION="${{ needs.build-images.outputs.version }}"
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
