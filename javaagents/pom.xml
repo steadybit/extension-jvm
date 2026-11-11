@@ -44,7 +44,7 @@
         <hystrix.version>1.5.18</hystrix.version>
         <jna.version>5.18.1</jna.version>
         <junit-pioneer.version>2.3.0</junit-pioneer.version>
-        <org-json.version>20250517</org-json.version>
+        <org-json.version>20260719</org-json.version>
         <resilience4j.version>1.7.1</resilience4j.version>
         <wiremock.version>3.13.1</wiremock.version>
 
