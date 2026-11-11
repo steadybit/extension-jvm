@@ -11,7 +11,12 @@ import com.steadybit.shaded.net.bytebuddy.dynamic.ClassFileLocator;
 import com.steadybit.shaded.net.bytebuddy.dynamic.loading.ClassInjector;
 
 import java.io.IOException;
+import java.lang.instrument.Instrumentation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 public final class ClassInjectionHelper {
     private static final Logger log = RemoteAgentLogger.getLogger(ClassInjectionHelper.class);
@@ -20,11 +25,41 @@ public final class ClassInjectionHelper {
         //util
     }
 
-    public static void inject(ClassLoader classLoader, Map<String, byte[]> classes) {
-        ClassInjector injector = ClassInjector.UsingUnsafe.isAvailable() ?
-                new ClassInjector.UsingUnsafe(classLoader) :
-                new ClassInjector.UsingReflection(classLoader);
-        injector.injectRaw(classes);
+    public static void inject(Instrumentation instrumentation, ClassLoader classLoader, Map<String, byte[]> classes) {
+        if (ClassInjector.UsingUnsafe.isAvailable()) {
+            new ClassInjector.UsingUnsafe(classLoader).injectRaw(classes);
+        } else {
+            injectUsingOpenedJavaLang(instrumentation, classLoader, classes);
+        }
+    }
+
+    /**
+     * Defines the classes through {@code ClassLoader#defineClass}. sun.misc.Unsafe, which ByteBuddy needs to get past
+     * the encapsulation of java.lang, is disabled as of Java 26. An agent may open the package to itself instead.
+     */
+    static void injectUsingOpenedJavaLang(Instrumentation instrumentation, ClassLoader classLoader, Map<String, byte[]> classes) {
+        try {
+            openJavaLang(instrumentation);
+            Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
+            defineClass.setAccessible(true);
+            for (Map.Entry<String, byte[]> entry : classes.entrySet()) {
+                defineClass.invoke(classLoader, entry.getKey(), entry.getValue(), 0, entry.getValue().length);
+            }
+        } catch (InvocationTargetException e) {
+            throw new IllegalStateException("Could not inject " + classes.keySet() + " into " + classLoader, e.getCause());
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            throw new IllegalStateException("Could not inject " + classes.keySet() + " into " + classLoader, e);
+        }
+    }
+
+    // Uses reflection for the module API, as the agent is compiled for Java 8.
+    private static void openJavaLang(Instrumentation instrumentation) throws ReflectiveOperationException {
+        Method getModule = Class.class.getMethod("getModule");
+        Object javaBase = getModule.invoke(ClassLoader.class);
+        Object agentModule = getModule.invoke(ClassInjectionHelper.class);
+        Instrumentation.class.getMethod("redefineModule", Class.forName("java.lang.Module"), Set.class, Map.class, Map.class, Set.class, Map.class)
+                .invoke(instrumentation, javaBase, Collections.emptySet(), Collections.emptyMap(),
+                        Collections.singletonMap("java.lang", Collections.singleton(agentModule)), Collections.emptySet(), Collections.emptyMap());
     }
 
     public static byte[] readClass(ClassLoader classLoader, String className) {
