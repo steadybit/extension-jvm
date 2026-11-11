@@ -43,11 +43,16 @@ public final class ClassInjectionHelper {
             Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
             defineClass.setAccessible(true);
             for (Map.Entry<String, byte[]> entry : classes.entrySet()) {
-                defineClass.invoke(classLoader, entry.getKey(), entry.getValue(), 0, entry.getValue().length);
+                try {
+                    defineClass.invoke(classLoader, entry.getKey(), entry.getValue(), 0, entry.getValue().length);
+                } catch (InvocationTargetException e) {
+                    // A class loader rejects a second definition of a name, e.g. when two threads inject concurrently.
+                    if (!(e.getCause() instanceof LinkageError) || !hasClass(classLoader, entry.getKey())) {
+                        throw new IllegalStateException("Could not inject " + entry.getKey() + " into " + classLoader, e.getCause());
+                    }
+                }
             }
-        } catch (InvocationTargetException e) {
-            throw new IllegalStateException("Could not inject " + classes.keySet() + " into " + classLoader, e.getCause());
-        } catch (ReflectiveOperationException | RuntimeException e) {
+        } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Could not inject " + classes.keySet() + " into " + classLoader, e);
         }
     }
