@@ -39,14 +39,14 @@ public abstract class AbstractJavaMethodInstrumentation extends ClassTransformat
 
     @Override
     protected AgentBuilder doInstall(AgentBuilder agentBuilder) {
-        return this.doInstall(agentBuilder, typeDefinitions -> {
+        return this.doInstall(agentBuilder, this.target(typeDefinitions -> {
             boolean matches = this.typeMatcher.matches(typeDefinitions);
             if (matches) {
                 log.debug("Matched type: " + typeDefinitions);
                 this.typeMatched.set(true);
             }
             return matches;
-        }, methodDescription -> {
+        }), methodDescription -> {
             boolean matches = this.methodMatcher.matches(methodDescription);
             if (matches) {
                 log.debug("Matched method: " + methodDescription);

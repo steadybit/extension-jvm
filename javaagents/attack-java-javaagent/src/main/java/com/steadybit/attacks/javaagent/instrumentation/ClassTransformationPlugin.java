@@ -10,6 +10,8 @@ import com.steadybit.javaagent.instrumentation.TransformationErrorListener;
 import com.steadybit.javaagent.util.TempFileUtils;
 import com.steadybit.shaded.net.bytebuddy.agent.builder.AgentBuilder;
 import com.steadybit.shaded.net.bytebuddy.agent.builder.ResettableClassFileTransformer;
+import com.steadybit.shaded.net.bytebuddy.description.type.TypeDescription;
+import com.steadybit.shaded.net.bytebuddy.matcher.ElementMatcher;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +46,13 @@ public abstract class ClassTransformationPlugin extends InstrumentationPlugin im
     }
 
     protected abstract AgentBuilder doInstall(AgentBuilder agentBuilder);
+
+    /**
+     * Marks the types an attack instruments. Only a failed instrumentation of these fails the attack.
+     */
+    protected ElementMatcher<TypeDescription> target(ElementMatcher<? super TypeDescription> typeMatcher) {
+        return this.errorListener.targets(typeMatcher);
+    }
 
     @Override
     public void reset() {

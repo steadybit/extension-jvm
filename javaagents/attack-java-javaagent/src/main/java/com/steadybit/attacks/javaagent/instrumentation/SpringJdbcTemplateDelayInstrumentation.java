@@ -42,7 +42,7 @@ public class SpringJdbcTemplateDelayInstrumentation extends ClassTransformation 
 
     @Override
     protected AgentBuilder doInstall(AgentBuilder agentBuilder) {
-        return agentBuilder.type(named(CLASSNAME_JDBC_TEMPLATE)) //
+        return agentBuilder.type(this.target(named(CLASSNAME_JDBC_TEMPLATE))) //
                 .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping() //
                         .bind(Delay.class, this.delay)//
                         .bind(Jitter.class, this.delayJitter)//

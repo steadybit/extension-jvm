@@ -144,7 +144,7 @@ class AttackRunnableTest {
 
         @Override
         protected AgentBuilder doInstall(AgentBuilder agentBuilder) {
-            return agentBuilder.type(named(TransformationTarget.class.getName()))
+            return agentBuilder.type(this.target(named(TransformationTarget.class.getName())))
                     .transform((builder, typeDescription, classLoader, module, protectionDomain) -> {
                         throw new IllegalStateException("transformation failed on purpose");
                     });

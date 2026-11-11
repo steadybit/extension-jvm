@@ -77,7 +77,7 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
     // Parameters follow the body top-to-bottom: .type(type, classLoader), inject responseClass, .advice(method, adviceClass).
     private AgentBuilder weave(AgentBuilder builder, ElementMatcher<? super TypeDescription> type, ElementMatcher<? super ClassLoader> classLoader,
                                String responseClass, ElementMatcher<? super MethodDescription> method, String adviceClass) {
-        return builder.type(type, classLoader)
+        return builder.type(this.target(type), classLoader)
                 .transform(new NamedClassInjectionTransformer(this.instrumentation, this.getClass().getClassLoader(), ADVICE_PKG + responseClass))
                 .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping().bind(Registration.class, this.getRegistration()))
                         .include(this.getClass().getClassLoader())

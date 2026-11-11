@@ -39,7 +39,7 @@ public class SpringJdbcTemplateExceptionInstrumentation extends ClassTransformat
 
     @Override
     protected AgentBuilder doInstall(AgentBuilder agentBuilder) {
-        return agentBuilder.type(named(CLASSNAME_JDBC_TEMPLATE)) //
+        return agentBuilder.type(this.target(named(CLASSNAME_JDBC_TEMPLATE))) //
                 .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping() //
                         .bind(JdbcUrl.class, this.jdbcUrl.isEmpty() ? "*" : this.jdbcUrl)//
                         .bind(ErrorRate.class, this.errorRate))//
