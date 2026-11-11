@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: attacks had no effect on JVMs running Java 27, while the action still reported a successful start
 - feat: the JVM attacks show their optional filters, including the erroneous call rate, in a "Traffic Filter" group on platforms that support parameter groups; Jitter, Failure Types and "Fail if Class or Method Is Missing" (formerly "Validate class and method name") are shown directly
 
 ## v1.3.11

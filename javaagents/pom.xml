@@ -49,7 +49,7 @@
         <wiremock.version>3.13.1</wiremock.version>
 
         <ipaddress.version>5.5.1</ipaddress.version>
-        <byte-buddy.version>1.17.8</byte-buddy.version>
+        <byte-buddy.version>1.18.17</byte-buddy.version>
         <!-- Spring 6 toolchain used only by attack-javaagent-spring6 to compile the injected
              client-response variants against the Spring 6 API. -->
         <spring.v6.version>6.2.7</spring.v6.version>
