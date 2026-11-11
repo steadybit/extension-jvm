@@ -385,7 +385,9 @@ func testHttpClientStatus(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 			UrlPath           string   `json:"urlPath"`
 			FailureCauses     []string `json:"failureCauses"`
 		}{
-			Duration:          10000,
+			// The attack has to outlast all probes of the erroneousCallRate 50 case: a probe that lands after the
+			// attack ended always returns 200, and that case needs a single 500 among them.
+			Duration:          30000,
 			ErroneousCallRate: tt.erroneousCallRate,
 			HttpMethods:       []string{"GET"},
 			HostAddress:       tt.hostAddress,
