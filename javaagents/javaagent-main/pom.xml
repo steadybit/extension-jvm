@@ -78,6 +78,7 @@
                             <Agent-Class>com.steadybit.javaagent.JavaAgent</Agent-Class>
                             <Can-Redefine-Classes>true</Can-Redefine-Classes>
                             <Can-Retransform-Classes>true</Can-Retransform-Classes>
+                            <Multi-Release>true</Multi-Release>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -97,6 +98,13 @@
                                 <relocation>
                                     <pattern>net.bytebuddy</pattern>
                                     <shadedPattern>com.steadybit.shaded.net.bytebuddy</shadedPattern>
+                                </relocation>
+                                <!-- The shade plugin does not relocate the paths of multi-release classes. ByteBuddy keeps its
+                                     JDK class file API bridge there, which it needs on JVMs newer than its bundled ASM. -->
+                                <relocation>
+                                    <pattern>^META-INF/versions/(\d+)/net/bytebuddy/</pattern>
+                                    <shadedPattern>META-INF/versions/$1/com/steadybit/shaded/net/bytebuddy/</shadedPattern>
+                                    <rawString>true</rawString>
                                 </relocation>
                             </relocations>
                             <filters>
