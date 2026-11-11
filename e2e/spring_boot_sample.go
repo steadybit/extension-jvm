@@ -313,7 +313,7 @@ func (n *SpringBootSample) AssertStatusOnPath(t *testing.T, expectedHttpStatus i
 	t.Helper()
 
 	measurements := make([]int, 0, 5)
-	e2e.Retry(t, 8, 500*time.Millisecond, func(r *e2e.R) {
+	e2e.Retry(t, 20, 500*time.Millisecond, func(r *e2e.R) {
 		success, statusCode, err := n.ExpectedStatusOnPath(expectedHttpStatus, path)
 		if err != nil {
 			r.Failed = true

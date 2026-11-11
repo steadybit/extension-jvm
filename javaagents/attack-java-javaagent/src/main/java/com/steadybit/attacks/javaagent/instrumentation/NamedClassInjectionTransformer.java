@@ -9,6 +9,7 @@ import com.steadybit.shaded.net.bytebuddy.description.type.TypeDescription;
 import com.steadybit.shaded.net.bytebuddy.dynamic.DynamicType;
 import com.steadybit.shaded.net.bytebuddy.utility.JavaModule;
 
+import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.Collections;
 
@@ -19,10 +20,12 @@ import java.util.Collections;
  * (the Spring-5 or Spring-6 class) is decided by the instrumentation's classloader matcher, not here.
  */
 public class NamedClassInjectionTransformer implements AgentBuilder.Transformer {
+    private final Instrumentation instrumentation;
     private final ClassLoader agentClassLoader;
     private final String canonicalName;
 
-    public NamedClassInjectionTransformer(ClassLoader agentClassLoader, String canonicalName) {
+    public NamedClassInjectionTransformer(Instrumentation instrumentation, ClassLoader agentClassLoader, String canonicalName) {
+        this.instrumentation = instrumentation;
         this.agentClassLoader = agentClassLoader;
         this.canonicalName = canonicalName;
     }
@@ -34,7 +37,7 @@ public class NamedClassInjectionTransformer implements AgentBuilder.Transformer 
             return builder;
         }
         byte[] bytes = ClassInjectionHelper.readClass(this.agentClassLoader, this.canonicalName);
-        ClassInjectionHelper.inject(classLoader, Collections.singletonMap(this.canonicalName, bytes));
+        ClassInjectionHelper.inject(this.instrumentation, classLoader, Collections.singletonMap(this.canonicalName, bytes));
         return builder;
     }
 }

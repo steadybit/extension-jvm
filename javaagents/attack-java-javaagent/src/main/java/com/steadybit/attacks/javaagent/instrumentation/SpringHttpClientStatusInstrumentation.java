@@ -37,6 +37,7 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
     private static final String SPRING6_MARKER = "org.springframework.http.HttpStatusCode";
 
     private final int errorRate;
+    private final Instrumentation instrumentation;
     private final JSONObject config;
     private final List<String> failureCauses;
     private final ElementMatcher<MethodDescription> executeMethod = named("execute").and(takesNoArguments()).and(not(isAbstract()));
@@ -48,6 +49,7 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
 
     public SpringHttpClientStatusInstrumentation(Instrumentation instrumentation, JSONObject config) {
         super(instrumentation);
+        this.instrumentation = instrumentation;
         this.errorRate = config.optInt("erroneousCallRate", 100);
         this.config = config;
         this.failureCauses = config.optJSONArray("failureCauses", EMPTY_ARRAY).toList().stream().map(Object::toString).collect(Collectors.toList());
@@ -75,8 +77,8 @@ public class SpringHttpClientStatusInstrumentation extends ClassTransformationPl
     // Parameters follow the body top-to-bottom: .type(type, classLoader), inject responseClass, .advice(method, adviceClass).
     private AgentBuilder weave(AgentBuilder builder, ElementMatcher<? super TypeDescription> type, ElementMatcher<? super ClassLoader> classLoader,
                                String responseClass, ElementMatcher<? super MethodDescription> method, String adviceClass) {
-        return builder.type(type, classLoader)
-                .transform(new NamedClassInjectionTransformer(this.getClass().getClassLoader(), ADVICE_PKG + responseClass))
+        return builder.type(this.target(type), classLoader)
+                .transform(new NamedClassInjectionTransformer(this.instrumentation, this.getClass().getClassLoader(), ADVICE_PKG + responseClass))
                 .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping().bind(Registration.class, this.getRegistration()))
                         .include(this.getClass().getClassLoader())
                         .advice(method, ADVICE_PKG + adviceClass));

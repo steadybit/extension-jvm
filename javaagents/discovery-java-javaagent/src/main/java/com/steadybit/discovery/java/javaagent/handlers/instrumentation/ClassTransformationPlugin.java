@@ -5,6 +5,7 @@ package com.steadybit.discovery.java.javaagent.handlers.instrumentation;
 
 import com.steadybit.javaagent.instrumentation.InstrumentationPlugin;
 import com.steadybit.javaagent.instrumentation.InstrumentationPluginDispatcher;
+import com.steadybit.javaagent.instrumentation.TransformationErrorListener;
 import com.steadybit.javaagent.util.TempFileUtils;
 import com.steadybit.shaded.net.bytebuddy.agent.builder.AgentBuilder;
 import com.steadybit.shaded.net.bytebuddy.agent.builder.ResettableClassFileTransformer;
@@ -30,7 +31,8 @@ public abstract class ClassTransformationPlugin extends InstrumentationPlugin {
     protected AgentBuilder createAgentBuilder() {
         return new AgentBuilder.Default().disableClassFormatChanges()
                 .with(new AgentBuilder.InjectionStrategy.UsingInstrumentation(this.instrumentation, TEMP_DIR))
-                .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION);
+                .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+                .with(new TransformationErrorListener());
     }
 
     protected abstract AgentBuilder doInstall(AgentBuilder agentBuilder);

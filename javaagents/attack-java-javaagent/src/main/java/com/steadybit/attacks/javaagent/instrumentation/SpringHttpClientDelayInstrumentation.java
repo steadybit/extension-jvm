@@ -50,12 +50,12 @@ public class SpringHttpClientDelayInstrumentation extends ClassTransformationPlu
     @Override
     protected AgentBuilder doInstall(AgentBuilder agentBuilder) {
         return agentBuilder
-                .type(hasSuperType(named("org.springframework.http.client.ClientHttpRequest")).and(declaresMethod(this.executeMethod)))
+                .type(this.target(hasSuperType(named("org.springframework.http.client.ClientHttpRequest")).and(declaresMethod(this.executeMethod))))
                 .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping() //
                         .bind(Registration.class, this.getRegistration())) //
                         .include(RestTemplateDelayAdvice.class.getClassLoader()) //
                         .advice(this.executeMethod, RestTemplateDelayAdvice.class.getName()))
-                .type(hasSuperType(named("org.springframework.http.client.reactive.ClientHttpConnector")).and(declaresMethod(this.connectMethod)))
+                .type(this.target(hasSuperType(named("org.springframework.http.client.reactive.ClientHttpConnector")).and(declaresMethod(this.connectMethod))))
                 .transform(new AgentBuilder.Transformer.ForAdvice(Advice.withCustomMapping() //
                         .bind(Registration.class, this.getRegistration())) //
                         .include(WebClientDelayAdvice.class.getClassLoader()) //

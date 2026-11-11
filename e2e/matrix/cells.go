@@ -15,7 +15,7 @@ const temurin = "eclipse-temurin:" // base image prefix for sample runtimes/buil
 type Cell struct {
 	SampleType string // "spring" | "plain"
 	Boot       string // Spring Boot version, "" for plain
-	Java       string // Java LTS runtime, e.g. "21"
+	Java       string // Java runtime, e.g. "21"
 	Builder    string // build-stage image
 	Runtime    string // run-stage image
 	Compiler   string // maven.compiler release / javac --release
@@ -36,13 +36,18 @@ func (c Cell) Attacks() []AttackSpec {
 	return springAttacks(c.RestClient)
 }
 
+// latestJava is the newest Java feature release. It is not an LTS, but the bytecode
+// library bundled with the agent has to know every runtime it instruments, so a new
+// Java release can break all attacks at once. Bump it when a new release ships.
+const latestJava = "27"
+
 // Cells is the sparse valid grid agreed for BM-13107. Illegal combinations
 // (e.g. Boot 4.x on Java 8/11, Boot 2.7 on Java 21/25) are simply omitted.
 func Cells() []Cell {
 	var cells []Cell
 
-	// Plain Java on every LTS (the two java-method attacks are Spring-independent).
-	for _, j := range []string{"8", "11", "17", "21", "25"} {
+	// Plain Java on every LTS and the latest release (the two java-method attacks are Spring-independent).
+	for _, j := range []string{"8", "11", "17", "21", "25", latestJava} {
 		cells = append(cells, Cell{
 			SampleType: "plain", Java: j, Compiler: "8",
 			Builder: temurin + "17-jdk", Runtime: temurin + j + "-jre",
@@ -58,7 +63,7 @@ func Cells() []Cell {
 	}
 
 	// Spring Boot 3.5 (Framework 6.x): Java 17+.
-	for _, j := range []string{"17", "21", "25"} {
+	for _, j := range []string{"17", "21", "25", latestJava} {
 		cells = append(cells, Cell{
 			SampleType: "spring", Boot: "3.5.16", Java: j, Compiler: "17", RestClient: true,
 			Builder: "maven:3.9.11-eclipse-temurin-17", Runtime: temurin + j + "-jre",
@@ -66,7 +71,7 @@ func Cells() []Cell {
 	}
 
 	// Spring Boot 4.1 (Framework 7.x): Java 17+.
-	for _, j := range []string{"17", "21", "25"} {
+	for _, j := range []string{"17", "21", "25", latestJava} {
 		cells = append(cells, Cell{
 			SampleType: "spring", Boot: "4.1.0", Java: j, Compiler: "17", RestClient: true,
 			Builder: "maven:3.9.11-eclipse-temurin-21", Runtime: temurin + j + "-jre",

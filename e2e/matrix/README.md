@@ -1,6 +1,7 @@
 # Attack Support Matrix (BM-13107)
 
-On-demand suite that determines **which attacks work on which Java LTS × Spring Boot version**
+On-demand suite that determines **which attacks work on which Java × Spring Boot version**
+(every Java LTS plus the latest feature release)
 by actually attaching the extension to a real sample JVM, running each attack, and observing the
 effect. It regenerates [`RESULTS.md`](./RESULTS.md) and `results.json`.
 
