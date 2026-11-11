@@ -5,6 +5,7 @@
 package com.steadybit.attacks.javaagent.instrumentation;
 
 import com.steadybit.attacks.javaagent.Installable;
+import com.steadybit.javaagent.instrumentation.TransformationErrorListener;
 import com.steadybit.javaagent.util.TempFileUtils;
 import com.steadybit.shaded.net.bytebuddy.agent.builder.AgentBuilder;
 import com.steadybit.shaded.net.bytebuddy.agent.builder.ResettableClassFileTransformer;
@@ -16,6 +17,7 @@ import java.lang.instrument.Instrumentation;
 public abstract class ClassTransformation implements Installable {
     private static final File TEMP_DIR = getTempDir();
     private final Instrumentation instrumentation;
+    private final TransformationErrorListener errorListener = new TransformationErrorListener();
     private ResettableClassFileTransformer transformer;
 
     protected ClassTransformation(Instrumentation instrumentation) {
@@ -25,13 +27,15 @@ public abstract class ClassTransformation implements Installable {
     @Override
     public AdviceApplied install() {
         this.transformer = this.doInstall(this.createAgentBuilder()).installOn(this.instrumentation);
+        this.errorListener.throwOnError(this::reset);
         return this.getAdviceApplied();
     }
 
     protected AgentBuilder createAgentBuilder() {
         return new AgentBuilder.Default().disableClassFormatChanges()
                 .with(new AgentBuilder.InjectionStrategy.UsingInstrumentation(this.instrumentation, TEMP_DIR))
-                .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION);
+                .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+                .with(this.errorListener);
     }
 
     protected abstract AgentBuilder doInstall(AgentBuilder agentBuilder);
