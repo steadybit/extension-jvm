@@ -1,11 +1,34 @@
 # Changelog
 
-## Unreleased
+## v1.4.0
 
-- fix: attacks had no effect on JVMs running Java 27, while the action still reported a successful start
-- fix: the HTTP client status attack could not inject its response classes on JVMs running Java 26 or newer, where `sun.misc.Unsafe` is disabled
-- fix: an attack now fails when the bytecode instrumentation of a target class raises an error, instead of running without any effect
+- chore(deps): bump github.com/shirou/gopsutil/v4 from 4.26.9 to 4.26.10
+- chore(deps): bump github.com/testcontainers/testcontainers-go
+- chore(deps): bump golang.org/x/net from 0.61.0 to 0.62.0
+- chore(deps): bump golang.org/x/sys from 0.49.0 to 0.50.0
+- chore(deps): bump helm/chart-releaser-action from 1.7.0 to 1.8.0
+- chore(deps): bump helm/chart-releaser-action from 1.8.0 to 1.9.0
+- chore(deps): bump k8s.io/apimachinery from 0.37.1 to 0.37.2
+- chore(deps): bump k8s.io/client-go from 0.37.1 to 0.37.2
+- chore(deps): bump org.json:json from 20250517 to 20260719 in /javaagents
+- chore(deps): bump the steadybit group with 2 updates
+- chore(deps): bump the steadybit group with 3 updates
+- chore: update crun to 1.30.1 and add CVE-2026-78661 to trivyignore
+- ci: bump npm to 12.2.2 and semver to 7.8.6 for the chart version bump
+- ci: run Snyk through extension-kit's setup-snyk action
+- feat: show "Fail if Class or Method Is Missing" below the method of Java method attacks
+- feat: show Jitter and Failure Types of the JVM attacks directly
+- feat: show what decides which calls a JVM attack hits in a Traffic Filter group
 - feat: the JVM attacks show their optional filters, including the erroneous call rate, in a "Traffic Filter" group on platforms that support parameter groups; Jitter, Failure Types and "Fail if Class or Method Is Missing" (formerly "Validate class and method name") are shown directly
+- fix(deps): bump byte-buddy to 1.18.17 to instrument Java 27 targets
+- fix: an attack now fails when the bytecode instrumentation of a target class raises an error, instead of running without any effect
+- fix: attacks had no effect on JVMs running Java 27, while the action still reported a successful start
+- fix: fail attacks when the bytecode transformation raises an error
+- fix: inject http client status classes without Unsafe on Java 26+
+- fix: only fail attacks on instrumentation errors of their target types
+- fix: relocate the multi-release classes of the shaded byte-buddy
+- fix: the HTTP client status attack could not inject its response classes on JVMs running Java 26 or newer, where `sun.misc.Unsafe` is disabled
+- fix: tolerate classes that are already injected without Unsafe
 
 ## v1.3.11
 
