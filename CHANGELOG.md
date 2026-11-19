@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.4.1
+
+- chore: update runc to v1.5.3
+- ci: CLA check with a GitHub App token (#494)
+- ci: SonarQube Cloud analysis without a stored token (#495)
+- ci: restart prod demo after a release (#497)
+- ci: restart test environments with an app token (#496)
+
 ## v1.4.0
 
 - chore(deps): bump github.com/shirou/gopsutil/v4 from 4.26.9 to 4.26.10
