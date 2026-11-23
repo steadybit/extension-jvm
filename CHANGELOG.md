@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.4.2
+
+- chore(deps): bump github.com/moby/moby/api from 1.56.1 to 1.57.0
+- chore(deps): bump the steadybit group with 3 updates
+
 ## v1.4.1
 
 - chore: update runc to v1.5.3
